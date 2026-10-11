@@ -242,6 +242,16 @@ dialog menu { display: flex; justify-content: flex-end; gap: 8px; padding: 0; ma
 .toast a { color: #9cc3ff; }
 .toast.error { background: var(--danger); }
 
+/* Quick tooltips (src/tooltips.js) */
+.tooltip {
+  position: fixed; z-index: 50; pointer-events: none; max-width: 260px;
+  padding: 5px 10px; border-radius: var(--radius-sm);
+  background: var(--toast); color: #fff; font-size: 12px; line-height: 1.35;
+  box-shadow: 0 4px 14px rgba(0,0,0,.18);
+  opacity: 0; transform: translateY(-2px); transition: opacity .12s, transform .12s;
+}
+.tooltip.show { opacity: 1; transform: none; }
+
 /* Theme picker (temporary): a bubble in the bottom-right corner. */
 .theme-bubble { position: fixed; right: calc(300px + 18px); bottom: 40px; /* bottom-right of the canvas */ z-index: 20; display: grid; justify-items: end; gap: 10px; }
 .theme-fab {

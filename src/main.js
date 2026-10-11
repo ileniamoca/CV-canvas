@@ -7,6 +7,7 @@ import {
   REGIONS, SIDES, MARGINS_CSS, regionRects, readMargins, initMargins, setMargin, drawMarginGuides,
 } from './margins.js';
 import { THEMES, applyTheme } from './themes.js';
+import { initTooltips } from './tooltips.js';
 import TEMPLATE from '../templates/blank.html?raw';
 
 const $ = (sel) => document.querySelector(sel);
@@ -201,6 +202,7 @@ function setupEditing() {
   try { d.execCommand('defaultParagraphSeparator', false, 'p'); } catch {}
   blocks.attach();
   canvas.attach();
+  initTooltips(d, { frameRect: () => iframe.getBoundingClientRect(), only: `[${EDITOR_ATTR}] *, [${EDITOR_ATTR}]` });
   initMargins(d.querySelector('.page')); // before the saved state is taken, so the doc doesn't look edited
   d.body.classList.toggle('cv-hide-margins', !$('#marginsToggle').checked);
   drawMargins();
@@ -617,6 +619,8 @@ function updateMarginInputs() {
     if (v != null && document.activeElement !== input) input.value = v;
   }
 }
+
+initTooltips(document);
 
 // ---------- Editor theme (temporary picker) ----------
 const desk = () => getComputedStyle(document.documentElement).getPropertyValue('--desk').trim() || '#ebebeb';
