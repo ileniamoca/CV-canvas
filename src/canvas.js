@@ -8,7 +8,7 @@
 // reorder, ↑/↓ to move it, ⌫ or its ✕ to hide it, Esc back to the frame (like groups in Canva). ⌘C/⌘X/⌘V copy, cut and paste objects. Drag any edge or corner to resize,
 // soft snap to the edges/centers of the page and of other elements (⌥ disables it).
 
-import { marginBoxes } from './margins.js';
+import { marginBoxes, regionRects } from './margins.js';
 
 const GAP = 16; // standard spacing between sections
 const SNAP_PX = 6; // snap distance, in screen pixels
@@ -123,10 +123,19 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onL
     heights = new WeakMap(frames().map((f) => [f, f.offsetHeight]));
   }
 
-  /** If a frame changes height, shift the frames right below it by the same amount. */
+  /**
+   * If a frame changes height, shift the frames right below it by the same amount — but only within
+   * its own page region (header left/right, main, side): text growing in the header never moves the
+   * columns below the rule, and one column never moves the other.
+   */
   function onFramesResized() {
     if (pushReady && pushEnabled() && !resizing) {
       const list = frames().sort((a, b) => a.offsetTop - b.offsetTop);
+      const rects = regionRects(page());
+      const regionAt = (x, y) => (rects ? Object.keys(rects).find((id) => {
+        const R = rects[id];
+        return x >= R.l && x < R.r && y >= R.t && y < R.b;
+      }) : null);
       for (const f of list) {
         const old = heights.get(f);
         const delta = old == null ? 0 : f.offsetHeight - old;
@@ -134,8 +143,10 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onL
         const l = f.offsetLeft;
         const r = l + f.offsetWidth;
         const oldBottom = f.offsetTop + old;
+        const region = regionAt(l + f.offsetWidth / 2, f.offsetTop + old / 2);
         for (const o of list) {
           if (o === f || o.offsetTop < oldBottom - 1) continue;
+          if (regionAt(o.offsetLeft + o.offsetWidth / 2, o.offsetTop + o.offsetHeight / 2) !== region) continue;
           if (o.offsetLeft < r && o.offsetLeft + o.offsetWidth > l) o.style.top = `${o.offsetTop + delta}px`;
         }
       }
