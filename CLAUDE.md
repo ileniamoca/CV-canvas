@@ -58,8 +58,11 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 - If the editor is open, it reloads the document by itself when it detects the change on disk (no need to say so).
 - To generate the PDF from the terminal: `npm run pdf -- documents/copies/<file>.html`
   (output goes to `documents/pdf/`).
-- Ilenia's professional background for writing content: `../ilenia/*.md`, `../career_summary_ilenia_1.md`,
-  job offers in `../jobs/`.
+- **Source of truth for content:** `../ilenia/` (outside this repo, private). Start with `../ilenia/README.md`: it
+  indexes the chapters and sets the rules (honesty about personal vs team work, confidence markers, `timeline.md`
+  wins on dates). `../ilenia/_archive/` holds older documents; don't use them.
+- **Tailoring a CV to a job ad:** the ad goes in `../jobs/` (one file per ad); create the CV in `documents/copies/`
+  from the original and reword experience and projects for the ad, using only what `../ilenia/` supports.
 
 ## Personal data
 
