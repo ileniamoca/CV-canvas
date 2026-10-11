@@ -4,15 +4,31 @@ import path from 'node:path';
 import { htmlToPdf, findChrome } from './pdf.js';
 
 const ROOT = path.resolve('documents');
+// templates: the base CVs every new page starts from · pages: the CVs sent to each job · pdf: exports
 const DIRS = {
-  originals: path.join(ROOT, 'originals'),
-  copies: path.join(ROOT, 'copies'),
+  templates: path.join(ROOT, 'templates'),
+  pages: path.join(ROOT, 'pages'),
   pdf: path.join(ROOT, 'pdf'),
 };
-const EXT = { originals: '.html', copies: '.html', pdf: '.pdf' };
+const EXT = { templates: '.html', pages: '.html', pdf: '.pdf' };
+const LEGACY = { originals: 'templates', copies: 'pages' }; // folder names before 10/2026
+
+/** Moves documents from the old folder names into the new ones (once). */
+function migrateLegacyDirs() {
+  for (const [old, kind] of Object.entries(LEGACY)) {
+    const from = path.join(ROOT, old);
+    if (!fs.existsSync(from)) continue;
+    for (const name of fs.readdirSync(from)) {
+      const to = path.join(DIRS[kind], name);
+      if (!fs.existsSync(to)) fs.renameSync(path.join(from, name), to);
+    }
+    if (!fs.readdirSync(from).length) fs.rmdirSync(from);
+  }
+}
 
 /** Returns the absolute path of a document, or throws if the name is invalid. */
 function resolveDoc(kind, name) {
+  kind = LEGACY[kind] ?? kind; // an editor tab opened before the rename still says originals/copies
   if (!DIRS[kind]) throw httpError(400, `Unknown folder: ${kind}`);
   const base = path.basename(String(name || ''));
   if (!base || base.startsWith('.') || path.extname(base) !== EXT[kind]) {
@@ -68,6 +84,7 @@ export function cvApi() {
     name: 'cv-api',
     configureServer(server) {
       for (const dir of Object.values(DIRS)) fs.mkdirSync(dir, { recursive: true });
+      migrateLegacyDirs();
 
       // Live notifications (SSE) when a file changes on disk, e.g. edited by Claude.
       const clients = new Set();
@@ -117,10 +134,10 @@ export function cvApi() {
 
           // GET /api/docs
           if (parts[1] === 'docs' && parts.length === 2 && req.method === 'GET') {
-            const [originals, copies, pdf] = await Promise.all(
-              ['originals', 'copies', 'pdf'].map(listDir),
+            const [templates, pages, pdf] = await Promise.all(
+              ['templates', 'pages', 'pdf'].map(listDir),
             );
-            return send(res, 200, { originals, copies, pdf, chrome: Boolean(findChrome()) });
+            return send(res, 200, { templates, pages, pdf, chrome: Boolean(findChrome()) });
           }
 
           // /api/docs/:kind/:name  (GET read, PUT save, DELETE delete)
@@ -136,17 +153,17 @@ export function cvApi() {
               await fsp.writeFile(file, html, 'utf8');
               return send(res, 200, { ok: true, kind, name: path.basename(file) });
             }
-            if (req.method === 'DELETE' && kind !== 'originals') {
+            if (req.method === 'DELETE' && kind !== 'templates') {
               await fsp.unlink(file);
               return send(res, 200, { ok: true });
             }
           }
 
-          // POST /api/copies  { name, html, kind? }  → creates a new document (never overwrites);
-          // kind: 'copies' (default) or 'originals' (new CV from the template)
-          if (parts[1] === 'copies' && req.method === 'POST') {
-            const { name, html, kind = 'copies' } = await readBody(req);
-            if (kind !== 'copies' && kind !== 'originals') throw httpError(400, `Invalid folder: ${kind}`);
+          // POST /api/docs/:kind  { name, html }  → creates a new page or template (never overwrites)
+          if (parts[1] === 'docs' && parts.length === 3 && req.method === 'POST') {
+            const kind = parts[2];
+            const { name, html } = await readBody(req);
+            if (kind !== 'pages' && kind !== 'templates') throw httpError(400, `Invalid folder: ${kind}`);
             if (!String(html || '').trim()) throw httpError(400, 'Empty document.');
             let fileName = cleanName(name, '.html');
             const stem = fileName.slice(0, -5);

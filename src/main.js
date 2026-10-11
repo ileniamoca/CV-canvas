@@ -21,9 +21,9 @@ const state = {
   dirty: false,
   zoom: 1,
   chrome: false,
-  docs: { originals: [], copies: [] }, // last list received (for “New CV”)
+  docs: { templates: [], pages: [] }, // last list received (for the "new page/template" dialog)
   ownWrites: new Map(), // "kind/name" → timestamp of our last save
-  confirmedOriginals: new Set(),
+  confirmedTemplates: new Set(), // templates she already agreed to overwrite this session
 };
 
 // ---------- API ----------
@@ -42,10 +42,10 @@ async function refreshList() {
   const data = await api('/api/docs');
   state.chrome = data.chrome;
   state.docs = data;
-  $('#empty').textContent = data.originals.length || data.copies.length
-    ? 'Pick a CV on the left to start editing.'
-    : 'No CVs yet. Click “+ New CV” to create the first one.';
-  for (const kind of ['originals', 'copies', 'pdf']) {
+  $('#empty').textContent = data.templates.length || data.pages.length
+    ? 'Pick a template or a page on the left to start editing.'
+    : 'No CVs yet. Click “+” next to Templates to create your first template.';
+  for (const kind of ['templates', 'pages', 'pdf']) {
     const ul = $(`#list-${kind}`);
     ul.replaceChildren();
     if (!data[kind].length) {
@@ -74,7 +74,7 @@ function renderItem(kind, f) {
   } else {
     li.addEventListener('click', () => openDoc(kind, f.name));
   }
-  if (kind !== 'originals') {
+  if (kind !== 'templates') {
     const del = document.createElement('button');
     del.className = 'mini del';
     del.textContent = '✕';
@@ -302,7 +302,7 @@ function updateChrome() {
   $('#btnPdf').disabled = !has;
   $('#btnPrint').disabled = !has;
   const label = has
-    ? `${stem(state.current.name)} — ${state.current.kind === 'originals' ? 'Original' : 'Copy'}`
+    ? `${stem(state.current.name)} — ${state.current.kind === 'templates' ? 'Template' : 'Page'}`
     : 'No document open';
   $('#docName').textContent = label + (state.dirty ? ' •' : '');
   $('#status').textContent = has ? (state.dirty ? 'Unsaved changes' : 'Saved') : '';
@@ -354,12 +354,12 @@ function markOwnWrite(kind, name) {
 async function save() {
   if (!state.current || !state.dirty) return;
   const { kind, name } = state.current;
-  if (kind === 'originals' && !state.confirmedOriginals.has(name)) {
+  if (kind === 'templates' && !state.confirmedTemplates.has(name)) {
     const ok = confirm(
-      'You are about to overwrite the ORIGINAL.\n\nAre you sure? (To keep it, use "Save as copy…")',
+      'You are about to change the TEMPLATE: new pages will start from this version.\n\nAre you sure? (To keep the template as it is, use "Save as page…")',
     );
     if (!ok) return;
-    state.confirmedOriginals.add(name);
+    state.confirmedTemplates.add(name);
   }
   const html = serialize();
   try {
@@ -378,25 +378,26 @@ async function save() {
   }
 }
 
+/** Saves what's on screen as a new page (the current template or page stays as it was saved). */
 async function saveCopy() {
   if (!state.current) return;
   const today = new Date().toISOString().slice(0, 10);
   const base = stem(state.current.name).replace(/ - \d{4}-\d{2}-\d{2}( \(\d+\))?$/, '');
-  const name = await askName('Save as copy', `${base} - ${today}`);
+  const name = await askName('Save as page', `${base} - ${today}`);
   if (!name) return;
   const html = serialize();
   try {
-    const res = await api('/api/copies', {
+    const res = await api('/api/docs/pages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, html }),
     });
-    markOwnWrite('copies', res.name);
-    state.current = { kind: 'copies', name: res.name };
+    markOwnWrite('pages', res.name);
+    state.current = { kind: 'pages', name: res.name };
     try { localStorage.setItem('cv-editor:last', JSON.stringify(state.current)); } catch {}
     state.savedHtml = html;
     setDirty(false);
-    toast(`Copy saved: ${res.name}`);
+    toast(`Page saved: ${res.name}`);
     refreshList();
   } catch (err) {
     toast(err.message, true);
@@ -435,12 +436,17 @@ function printDoc() {
   iframe.contentWindow?.print();
 }
 
-// ---------- New CV ----------
+// ---------- New page / new template ----------
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const KIND_LABEL = { templates: 'Templates', pages: 'Pages' };
 
-/** Creates a CV from the blank template (in Originals) or by duplicating another (in Copies) and opens it. */
-async function newCv() {
-  const choice = await askNew();
+/**
+ * Creates a document and opens it:
+ *  - kind 'pages': a CV for a job, started from a template (or by duplicating another page);
+ *  - kind 'templates': a base CV, from the blank layout or from an existing template or page.
+ */
+async function newDoc(kind) {
+  const choice = await askNew(kind);
   if (!choice) return;
   if (state.dirty && !confirm('You have unsaved changes. Discard them?')) return;
   const { name, source } = choice;
@@ -448,47 +454,54 @@ async function newCv() {
     const html = source
       ? await api(docUrl(source.kind, source.name))
       : TEMPLATE.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(stem(name))}</title>`);
-    const res = await api('/api/copies', {
+    const res = await api(`/api/docs/${kind}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, html, kind: source ? 'copies' : 'originals' }),
+      body: JSON.stringify({ name, html }),
     });
     markOwnWrite(res.kind, res.name);
-    if (res.kind === 'originals') state.confirmedOriginals.add(res.name); // it's hers: save without asking
+    if (res.kind === 'templates') state.confirmedTemplates.add(res.name); // brand new: save without asking
     await openDoc(res.kind, res.name, { force: true });
-    toast(`CV created: ${res.name}`);
+    toast(kind === 'pages' ? `Page added: ${res.name}` : `Template created: ${res.name}`);
   } catch (err) {
     toast(err.message, true);
   }
 }
 
-function askNew() {
+function askNew(kind) {
   const dlg = $('#newDialog');
   const input = $('#newName');
   const select = $('#newFrom');
+  const forPage = kind === 'pages';
+  $('#newTitle').textContent = forPage ? 'Add page' : 'New template';
+  // Sources: templates first (the usual start for a page), then pages; a template can also start blank.
   const sources = [
-    null,
-    ...['originals', 'copies'].flatMap((kind) => (state.docs[kind] ?? []).map((f) => ({ kind, name: f.name }))),
+    ...(forPage ? [] : [null]),
+    ...['templates', 'pages'].flatMap((k) => (state.docs[k] ?? []).map((f) => ({ kind: k, name: f.name }))),
   ];
-  select.innerHTML = '<option value="0">Blank template</option>' +
-    ['originals', 'copies'].map((kind) => {
+  if (!sources.length) {
+    toast('Create a template first (the “+” next to Templates).');
+    return Promise.resolve(null);
+  }
+  select.innerHTML = (forPage ? '' : '<option value="0">Blank layout</option>') +
+    ['templates', 'pages'].map((k) => {
       const opts = sources
-        .map((src, i) => (src?.kind === kind ? `<option value="${i}">${escapeHtml(stem(src.name))}</option>` : ''))
+        .map((src, i) => (src?.kind === k ? `<option value="${i}">${escapeHtml(stem(src.name))}</option>` : ''))
         .join('');
-      return opts && `<optgroup label="${kind === 'originals' ? 'Originals' : 'Copies'}">${opts}</optgroup>`;
+      return opts && `<optgroup label="${KIND_LABEL[k]}">${opts}</optgroup>`;
     }).join('');
-  const today = new Date().toISOString().slice(0, 10);
-  const suggest = (src) => (src ? `${stem(src.name).replace(/ - \d{4}-\d{2}-\d{2}( \(\d+\))?$/, '')} - ${today}` : 'New CV');
-  let suggested = suggest(null);
+  select.value = String(forPage ? 0 : sources.findIndex((s) => s?.kind === 'templates') + 1 || 0);
+  input.value = forPage ? '' : 'New template';
+  input.placeholder = forPage ? 'e.g. Sinch – Data Analyst II' : '';
   const update = () => {
     const src = sources[select.value];
-    $('#newHint').textContent = src
-      ? `It will be saved in Copies as a duplicate of “${stem(src.name)}”.`
-      : 'It will be saved in Originals: a two-column A4 page with sample text to replace.';
-    if (input.value === suggested) input.value = suggested = suggest(src); // only if she hasn't changed it
+    $('#newHint').textContent = forPage
+      ? `A new page (a CV for one job) starting as a copy of “${stem(src.name)}”. Then tailor it to the job.`
+      : src
+        ? `A new template starting as a copy of “${stem(src.name)}”.`
+        : 'A new template: a two-column A4 page with sample text to replace.';
   };
   select.onchange = update;
-  input.value = suggested;
   update();
   dlg.returnValue = '';
   dlg.showModal();
@@ -1099,7 +1112,8 @@ $('#btnLink').addEventListener('click', insertLink);
 $('#zoomIn').addEventListener('click', () => setZoom(state.zoom + 0.1));
 $('#zoomOut').addEventListener('click', () => setZoom(state.zoom - 0.1));
 
-$('#btnNew').addEventListener('click', newCv);
+$('#btnAddPage').addEventListener('click', () => newDoc('pages'));
+$('#btnNewTemplate').addEventListener('click', () => newDoc('templates'));
 $('#btnSave').addEventListener('click', save);
 $('#btnSaveCopy').addEventListener('click', saveCopy);
 $('#btnPdf').addEventListener('click', exportPdf);
@@ -1118,5 +1132,5 @@ refreshList().then(() => {
   let last = null;
   try { last = JSON.parse(localStorage.getItem('cv-editor:last')); } catch {}
   const lastItem = last && [...document.querySelectorAll(`#list-${last.kind} li`)].find((li) => li.title === last.name);
-  (lastItem ?? document.querySelector('#list-originals li:not(.none)'))?.click();
+  (lastItem ?? document.querySelector('#list-templates li:not(.none)'))?.click();
 });

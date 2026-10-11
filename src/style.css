@@ -120,9 +120,15 @@ button.active { background: var(--accent-soft); border-color: var(--accent); }
   padding: 8px 0 24px;
 }
 .sidebar h2 {
+  display: flex; align-items: center; justify-content: space-between;
   font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
   color: var(--muted); margin: 14px 16px 6px;
 }
+.sidebar .h2-add {
+  width: 22px; height: 22px; padding: 0; border-radius: 50%; font-size: 15px; line-height: 1;
+  color: var(--accent); border-color: var(--border);
+}
+.sidebar .h2-add:hover { background: var(--accent-soft); }
 .sidebar ul { list-style: none; margin: 0; padding: 0; }
 .sidebar li {
   display: flex; align-items: center; gap: 6px;
@@ -138,7 +144,7 @@ button.active { background: var(--accent-soft); border-color: var(--accent); }
 .sidebar li:hover .mini { opacity: 1; }
 .sidebar li .mini.del:hover { color: var(--danger); border-color: var(--danger); }
 .sidebar .none { color: var(--muted); font-style: italic; cursor: default; }
-.sidebar .new-cv { display: block; width: calc(100% - 32px); margin: 8px 16px 2px; }
+.sidebar .new-cv { display: block; width: calc(100% - 32px); margin: 2px 16px 6px; color: var(--accent); }
 .sidebar .none:hover { background: none; }
 
 /* Inspector (right panel) */

@@ -1,6 +1,6 @@
 # CV Designer
 
-Local tool (Vite) to edit Ilenia's CVs as if in Word, save copies and export PDFs.
+Local tool (Vite) to edit Ilenia's CVs as if in Word/Canva: templates, one page per job application, PDF export.
 
 ## Language
 
@@ -9,12 +9,12 @@ Local tool (Vite) to edit Ilenia's CVs as if in Word, save copies and export PDF
 
 ## Where the documents live
 
-- `documents/originals/` — original CVs (self-contained HTML, styles inside `<style>`). **They are the source of truth.**
-- `documents/copies/` — copies saved from the web app ("Save as copy…").
+- `documents/templates/` — **templates**: the base CVs (self-contained HTML, styles inside `<style>`) every new page
+  starts from. Changing a template doesn't change pages already made from it.
+- `documents/pages/` — **pages**: one CV per job application ("+ Add page", or "Save as page…").
 - `documents/pdf/` — exported PDFs (A4, generated with Chrome via puppeteer-core).
-- `templates/blank.html` — template for a new CV (two columns, generic sample text, no personal data;
-  it *is* pushed to the repo). The “+ New CV” button copies it into `originals/`, or duplicates an existing CV
-  into `copies/`.
+- `templates/blank.html` (in the repo, not in `documents/`) — the **blank layout** (two columns, generic sample
+  text, no personal data; it *is* pushed). "+" next to Templates can start a new template from it.
 
 ## CV structure: free-form layout (frames, shapes and styles)
 
@@ -52,17 +52,17 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 
 - Edit the corresponding `.html` directly with Edit. Keep the existing structure and classes
   (`.frame`, `.item`, `.job-head`, `.where`, `.note`, `h2 .meta`…) so the design and A4 print layout don't break.
-- If she asks for a new version (e.g. tailored to a job offer), create a new file in `documents/copies/`
-  based on the original, instead of touching the original.
-- If she asks for a CV from scratch, start from `templates/blank.html` and save it in `documents/originals/`.
+- If she asks for a new version (e.g. tailored to a job offer), create a new page in `documents/pages/`
+  from the template, instead of touching the template.
+- If she asks for a new template from scratch, start from `templates/blank.html` and save it in `documents/templates/`.
 - If the editor is open, it reloads the document by itself when it detects the change on disk (no need to say so).
-- To generate the PDF from the terminal: `npm run pdf -- documents/copies/<file>.html`
+- To generate the PDF from the terminal: `npm run pdf -- documents/pages/<file>.html`
   (output goes to `documents/pdf/`).
 - **Source of truth for content:** `../ilenia/` (outside this repo, private). Start with `../ilenia/README.md`: it
   indexes the chapters and sets the rules (honesty about personal vs team work, confidence markers, `timeline.md`
   wins on dates). `../ilenia/_archive/` holds older documents; don't use them.
-- **Tailoring a CV to a job ad:** the ad goes in `../jobs/` (one file per ad); create the CV in `documents/copies/`
-  from the original and reword experience and projects for the ad, using only what `../ilenia/` supports.
+- **Tailoring a CV to a job ad:** the ad goes in `../jobs/` (one file per ad); create the page in `documents/pages/`
+  from the template and reword experience and projects for the ad, using only what `../ilenia/` supports.
 
 ## Personal data
 
@@ -77,8 +77,9 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 
 ## Code
 
-- `server/cv-api.js` — Vite plugin with the local API (`/api/docs`, `/api/copies` — creates in `copies`
-  or, with `kind: 'originals'`, in originals —, `/api/pdf`, `/api/events` SSE).
+- `server/cv-api.js` — Vite plugin with the local API (`/api/docs` list, `/api/docs/:kind/:name` read/save/delete,
+  `POST /api/docs/:kind` create a page or template, `/api/pdf`, `/api/events` SSE). Moves the old
+  `documents/originals` and `documents/copies` folders into `templates` and `pages` on startup.
 - `server/pdf.js` — HTML → PDF with the installed Chrome/Brave.
 - `src/main.js` — editor: the CV is loaded in an iframe with `body.contentEditable`; whatever the editor injects
   carries `data-cv-editor` (and `cv-*` classes) and is removed on save.

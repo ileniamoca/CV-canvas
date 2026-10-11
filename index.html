@@ -14,7 +14,7 @@
     <div class="actions">
       <span class="status" id="status"></span>
       <button id="btnSave" class="primary" title="Save (⌘S)" disabled>Save</button>
-      <button id="btnSaveCopy" title="Save as a new copy (⇧⌘S)" disabled>Save as copy…</button>
+      <button id="btnSaveCopy" title="Save as a new page (⇧⌘S)" disabled>Save as page…</button>
       <button id="btnPdf" title="Export to documents/pdf" disabled>Export PDF</button>
       <button id="btnPrint" title="Print (⌘P)" disabled>Print</button>
     </div>
@@ -59,17 +59,17 @@
 
   <div class="layout">
     <nav class="sidebar" id="sidebar">
-      <button id="btnNew" class="new-cv" title="Create a new CV from the template or from another one">+ New CV</button>
       <section>
-        <h2>Originals</h2>
-        <ul id="list-originals"></ul>
+        <h2>Templates <button class="h2-add" id="btnNewTemplate" title="New template (blank, or from a page or another template)">+</button></h2>
+        <ul id="list-templates"></ul>
       </section>
       <section>
-        <h2>Copies</h2>
-        <ul id="list-copies"></ul>
+        <h2>Pages</h2>
+        <button id="btnAddPage" class="new-cv" title="Add a page: a new CV for a job, started from a template">+ Add page</button>
+        <ul id="list-pages"></ul>
       </section>
       <section>
-        <h2>PDF</h2>
+        <h2>Exported PDF</h2>
         <ul id="list-pdf"></ul>
       </section>
     </nav>
@@ -137,7 +137,7 @@
 
   <dialog id="nameDialog">
     <form method="dialog">
-      <h3 id="nameDialogTitle">Save as copy</h3>
+      <h3 id="nameDialogTitle">Save as page</h3>
       <label>File name
         <input id="nameInput" required autocomplete="off" />
       </label>
@@ -150,8 +150,8 @@
 
   <dialog id="newDialog">
     <form method="dialog">
-      <h3>New CV</h3>
-      <label>File name
+      <h3 id="newTitle">Add page</h3>
+      <label>Name
         <input id="newName" required autocomplete="off" />
       </label>
       <label>Start from

@@ -1,4 +1,4 @@
-// Usage: npm run pdf -- documents/originals/MyCV.html [output.pdf]
+// Usage: npm run pdf -- documents/pages/MyCV.html [output.pdf]
 import fs from 'node:fs';
 import path from 'node:path';
 import { htmlToPdf } from './pdf.js';
