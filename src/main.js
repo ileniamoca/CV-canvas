@@ -3,6 +3,9 @@ import { createCanvas, CANVAS_CSS } from './canvas.js';
 import {
   TEXT_STYLES, FONTS, fontByStack, styleSheetEl, readStyles, writeStyles, detectStyle, applyStyle,
 } from './styles.js';
+import {
+  REGIONS, SIDES, MARGINS_CSS, regionRects, readMargins, initMargins, setMargin, drawMarginGuides,
+} from './margins.js';
 import TEMPLATE from '../templates/blank.html?raw';
 
 const $ = (sel) => document.querySelector(sel);
@@ -94,9 +97,11 @@ function afterChange() {
   blocks.ensureControls();
   canvas.ensureControls();
   canvas.checkLayout();
+  drawMargins();
   setDirty(serialize() !== state.savedHtml);
   updateWordCount();
   updateInspector(canvas.getSelected(), canvas.getCount());
+  updateMarginInputs();
 }
 
 const blocks = createBlocks({
@@ -197,6 +202,10 @@ function setupEditing() {
   try { d.execCommand('defaultParagraphSeparator', false, 'p'); } catch {}
   blocks.attach();
   canvas.attach();
+  initMargins(d.querySelector('.page')); // before the saved state is taken, so the doc doesn't look edited
+  d.body.classList.toggle('cv-hide-margins', !$('#marginsToggle').checked);
+  drawMargins();
+  renderMargins();
   renderStyles();
   updateInspector(null);
   // Recompute pages/warnings when the height changes (text, moved blocks, loaded fonts…).
@@ -245,7 +254,7 @@ function setupEditing() {
 function applyZoom() {
   const style = doc()?.querySelector(`style[${EDITOR_ATTR}]`);
   if (style) {
-    style.textContent = BLOCKS_CSS + CANVAS_CSS + `
+    style.textContent = BLOCKS_CSS + CANVAS_CSS + MARGINS_CSS + `
       html { zoom: ${state.zoom}; }
       @media screen { body { background: #ebebeb; } } /* desk around the page, lighter than the CVs' own grey */
       @media print { html { zoom: 1 !important; } }
@@ -562,6 +571,60 @@ function setZoom(z) {
   state.zoom = Math.min(2, Math.max(0.5, Math.round(z * 10) / 10));
   applyZoom();
 }
+
+// ---------- Inspector: margins ----------
+let hotRegion = null; // region whose controls are under the mouse: its guide is highlighted
+
+function drawMargins() {
+  drawMarginGuides(doc()?.querySelector('.page'), EDITOR_ATTR, hotRegion);
+}
+
+function renderMargins() {
+  const list = $('#marginsList');
+  const page = doc()?.querySelector('.page');
+  if (!regionRects(page)) {
+    list.innerHTML = '<p class="hint">Margins need the side stripe and the header rule of the CV layout.</p>';
+    return;
+  }
+  list.replaceChildren(...REGIONS.map(({ id, label }) => {
+    const box = document.createElement('div');
+    box.className = 'margin-region';
+    box.dataset.region = id;
+    box.innerHTML = `<div class="margin-title">${label}</div><div class="geo margins">${SIDES.map((s) =>
+      `<label>${s[0].toUpperCase() + s.slice(1)} <input type="number" min="0" step="1" data-side="${s}"></label>`).join('')}</div>`;
+    box.addEventListener('change', (e) => {
+      const side = e.target.dataset.side;
+      if (!side) return;
+      blocks.snapshot();
+      setMargin(doc().querySelector('.page'), id, side, parseFloat(e.target.value) || 0);
+      blocks.committed();
+    });
+    const hot = (on) => {
+      hotRegion = on ? id : null;
+      drawMargins();
+    };
+    box.addEventListener('mouseenter', () => hot(true));
+    box.addEventListener('mouseleave', () => hot(box.contains(document.activeElement)));
+    box.addEventListener('focusin', () => hot(true));
+    box.addEventListener('focusout', () => hot(false));
+    return box;
+  }));
+  updateMarginInputs();
+}
+
+function updateMarginInputs() {
+  const margins = readMargins(doc()?.querySelector('.page'));
+  for (const input of document.querySelectorAll('#marginsList input[data-side]')) {
+    const v = margins[input.closest('.margin-region').dataset.region]?.[input.dataset.side];
+    if (v != null && document.activeElement !== input) input.value = v;
+  }
+}
+
+try { $('#marginsToggle').checked = localStorage.getItem('cv-editor:margins') !== 'hidden'; } catch {}
+$('#marginsToggle').addEventListener('change', (e) => {
+  doc()?.body.classList.toggle('cv-hide-margins', !e.target.checked);
+  try { localStorage.setItem('cv-editor:margins', e.target.checked ? 'shown' : 'hidden'); } catch {}
+});
 
 // ---------- Inspector: layout ----------
 function updateLayoutStatus({ outside, overlaps }) {

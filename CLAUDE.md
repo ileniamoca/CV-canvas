@@ -26,6 +26,11 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
   side column: x 606, width 166; standard spacing between frames: 16 px.
 - **Shape** = `.page > .shape` with `left/top/width/height/background` (grey side stripe, header rule…).
   Shapes come before the frames in the HTML (so they sit behind them).
+- **Regions & margins** = the side stripe (`.shape[data-role="sidebar"]`) and the header rule (`.shape[data-role="rule"]`)
+  split the page into four regions: `header-left`, `header-right`, `main`, `side`. Each has its own margins, stored on
+  the page as `data-margins="header-left 28 19 40 28; …"` (top bottom left right, px). The editor shows them as
+  violet guides and frames snap to them; changing a margin in the inspector moves the frames sitting on it.
+  When adding or moving frames by hand, keep them inside their region's margins.
 - **Item** = `<div class="item">` inside a frame: a job (`.job-head` + `ul`/`p`), a project
   (`h3` + `ul`), a degree, a group of skills, a language… When adding content, wrap it in an `.item`.
 - **Text styles** = variables in `<style id="cv-text-styles">` (`--<style>-font|size|weight|style|case|spacing|leading|color|before|after`).
@@ -83,5 +88,6 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
   pushing frames down as text grows, overlap warnings, alignment, adding elements.
 - `src/blocks.js` — items (.item): drag between frames or into a new frame, duplicate, delete; plus the
   shared undo history (body + styles).
+- `src/margins.js` — regions and margins: read/write `data-margins`, guides, adjusting frames when a margin changes.
 - `src/styles.js` — text styles: read/write the variables, apply a style to a paragraph, font catalog.
 - Start: `npm run dev` → http://localhost:5180

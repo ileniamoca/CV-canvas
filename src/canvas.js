@@ -7,6 +7,8 @@
 // select text), Esc goes back. ⌘C/⌘X/⌘V copy, cut and paste objects. Drag any edge or corner to resize,
 // soft snap to the edges/centers of the page and of other elements (⌥ disables it).
 
+import { marginBoxes } from './margins.js';
+
 const GAP = 16; // standard spacing between sections
 const SNAP_PX = 6; // snap distance, in screen pixels
 
@@ -211,6 +213,10 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
         gapBottom.push({ v: g.t - GAP, from: g.t, l: g.l, w: g.w });
       }
     }
+    for (const m of marginBoxes(p)) {
+      xs.push(m.l, m.r);
+      ys.push(m.t, m.b);
+    }
     return { xs, ys, gapTop, gapBottom };
   }
 
@@ -252,6 +258,10 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
     const pageBox = { l: 0, t: 0, w: p.offsetWidth, h: p.offsetHeight };
     for (const x of xsOf(pageBox)) if (near(mx, x)) add(true, x, 0, pageBox.h);
     for (const y of ysOf(pageBox)) if (near(my, y)) add(false, y, 0, pageBox.w);
+    for (const m of marginBoxes(p)) {
+      for (const x of [m.l, m.r]) if (near(mx, x)) add(true, x, m.R.t, m.R.b);
+      for (const y of [m.t, m.b]) if (near(my, y)) add(false, y, m.R.l, m.R.r);
+    }
     for (const o of objects()) {
       if (exclude.includes(o)) continue;
       const g = geom(o);
