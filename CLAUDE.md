@@ -33,8 +33,10 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
   the page as `data-margins="header-left 28 19 40 28; …"` (top bottom left right, px). The editor shows them as
   violet guides and frames snap to them; changing a margin in the inspector moves the frames sitting on it.
   When adding or moving frames by hand, keep them inside their region's margins.
-- **Item** = `<div class="item">` inside a frame: a job (`.job-head` + `ul`/`p`), a project
-  (`h3` + `ul`), a degree, a group of skills, a language… When adding content, wrap it in an `.item`.
+- **Item** = `<div class="item">` inside a frame: a job (`.job-head` + `ul`/`p`), a project (`h3` + `ul`), a
+  degree… Items are the blocks of the Blocks panel (reorder, hide, move between sections); wrap new entries in one.
+  **Skills and Languages are plain text, not items** (they change with every job ad): Skills is `h3` + `p` pairs
+  straight in the frame, Languages is `p` lines. Keep them that way.
 - **Text styles** = variables in `<style id="cv-text-styles">` (`--<style>-font|size|weight|style|case|spacing|leading|color|before|after`).
   Styles: `name` (h1), `role` (.role), `section` (h2), `subheading` (h3, .job-head), `body` (p, li),
   `detail` (.detail, .where, .meta) and `note` (.note). To change the typography of the whole document, change
