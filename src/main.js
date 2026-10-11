@@ -1,6 +1,7 @@
 import { createBlocks, BLOCKS_CSS } from './blocks.js';
 import { createCanvas, CANVAS_CSS } from './canvas.js';
 import { createLibrary } from './library.js';
+import { createBoard, sheetCss } from './board.js';
 import {
   TEXT_STYLES, FONTS, fontByStack, styleSheetEl, readStyles, writeStyles, detectStyle, applyStyle,
 } from './styles.js';
@@ -12,7 +13,7 @@ import { initTooltips } from './tooltips.js';
 import TEMPLATE from '../templates/blank.html?raw';
 
 const $ = (sel) => document.querySelector(sel);
-const iframe = $('#editor');
+let iframe = null; // the active sheet's iframe (the document being edited), see board.js
 const EDITOR_ATTR = 'data-cv-editor'; // marks what the editor injects; never saved
 
 const state = {
@@ -37,6 +38,16 @@ async function api(path, opts = {}) {
 const docUrl = (kind, name) => `/api/docs/${kind}/${encodeURIComponent(name)}`;
 const stem = (name) => name.replace(/\.(html|pdf)$/i, '');
 
+const board = createBoard({
+  board: $('#board'),
+  strip: $('#boardStrip'),
+  zoom: () => state.zoom,
+  kindLabel: (kind) => (kind === 'templates' ? 'Template' : 'Page'),
+  load: (kind, name) => api(docUrl(kind, name)),
+  onActivate: (kind, name) => openDoc(kind, name),
+  onPinch: (deltaY) => setZoom(state.zoom * Math.exp(-deltaY * 0.01)),
+});
+
 // ---------- Sidebar list ----------
 async function refreshList() {
   const data = await api('/api/docs');
@@ -45,6 +56,12 @@ async function refreshList() {
   $('#empty').textContent = data.templates.length || data.pages.length
     ? 'Pick a template or a page on the left to start editing.'
     : 'No CVs yet. Click “+” next to Templates to create your first template.';
+  // Templates and pages keep their place on the board and in the list: oldest first, new ones at the end.
+  for (const kind of ['templates', 'pages']) data[kind].sort((a, b) => a.created - b.created || a.name.localeCompare(b.name));
+  const sheets = ['templates', 'pages'].flatMap((kind) => data[kind].map((f) => ({ kind, name: f.name, mtime: f.mtime })));
+  $('#empty').hidden = sheets.length > 0;
+  $('#board').hidden = !sheets.length;
+  board.sync(sheets);
   for (const kind of ['templates', 'pages', 'pdf']) {
     const ul = $(`#list-${kind}`);
     ul.replaceChildren();
@@ -93,7 +110,7 @@ function renderItem(kind, f) {
 
 // ---------- Document ----------
 function doc() {
-  return iframe.contentDocument;
+  return iframe?.contentDocument ?? null;
 }
 
 function afterChange() {
@@ -164,20 +181,27 @@ function serialize() {
   return '<!DOCTYPE html>\n' + clone.outerHTML + '\n';
 }
 
-async function openDoc(kind, name, { force = false, keepScroll = false } = {}) {
-  if (!force && state.dirty && !confirm('You have unsaved changes. Discard them?')) return;
+/**
+ * Makes a document the active sheet (the one being edited) and glides the board to it.
+ * Leaving a sheet with unsaved changes saves them first. `force` reloads the active one from disk.
+ */
+async function openDoc(kind, name, { force = false } = {}) {
+  const same = state.current?.kind === kind && state.current?.name === name;
+  if (same && !force) return board.glideTo(kind, name);
+  if (!same && state.dirty && !(await save())) return;
   try {
     const html = await api(docUrl(kind, name));
-    const scrollY = keepScroll ? iframe.contentWindow?.scrollY ?? 0 : 0;
+    if (!board.has(kind, name)) await refreshList(); // a document just created
     state.current = { kind, name };
     try { localStorage.setItem('cv-editor:last', JSON.stringify(state.current)); } catch {}
+    iframe = board.setActive(kind, name);
     await loadIntoIframe(html);
-    iframe.contentWindow.scrollTo(0, scrollY);
     state.savedHtml = serialize();
     setDirty(false);
     $('#banner').hidden = true;
     updateChrome();
     refreshList();
+    board.glideTo(kind, name);
   } catch (err) {
     toast(err.message, true);
   }
@@ -186,8 +210,8 @@ async function openDoc(kind, name, { force = false, keepScroll = false } = {}) {
 function closeDoc() {
   state.current = null;
   state.dirty = false;
-  iframe.hidden = true;
-  $('#empty').hidden = false;
+  iframe = null;
+  board.setActive(null);
   updateChrome();
 }
 
@@ -197,8 +221,6 @@ function loadIntoIframe(html) {
       setupEditing();
       resolve();
     };
-    iframe.hidden = false;
-    $('#empty').hidden = true;
     iframe.srcdoc = html;
   });
 }
@@ -215,7 +237,9 @@ function setupEditing() {
   try { d.execCommand('defaultParagraphSeparator', false, 'p'); } catch {}
   blocks.attach();
   canvas.attach();
-  initTooltips(d, { frameRect: () => iframe.getBoundingClientRect(), only: `[${EDITOR_ATTR}] *, [${EDITOR_ATTR}]` });
+  const frameEl = iframe;
+  initTooltips(d, { frameRect: () => frameEl.getBoundingClientRect(), only: `[${EDITOR_ATTR}] *, [${EDITOR_ATTR}]` });
+  board.forwardPinch(d);
   initMargins(d.querySelector('.page')); // before the saved state is taken, so the doc doesn't look edited
   library.register(); // block ids, saved with the CV
   renderLibrary();
@@ -269,11 +293,8 @@ function setupEditing() {
 function applyZoom() {
   const style = doc()?.querySelector(`style[${EDITOR_ATTR}]`);
   if (style) {
-    style.textContent = BLOCKS_CSS + CANVAS_CSS + MARGINS_CSS + `
-      html { zoom: ${state.zoom}; }
+    style.textContent = BLOCKS_CSS + CANVAS_CSS + MARGINS_CSS + sheetCss(state.zoom) + `
       .item.cv-flash { outline: 2px solid ${accent()} !important; outline-offset: 3px; }
-      @media screen { body { background: ${desk()}; } } /* desk around the page (theme), not the CVs' own grey */
-      @media print { html { zoom: 1 !important; } }
       a { cursor: text; }
       .page { position: relative; }
       .cv-pagebreak {
@@ -288,6 +309,7 @@ function applyZoom() {
       @media print { .cv-pagebreak { display: none !important; } }`;
   }
   $('#zoomLabel').textContent = `${Math.round(state.zoom * 100)}%`;
+  board.resize();
 }
 
 function setDirty(dirty) {
@@ -351,14 +373,15 @@ function markOwnWrite(kind, name) {
   state.ownWrites.set(`${kind}/${name}`, Date.now());
 }
 
+/** Saves the active document. Returns false if it wasn't saved (cancelled or failed). */
 async function save() {
-  if (!state.current || !state.dirty) return;
+  if (!state.current || !state.dirty) return true;
   const { kind, name } = state.current;
   if (kind === 'templates' && !state.confirmedTemplates.has(name)) {
     const ok = confirm(
       'You are about to change the TEMPLATE: new pages will start from this version.\n\nAre you sure? (To keep the template as it is, use "Save as page…")',
     );
-    if (!ok) return;
+    if (!ok) return false;
     state.confirmedTemplates.add(name);
   }
   const html = serialize();
@@ -373,8 +396,10 @@ async function save() {
     setDirty(false);
     toast('Saved');
     refreshList();
+    return true;
   } catch (err) {
     toast(err.message, true);
+    return false;
   }
 }
 
@@ -432,8 +457,8 @@ async function exportPdf() {
 }
 
 function printDoc() {
-  iframe.contentWindow?.focus();
-  iframe.contentWindow?.print();
+  iframe?.contentWindow?.focus();
+  iframe?.contentWindow?.print();
 }
 
 // ---------- New page / new template ----------
@@ -540,7 +565,7 @@ function askName(title, value, okLabel = 'Save') {
 function exec(cmd, value = null) {
   const d = doc();
   if (!d) return;
-  iframe.contentWindow.focus();
+  iframe?.contentWindow.focus();
   if (cmd === 'undo' && blocks.undo()) return;
   if (cmd === 'redo' && blocks.redo()) return;
   blocks.textEdited();
@@ -597,8 +622,14 @@ function handleShortcuts(e) {
 }
 
 function setZoom(z) {
-  state.zoom = Math.min(2, Math.max(0.5, Math.round(z * 10) / 10));
+  // Keep the point at the center of the view where it is while the board grows or shrinks.
+  const b = $('#board');
+  const cx = (b.scrollLeft + b.clientWidth / 2) / (b.scrollWidth || 1);
+  const cy = (b.scrollTop + b.clientHeight / 2) / (b.scrollHeight || 1);
+  state.zoom = Math.min(2, Math.max(0.3, Math.round(z * 100) / 100));
   applyZoom();
+  b.scrollLeft = cx * b.scrollWidth - b.clientWidth / 2;
+  b.scrollTop = cy * b.scrollHeight - b.clientHeight / 2;
 }
 
 // ---------- Inspector: shape properties ----------
@@ -825,7 +856,6 @@ initTooltips(document);
 
 // ---------- Editor theme (temporary picker) ----------
 const cssVar = (name, fallback) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
-const desk = () => cssVar('--desk', '#ebebeb');
 const accent = () => cssVar('--accent', '#2b5797');
 
 function setTheme(id) {
@@ -1095,7 +1125,7 @@ function listenForChanges() {
     if (state.dirty) {
       $('#banner').hidden = false;
     } else {
-      openDoc(kind, name, { force: true, keepScroll: true }).then(() => toast('Document reloaded from disk'));
+      openDoc(kind, name, { force: true }).then(() => toast('Document reloaded from disk'));
     }
   };
 }
@@ -1118,7 +1148,7 @@ $('#btnSave').addEventListener('click', save);
 $('#btnSaveCopy').addEventListener('click', saveCopy);
 $('#btnPdf').addEventListener('click', exportPdf);
 $('#btnPrint').addEventListener('click', printDoc);
-$('#bannerReload').addEventListener('click', () => openDoc(state.current.kind, state.current.name, { force: true, keepScroll: true }));
+$('#bannerReload').addEventListener('click', () => openDoc(state.current.kind, state.current.name, { force: true }));
 $('#bannerDismiss').addEventListener('click', () => ($('#banner').hidden = true));
 
 document.addEventListener('keydown', handleShortcuts);

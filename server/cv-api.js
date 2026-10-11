@@ -59,7 +59,7 @@ async function listDir(kind) {
       .filter((e) => e.isFile() && e.name.endsWith(EXT[kind]))
       .map(async (e) => {
         const st = await fsp.stat(path.join(DIRS[kind], e.name));
-        return { name: e.name, mtime: st.mtimeMs, size: st.size };
+        return { name: e.name, mtime: st.mtimeMs, created: st.birthtimeMs || st.ctimeMs, size: st.size };
       }),
   );
   return files.sort((a, b) => b.mtime - a.mtime);
