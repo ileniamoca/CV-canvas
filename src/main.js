@@ -327,6 +327,15 @@ function updateChrome() {
     ? `${stem(state.current.name)} — ${state.current.kind === 'templates' ? 'Template' : 'Page'}`
     : 'No document open';
   $('#docName').textContent = label + (state.dirty ? ' •' : '');
+  $('#inspectorHead').hidden = !has;
+  if (has) {
+    const template = state.current.kind === 'templates';
+    $('#inspectorKind').textContent = template ? 'Template' : 'Page';
+    $('#inspectorName').textContent = stem(state.current.name) + (state.dirty ? ' •' : '');
+    $('#inspectorHead small').textContent = template
+      ? 'Changes here apply to this template only'
+      : 'Changes here apply to this page only';
+  }
   $('#status').textContent = has ? (state.dirty ? 'Unsaved changes' : 'Saved') : '';
   $('#pathInfo').textContent = has ? `CVs/documents/${state.current.kind}/${state.current.name}` : '';
   document.title = has ? `${state.dirty ? '• ' : ''}${stem(state.current.name)} · CV Designer` : 'CV Designer';

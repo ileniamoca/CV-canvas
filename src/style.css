@@ -154,6 +154,20 @@ button.active { background: var(--accent-soft); border-color: var(--accent); }
   overflow-y: auto;
   padding: 4px 14px 24px;
 }
+/* Header of the inspector: the active document (sticky) */
+.inspector-head {
+  position: sticky; top: -4px; z-index: 2; display: grid; grid-template-columns: auto 1fr; align-items: center;
+  gap: 2px 8px; margin: -4px -14px 4px; padding: 14px 14px 12px;
+  background: var(--panel); border-bottom: 1px solid var(--border);
+}
+.inspector-head .kind {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  padding: 2px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent);
+}
+.inspector-head .name { font-size: 15px; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inspector-head small { grid-column: 1 / -1; font-size: 11px; color: var(--muted); }
+.inspector-head + .panel { border-top: 0; }
+
 /* Collapsible panels: a <details> per topic; open/closed state is remembered (main.js). */
 .inspector .panel { border-top: 1px solid var(--border); padding-bottom: 10px; }
 .inspector .panel:first-child { border-top: 0; }

@@ -86,6 +86,12 @@
     </main>
 
     <aside class="inspector" id="inspector">
+      <!-- Which document the inspector acts on (only the active sheet) -->
+      <div class="inspector-head" id="inspectorHead" hidden>
+        <span class="kind" id="inspectorKind"></span>
+        <span class="name" id="inspectorName"></span>
+        <small>Changes here apply to this page only</small>
+      </div>
       <!-- Shown only while a shape (line, stripe, rectangle) is selected -->
       <details class="panel shape-panel" data-panel="shape" id="shapePanel" open hidden>
         <summary id="shapeTitle">Shape</summary>
