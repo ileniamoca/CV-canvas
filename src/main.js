@@ -601,11 +601,14 @@ function renderLibrary() {
   const box = $('#libraryList');
   if (!doc()?.querySelector('.page')) return box.replaceChildren();
   const sections = library.state();
+  // Sections that hold blocks, or are still empty, can receive blocks; text-only sections
+  // (a summary paragraph, the languages lines…) can't.
+  const takesBlocks = (s) => s.items.length > 0 || !s.frame.querySelector(':scope > :not(h2, [data-cv-editor])');
   // A <select> laid over an icon: picking a section moves the block there.
   const sectionPicker = (exclude) => `
     <label class="lib-ico lib-pick" title="Move to another section">${icon('move')}
       <select><option value="" selected disabled>Move to section…</option>${sections.map((s, i) =>
-        s.frame === exclude ? '' : `<option value="${i}">${escapeText(s.title)}</option>`).join('')}</select>
+        s.frame === exclude || !takesBlocks(s) ? '' : `<option value="${i}">${escapeText(s.title)}</option>`).join('')}</select>
     </label>`;
 
   // Sections without blocks (e.g. a summary paragraph) aren't listed, but can still receive blocks.
