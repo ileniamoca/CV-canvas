@@ -24,7 +24,7 @@ export const BLOCKS_CSS = `
   .cv-ctl button[data-act="drag"], .cv-ctl button[data-act="move"] { cursor: grab; }
   .cv-ctl-item { left: -30px; top: 0; flex-direction: column; padding-right: 8px; }
   .item:hover > .cv-ctl-item { display: flex; }
-  .item:hover { outline: 1px dashed rgba(43,87,151,.6); outline-offset: 3px; }
+  .item:has(> .cv-ctl-item:hover) { outline: 1px dashed rgba(43,87,151,.6); outline-offset: 3px; }
   .cv-dragging { opacity: .3; }
   .cv-drop { height: 0; border-top: 3px solid #2b5797; border-radius: 2px; margin: 6px 0; }
   .cv-drop-new {

@@ -620,7 +620,7 @@ function updateMarginInputs() {
   }
 }
 
-try { $('#marginsToggle').checked = localStorage.getItem('cv-editor:margins') !== 'hidden'; } catch {}
+try { $('#marginsToggle').checked = localStorage.getItem('cv-editor:margins') === 'shown'; } catch {}
 $('#marginsToggle').addEventListener('change', (e) => {
   doc()?.body.classList.toggle('cv-hide-margins', !e.target.checked);
   try { localStorage.setItem('cv-editor:margins', e.target.checked ? 'shown' : 'hidden'); } catch {}

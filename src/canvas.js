@@ -13,9 +13,10 @@ const GAP = 16; // standard spacing between sections
 const SNAP_PX = 6; // snap distance, in screen pixels
 
 export const CANVAS_CSS = `
-  .page > .frame:hover, .page > .shape:hover { outline: 1px dashed rgba(43,87,151,.45); outline-offset: 2px; }
+  /* Outlines sit exactly on the object's edge: dashed on hover, stronger when selected. */
+  .page > .frame:hover, .page > .shape:hover { outline: 1px dashed rgba(43,87,151,.5); outline-offset: -1px; }
   .page > .shape { cursor: move; }
-  .page > .cv-selected { outline: 1.5px solid #2b5797 !important; outline-offset: 2px; }
+  .page > .cv-selected { outline: 1px dashed #2b5797 !important; outline-offset: -1px; }
   /* Resize: invisible strips just outside each edge (and corner) of the selected object. */
   .cv-h { position: absolute; z-index: 21; display: none; }
   .page > .cv-selected > .cv-h { display: block; }
@@ -40,8 +41,8 @@ export const CANVAS_CSS = `
     position: absolute; z-index: 41; pointer-events: none; white-space: nowrap;
     font: 600 10px/1.6 -apple-system, sans-serif; color: #fff; background: #2b5797; padding: 0 6px; border-radius: 3px;
   }
-  .page > .cv-overlap { outline: 2px solid #f29900 !important; outline-offset: 2px; }
-  .page > .cv-outside { outline: 2px solid #d93025 !important; outline-offset: 2px; }
+  .page > .cv-overlap { outline: 1px dashed #f29900 !important; outline-offset: -1px; }
+  .page > .cv-outside { outline: 1px dashed #d93025 !important; outline-offset: -1px; }
   body.cv-multi .page > .cv-selected > .cv-h { display: none; }
   .cv-marquee {
     position: absolute; z-index: 45; pointer-events: none;
@@ -350,6 +351,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
       if (!moved) {
         history.snapshot();
         moved = true;
+        d.body.classList.add('cv-show-margins'); // margin guides while dragging
       }
       let l = start.l + dx;
       let tp = start.t + dy;
@@ -381,7 +383,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
       handle.removeEventListener('pointermove', onMove);
       handle.removeEventListener('pointerup', onUp);
       handle.removeEventListener('pointercancel', onUp);
-      d.body.classList.remove('cv-moving');
+      d.body.classList.remove('cv-moving', 'cv-show-margins');
       clearGuides();
       if (moved) history.committed();
       // A plain click on a member of the group selects just that object, like Canva.
@@ -457,7 +459,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
     const minH = isShape ? 1 : naturalHeight(el);
     history.snapshot();
     resizing = true;
-    d.body.classList.add('cv-moving');
+    d.body.classList.add('cv-moving', 'cv-show-margins');
 
     const onMove = (ev) => {
       const dx = (ev.clientX - sx) / s;
@@ -505,7 +507,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
       handle.removeEventListener('pointermove', onMove);
       handle.removeEventListener('pointerup', onUp);
       handle.removeEventListener('pointercancel', onUp);
-      d.body.classList.remove('cv-moving');
+      d.body.classList.remove('cv-moving', 'cv-show-margins');
       clearGuides();
       rememberHeights();
       resizing = false;

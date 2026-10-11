@@ -21,7 +21,9 @@ export const MARGINS_CSS = `
     border: 1px dashed rgba(150, 80, 220, .55);
   }
   .cv-margin.cv-hot { border: 1.5px solid rgba(150, 80, 220, .9); background: rgba(150, 80, 220, .05); }
-  body.cv-hide-margins .cv-margin { display: none; }
+  /* Hidden unless "Always show" is on: they appear while moving/resizing, or for the region hovered in the panel. */
+  body.cv-hide-margins .cv-margin:not(.cv-hot) { display: none; }
+  body.cv-hide-margins.cv-show-margins .cv-margin { display: block; }
   @media print { .cv-margin { display: none !important; } }
 `;
 
