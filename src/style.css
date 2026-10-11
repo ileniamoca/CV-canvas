@@ -85,16 +85,30 @@ button.active { background: var(--accent-soft); border-color: var(--accent); }
   background: var(--panel);
   border-bottom: 1px solid var(--border);
 }
-.toolbar .group { display: flex; align-items: center; gap: 3px; }
-.toolbar .group.right { margin-left: auto; }
-.toolbar button { min-width: 32px; padding: 4px 8px; }
-.toolbar .color {
-  position: relative; display: inline-flex; align-items: center; justify-content: center;
-  width: 32px; height: 30px; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
-  font-weight: 700;
+.toolbar .group { display: flex; align-items: center; gap: 2px; }
+.toolbar .group + .group { padding-left: 10px; border-left: 1px solid var(--border); }
+.toolbar .group.right { margin-left: auto; border-left: 0; }
+/* Icon buttons: thin rounded line icons (inline SVG), soft hover, accent when active. */
+.toolbar button, .toolbar .color {
+  position: relative; display: inline-grid; place-items: center;
+  width: 32px; height: 32px; padding: 0; border: 1px solid transparent; background: none;
+  border-radius: var(--radius-sm); color: var(--text); cursor: pointer;
 }
-.toolbar .color input { position: absolute; inset: auto 3px 2px; width: auto; height: 5px; padding: 0; border: 0; cursor: pointer; }
-.toolbar .color.hl { color: #e6c700; }
+.toolbar button:hover:not(:disabled), .toolbar .color:hover { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+.toolbar button.active { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+.ico {
+  width: 18px; height: 18px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.ico.bold { stroke-width: 2.6; }
+.ico .dot { stroke-width: 3; }
+.toolbar .color .ico { margin-top: -5px; }
+.toolbar .color input {
+  position: absolute; left: 8px; right: 8px; bottom: 5px; width: auto; height: 4px;
+  padding: 0; border: 0; border-radius: 2px; cursor: pointer; background: none;
+}
+.toolbar .color input::-webkit-color-swatch-wrapper { padding: 0; }
+.toolbar .color input::-webkit-color-swatch { border: 0; border-radius: 2px; }
 #zoomLabel { min-width: 44px; text-align: center; font-variant-numeric: tabular-nums; }
 
 /* Layout */
