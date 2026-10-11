@@ -65,7 +65,10 @@
       </section>
       <section>
         <h2>Pages</h2>
-        <button id="btnAddPage" class="new-cv" title="Add a page: a new CV for a job, started from a template">+ Add page</button>
+        <div class="page-actions">
+          <button id="btnFromJob" class="new-cv" title="Paste a job ad: it's saved and a page for it is created, ready to be tailored">+ From job ad</button>
+          <button id="btnAddPage" class="new-cv" title="Add a blank page from a template">+ Add page</button>
+        </div>
         <ul id="list-pages"></ul>
       </section>
       <section>
@@ -176,6 +179,32 @@
         <button value="cancel" formnovalidate>Cancel</button>
         <button value="ok" class="primary">Create</button>
       </menu>
+    </form>
+  </dialog>
+
+  <dialog id="jobDialog" class="wide">
+    <form method="dialog">
+      <h3>New page from a job ad</h3>
+      <div class="two">
+        <label>Company <input id="jobCompany" required autocomplete="off" placeholder="e.g. Sinch" /></label>
+        <label>Role <input id="jobRole" required autocomplete="off" placeholder="e.g. Data Analyst II" /></label>
+      </div>
+      <label>Link to the ad <small>(optional)</small> <input id="jobUrl" autocomplete="off" placeholder="https://…" /></label>
+      <label>Job ad <small>(paste the whole text)</small> <textarea id="jobText" required rows="12" placeholder="Paste the job ad here…"></textarea></label>
+      <label>Start from template <select id="jobTemplate"></select></label>
+      <p class="hint">The ad is saved in <code>jobs/</code> and a page “Company – Role” is created from the template. Then ask Claude Code to tailor it: <em>“tailor the page Company – Role”</em>.</p>
+      <menu>
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="ok" class="primary">Create page</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <dialog id="jobView" class="wide">
+    <form method="dialog">
+      <h3 id="jobViewTitle">Job ad</h3>
+      <pre id="jobViewText"></pre>
+      <menu><button value="ok" class="primary">Close</button></menu>
     </form>
   </dialog>
 

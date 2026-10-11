@@ -65,8 +65,26 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 - **Source of truth for content:** `../ilenia/` (outside this repo, private). Start with `../ilenia/README.md`: it
   indexes the chapters and sets the rules (honesty about personal vs team work, confidence markers, `timeline.md`
   wins on dates). `../ilenia/_archive/` holds older documents; don't use them.
-- **Tailoring a CV to a job ad:** the ad goes in `../jobs/` (one file per ad); create the page in `documents/pages/`
-  from the template and reword experience and projects for the ad, using only what `../ilenia/` supports.
+- **Job ads:** "+ From job ad" in the app saves the pasted ad as `../jobs/<company-role>.md` (outside this repo,
+  private) and creates the page "Company – Role", linked to it with `<meta name="cv-job" content="<file>.md">`.
+
+## When Ilenia asks to tailor a page ("tailor the page X")
+
+1. Open `documents/pages/X.html`. Its `cv-job` meta points to the ad in `../jobs/`; `cv-template` to its template.
+2. Read `../ilenia/README.md` and the chapters that matter for the ad (respect each project file's
+   "safe / not safe to claim" sections).
+3. From the ad, list must-haves, nice-to-haves, keywords, seniority and domain.
+4. Edit only the content of the page, keeping its structure and classes:
+   - subtitle (`.role`) and **Professional Summary**: rewrite for this role;
+   - **Experience**: reorder and reword bullets toward the ad's keywords, only where true;
+   - **Selected Projects**: order by relevance; hide the least relevant with the `hidden` attribute (don't delete);
+   - **Skills** (plain text): regroup and reorder to mirror the ad, only skills the chapters support.
+5. Never add skills, tools or results that aren't in `../ilenia/`; keep built / contributed / participated;
+   no internal notes (names, mentors, personal life).
+6. Keep **one A4 page**: no frame past its region's bottom margin, no overlaps (restack each column with 16 px
+   gaps if heights changed). Check with headless Chrome or `npm run pdf -- documents/pages/X.html`.
+7. In the job file set `Status: tailored (YYYY-MM-DD)` and add a short "Tailoring notes" section: what was
+   emphasised, what was hidden, and honest gaps vs the requirements. Tell Ilenia the gaps.
 
 ## Personal data
 

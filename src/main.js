@@ -93,10 +93,10 @@ function renderItem(kind, f) {
   date.className = 'date';
   date.textContent = new Date(f.mtime).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
   label.append(date);
-  if (kind === 'pages' && f.template) {
+  if (kind === 'pages' && (f.template || f.job)) {
     const tpl = document.createElement('span');
     tpl.className = 'tpl';
-    tpl.textContent = `Template: ${f.template}`;
+    tpl.textContent = [f.template && `Template: ${f.template}`, f.job && 'job ad ✓'].filter(Boolean).join(' · ');
     label.append(tpl);
   }
   li.append(label);
@@ -116,6 +116,7 @@ function renderItem(kind, f) {
     e.stopPropagation();
     openItemMenu(more, [
       ...(kind === 'templates' ? [['Edit template', () => openDoc(kind, f.name)]] : []),
+      ...(f.job ? [['View job ad', () => viewJob(f.job)]] : []),
       ['Rename', () => startRename(li, kind, f)],
       ...(kind !== 'pdf' ? [['Duplicate', () => duplicateDoc(kind, f.name)], ['Export PDF', () => exportPdf(kind, f.name)]] : []),
       ...(kind !== 'templates' ? [['Delete', () => deleteDoc(kind, f.name), 'danger']] : []),
@@ -406,6 +407,56 @@ $('#btnTemplateDiscard').addEventListener('click', () => {
   if (state.dirty && !confirm('Discard your changes to the template?')) return;
   leaveTemplate({ saveFirst: false });
 });
+
+// ---------- Pages from job ads ----------
+/** Paste a job ad → saved in ../jobs → a page "Company – Role" from a template, linked to the ad. */
+async function newFromJob() {
+  const templates = state.docs.templates ?? [];
+  if (!templates.length) return toast('Create a template first (the “+” next to Templates).');
+  const dlg = $('#jobDialog');
+  $('#jobTemplate').innerHTML = templates.map((f) => `<option value="${escapeHtml(f.name)}">${escapeHtml(stem(f.name))}</option>`).join('');
+  for (const id of ['#jobCompany', '#jobRole', '#jobUrl', '#jobText']) $(id).value = '';
+  dlg.returnValue = '';
+  dlg.showModal();
+  $('#jobCompany').focus();
+  const ok = await new Promise((resolve) => dlg.addEventListener('close', () => resolve(dlg.returnValue === 'ok'), { once: true }));
+  if (!ok) return;
+  const company = $('#jobCompany').value.trim();
+  const role = $('#jobRole').value.trim();
+  const template = $('#jobTemplate').value;
+  const name = `${company} – ${role}`;
+  try {
+    const job = await api('/api/jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ company, role, url: $('#jobUrl').value, text: $('#jobText').value, page: `${name}.html` }),
+    });
+    let html = withTemplate(await api(docUrl('templates', template)), template);
+    html = html.replace(/<meta name="cv-template"[^>]*>/, (m) => `${m}\n<meta name="cv-job" content="${escapeHtml(job.file)}">`);
+    html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(name)}</title>`);
+    const res = await api('/api/docs/pages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, html }),
+    });
+    markOwnWrite('pages', res.name);
+    await openDoc('pages', res.name, { force: true });
+    toast(`Page “${stem(res.name)}” created. Now ask Claude Code: “tailor the page ${stem(res.name)}”.`);
+  } catch (err) {
+    toast(err.message, true);
+  }
+}
+
+async function viewJob(file) {
+  try {
+    const md = await api(`/api/jobs/${encodeURIComponent(file)}`);
+    $('#jobViewTitle').textContent = md.match(/^# (.+)$/m)?.[1] ?? 'Job ad';
+    $('#jobViewText').textContent = md.replace(/^# .+\n+/, '');
+    $('#jobView').showModal();
+  } catch (err) {
+    toast(err.message, true);
+  }
+}
 
 /** Records in a page which template it was made from. */
 function withTemplate(html, templateName) {
@@ -1373,6 +1424,7 @@ $('#zoomIn').addEventListener('click', () => setZoom(state.zoom + 0.1));
 $('#zoomOut').addEventListener('click', () => setZoom(state.zoom - 0.1));
 
 $('#btnAddPage').addEventListener('click', () => newDoc('pages'));
+$('#btnFromJob').addEventListener('click', newFromJob);
 $('#btnNewTemplate').addEventListener('click', () => newDoc('templates'));
 $('#btnSave').addEventListener('click', save);
 $('#btnSaveCopy').addEventListener('click', saveCopy);

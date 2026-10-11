@@ -54,6 +54,10 @@ function httpError(status, message) {
 
 // A page records the template it was made from: <meta name="cv-template" content="Template name">
 const TEMPLATE_META = /<meta name="cv-template" content="([^"]*)">/;
+// …and, if made from a job ad, the ad's file in ../jobs: <meta name="cv-job" content="company-role.md">
+const JOB_META = /<meta name="cv-job" content="([^"]*)">/;
+// Job ads live next to the career docs, outside this repo (private): portfolio_web/jobs/
+const JOBS_DIR = path.resolve('..', 'jobs');
 const unescapeAttr = (s) => s.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 const escapeAttr = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -82,6 +86,8 @@ async function listDir(kind) {
         if (kind === 'pages') {
           const m = (await fsp.readFile(file, 'utf8')).match(TEMPLATE_META);
           doc.template = m ? unescapeAttr(m[1]) : null;
+          const j = (await fsp.readFile(file, 'utf8')).match(JOB_META);
+          doc.job = j ? unescapeAttr(j[1]) : null;
         }
         return doc;
       }),
@@ -209,6 +215,42 @@ export function cvApi() {
             }
             await fsp.writeFile(path.join(DIRS[kind], fileName), html, 'utf8');
             return send(res, 200, { ok: true, kind, name: fileName });
+          }
+
+          // POST /api/jobs  { company, role, url?, text, page }  → saves a pasted job ad as ../jobs/<company-role>.md
+          if (parts[1] === 'jobs' && parts.length === 2 && req.method === 'POST') {
+            const { company = '', role = '', url = '', text = '', page = '' } = await readBody(req);
+            if (!String(text).trim()) throw httpError(400, 'Paste the job ad first.');
+            if (!String(company).trim() || !String(role).trim()) throw httpError(400, 'Company and role are needed.');
+            const slug = `${company}-${role}`.normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+              .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80) || 'job';
+            await fsp.mkdir(JOBS_DIR, { recursive: true });
+            let fileName = `${slug}.md`;
+            for (let i = 2; fs.existsSync(path.join(JOBS_DIR, fileName)); i++) fileName = `${slug}-${i}.md`;
+            const md = [
+              `# ${company.trim()} — ${role.trim()}`,
+              '',
+              `- **Company:** ${company.trim()}`,
+              `- **Role:** ${role.trim()}`,
+              ...(url.trim() ? [`- **Link:** ${url.trim()}`] : []),
+              `- **Saved:** ${new Date().toLocaleDateString('sv-SE')}`, // local date, YYYY-MM-DD
+              ...(page ? [`- **CV page:** \`CVs/documents/pages/${page}\``] : []),
+              '- **Status:** to tailor',
+              '',
+              '## Job ad (as pasted)',
+              '',
+              String(text).trim(),
+              '',
+            ].join('\n');
+            await fsp.writeFile(path.join(JOBS_DIR, fileName), md, 'utf8');
+            return send(res, 200, { ok: true, file: fileName });
+          }
+
+          // GET /api/jobs/:file  → a saved job ad (Markdown)
+          if (parts[1] === 'jobs' && parts.length === 3 && req.method === 'GET') {
+            const base = path.basename(parts[2]);
+            if (!base.endsWith('.md')) throw httpError(400, `Invalid name: ${parts[2]}`);
+            return send(res, 200, await fsp.readFile(path.join(JOBS_DIR, base), 'utf8'), 'text/markdown; charset=utf-8');
           }
 
           // POST /api/pdf  { name, html }  → generates documents/pdf/<name>.pdf
