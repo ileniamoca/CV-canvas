@@ -19,6 +19,7 @@ export const PROPS = ['font', 'size', 'weight', 'style', 'case', 'spacing', 'lea
 
 export const FONTS = [
   { name: 'Roboto', stack: '"Roboto", sans-serif', weights: [400, 500, 700], ital: true },
+  { name: 'Roboto Condensed', stack: '"Roboto Condensed", sans-serif', weights: [400, 500, 700], ital: true },
   { name: 'Roboto Mono', stack: '"Roboto Mono", monospace', weights: [400, 500, 700], ital: true },
   { name: 'Tinos', stack: '"Tinos", serif', weights: [400, 700], ital: true },
   { name: 'Inter', stack: '"Inter", sans-serif', weights: [400, 500, 700], ital: false },
