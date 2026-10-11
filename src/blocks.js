@@ -1,30 +1,25 @@
 // Items (.item) inside text frames, and the shared undo history.
-//  - An item is a job, a project, a degree, a group of skills…
-//  - It can be dragged to another position in the same frame, to another frame, or to an
-//    empty area of the page (a new frame is then created for it).
-// Controls are injected with the editor attribute and removed on save.
+//  - An item is a job, a project, a degree, a group of skills… (a sub-block of its frame).
+//  - Selected inside its frame (see canvas.js), it can be dragged to another position in the same
+//    frame, to another frame, or to an empty area of the page (a new frame is then created for it).
+// Anything the editor injects carries the editor attribute and is removed on save.
 
 export const FRAME = '.page > .frame';
 const ITEM = '.item';
 
 export const BLOCKS_CSS = `
   .item { position: relative; }
-  .cv-ctl {
-    position: absolute; z-index: 20; display: none; gap: 3px;
-    font: 12px/1 -apple-system, BlinkMacSystemFont, sans-serif;
-    user-select: none; -webkit-user-select: none;
+  .item[hidden] { display: none !important; }
+  /* Sub-blocks: inside a selected frame, items can be hovered and selected (Canva-style groups). */
+  .page > .frame.cv-selected > .item:hover { outline: 1px dashed rgba(43,87,151,.4); outline-offset: 2px; }
+  .page .item.cv-item-sel { outline: 1px dashed #2b5797 !important; outline-offset: 2px; }
+  .cv-item-x {
+    all: unset; position: absolute; top: -11px; right: -11px; z-index: 25; box-sizing: border-box;
+    width: 20px; height: 20px; display: grid; place-items: center; cursor: pointer;
+    font: 11px/1 -apple-system, sans-serif; color: #555; background: #fff;
+    border: 1px solid #c9c9c9; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.15);
   }
-  .cv-ctl button {
-    all: unset; box-sizing: border-box; width: 22px; height: 22px;
-    display: grid; place-items: center; cursor: pointer;
-    background: #fff; color: #555; border: 1px solid #c9c9c9; border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.12);
-  }
-  .cv-ctl button:hover { background: #2b5797; border-color: #2b5797; color: #fff; }
-  .cv-ctl button[data-act="drag"], .cv-ctl button[data-act="move"] { cursor: grab; }
-  .cv-ctl-item { left: -30px; top: 0; flex-direction: column; padding-right: 8px; }
-  .item:hover > .cv-ctl-item { display: flex; }
-  .item:has(> .cv-ctl-item:hover) { outline: 1px dashed rgba(43,87,151,.6); outline-offset: 3px; }
+  .cv-item-x:hover { background: #d93025; border-color: #d93025; color: #fff; }
   .cv-dragging { opacity: .3; }
   .cv-drop { height: 0; border-top: 3px solid #2b5797; border-radius: 2px; margin: 6px 0; }
   .cv-drop-new {
@@ -32,10 +27,9 @@ export const BLOCKS_CSS = `
     background: rgba(43,87,151,.06); pointer-events: none;
   }
   body.cv-is-dragging, body.cv-is-dragging * { cursor: grabbing !important; user-select: none !important; }
-  body.cv-is-dragging .cv-ctl { display: none !important; }
-  body.cv-is-dragging .item { outline: none !important; }
+  body.cv-is-dragging .cv-item-x { display: none !important; }
   .frame.cv-target { outline: 2px solid rgba(43,87,151,.35) !important; outline-offset: 2px; }
-  @media print { .cv-ctl, .cv-drop, .cv-drop-new { display: none !important; } .item { outline: none !important; } }
+  @media print { .cv-item-x, .cv-drop, .cv-drop-new { display: none !important; } .item { outline: none !important; } }
 `;
 
 /**
@@ -46,43 +40,16 @@ export const BLOCKS_CSS = `
  * @param {(s: any) => void} o.setState
  * @param {() => void} o.onChange         after each structural change
  * @param {(msg: string) => void} o.toast
- * @param {(el: Element) => void} [o.removeItem]  instead of deleting: e.g. keep the item in the block library
+ * @param {(el: Element) => void} [o.removeItem]  instead of deleting: e.g. hide the item (Blocks panel)
  */
 export function createBlocks({ doc, attr, getState, setState, onChange, toast, removeItem }) {
   let undoStack = [];
   let redoStack = [];
   let lastWasStructural = false;
 
-  function controls() {
-    const d = doc();
-    const box = d.createElement('div');
-    box.setAttribute(attr, '');
-    box.setAttribute('contenteditable', 'false');
-    box.className = 'cv-ctl cv-ctl-item';
-    for (const [act, icon, title] of [
-      ['drag', '⠿', 'Drag block (elsewhere in the frame, to another frame or to an empty area)'],
-      ['dup', '⧉', 'Duplicate block'],
-      ['del', '✕', 'Remove block (it stays in the library)'],
-    ]) {
-      const b = d.createElement('button');
-      b.type = 'button';
-      b.dataset.act = act;
-      b.title = title;
-      b.textContent = icon;
-      box.append(b);
-    }
-    return box;
-  }
-
+  /** Removes stray editor controls (e.g. the hover buttons of earlier versions). */
   function ensureControls() {
-    const d = doc();
-    if (!d?.body) return;
-    d.querySelectorAll('.cv-ctl-item').forEach((c) => {
-      if (!c.parentElement?.matches(ITEM)) c.remove();
-    });
-    for (const el of d.querySelectorAll(ITEM)) {
-      if (el.closest('.frame') && !el.querySelector(':scope > .cv-ctl-item')) el.append(controls());
-    }
+    doc()?.querySelectorAll('.cv-ctl-item').forEach((c) => c.remove());
   }
 
   // ---------- History (shared by blocks, frames, shapes and styles) ----------
@@ -132,7 +99,7 @@ export function createBlocks({ doc, attr, getState, setState, onChange, toast, r
   function remove(el) {
     if (removeItem) {
       removeItem(el);
-      toast('Block removed · it stays in the library (Blocks panel)');
+      toast('Block hidden · tick it in the Blocks panel to show it again');
       return;
     }
     snapshot();
@@ -158,7 +125,7 @@ export function createBlocks({ doc, attr, getState, setState, onChange, toast, r
       const s = pageScale(page);
       return { page, x: Math.round((x - r.left) / s), y: Math.round((y - r.top) / s) };
     }
-    const items = [...frame.children].filter((c) => c.matches(ITEM) && c !== el);
+    const items = [...frame.children].filter((c) => c.matches(ITEM) && c !== el && !c.hidden);
     let before = items.find((c) => {
       const r = c.getBoundingClientRect();
       return y < r.top + r.height / 2;
@@ -185,13 +152,18 @@ export function createBlocks({ doc, attr, getState, setState, onChange, toast, r
     ghost.className = 'cv-drop-new';
     ghost.style.width = `${sourceFrame.offsetWidth}px`;
 
-    el.classList.add('cv-dragging');
-    d.body.classList.add('cv-is-dragging');
     d.getSelection()?.removeAllRanges();
     let target = null;
     let highlighted = null;
+    let started = false; // a plain click (no movement) doesn't drag
 
     const onMove = (ev) => {
+      if (!started) {
+        if (Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) < 4) return;
+        started = true;
+        el.classList.add('cv-dragging');
+        d.body.classList.add('cv-is-dragging');
+      }
       target = dropTarget(ev.clientX, ev.clientY, el);
       if (target?.container) {
         ghost.remove();
@@ -258,21 +230,11 @@ export function createBlocks({ doc, attr, getState, setState, onChange, toast, r
     handle.addEventListener('pointercancel', onUp);
   }
 
-  /** Hooks events onto the iframe document (call after each load). */
+  /** Call after each document load. */
   function attach() {
-    const d = doc();
     reset();
     ensureControls();
-    d.addEventListener('pointerdown', (e) => {
-      const btn = e.target.closest?.('.cv-ctl-item button');
-      if (!btn) return;
-      const el = btn.parentElement.parentElement;
-      if (btn.dataset.act === 'drag') return startDrag(e, el);
-      e.preventDefault();
-      if (btn.dataset.act === 'dup') duplicate(el);
-      if (btn.dataset.act === 'del') remove(el);
-    });
   }
 
-  return { attach, ensureControls, undo, redo, textEdited, snapshot, committed };
+  return { attach, ensureControls, undo, redo, textEdited, snapshot, committed, drag: startDrag, duplicate, remove };
 }

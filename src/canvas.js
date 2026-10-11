@@ -4,7 +4,8 @@
 // Like Canva: a click selects a frame or shape as an object (drag or arrow keys to move it);
 // dragging on an empty area draws a selection box, ⇧+click adds/removes, ⌘A selects all, and
 // several objects move together. Double-click or Enter edits a frame's text (the only way to
-// select text), Esc goes back. ⌘C/⌘X/⌘V copy, cut and paste objects. Drag any edge or corner to resize,
+// select text), Esc goes back. Inside a selected frame, a click selects a sub-block (.item): drag it to
+// reorder, ↑/↓ to move it, ⌫ or its ✕ to hide it, Esc back to the frame (like groups in Canva). ⌘C/⌘X/⌘V copy, cut and paste objects. Drag any edge or corner to resize,
 // soft snap to the edges/centers of the page and of other elements (⌥ disables it).
 
 import { marginBoxes } from './margins.js';
@@ -49,7 +50,7 @@ export const CANVAS_CSS = `
     border: 1px solid #2b5797; background: rgba(43,87,151,.08);
   }
   body.cv-moving, body.cv-moving * { user-select: none !important; }
-  body.cv-moving .cv-ctl { display: none !important; }
+  body.cv-moving .cv-item-x { display: none !important; }
   @media print { .cv-h, .cv-guide, .cv-badge, .cv-marquee { display: none !important; } .page > * { outline: none !important; } }
 `;
 
@@ -62,9 +63,11 @@ export const CANVAS_CSS = `
  * @param {() => boolean} o.pushEnabled          when a frame grows, shift the ones below
  * @param {(r: {outside: number, overlaps: number}) => void} o.onLayout
  * @param {(msg: string) => void} o.toast
+ * @param {{drag: Function, remove: Function, duplicate: Function, step: Function}} o.items  sub-block actions
  */
-export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onLayout, toast }) {
+export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onLayout, toast, items }) {
   let selection = []; // selected objects (frames/shapes)
+  let item = null; // selected sub-block (.item) inside the selected frame
   let selected = null; // main selected object (the last one clicked)
   let frameMode = false; // true: selected as object(s); false: editing the selected frame's text
   let resizeObserver = null;
@@ -153,6 +156,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onL
 
   /** Selects several objects at once (always as objects, unless editing a single frame). */
   function setSelection(list, asObject = true) {
+    selectItem(null);
     selection = list.filter((el) => el?.isConnected);
     selected = selection.at(-1) ?? null;
     frameMode = Boolean(selected) && (asObject || selection.length > 1);
@@ -162,6 +166,24 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onL
     setEditable(selected && !frameMode ? selected : null);
     if (frameMode || !selected) d.getSelection()?.removeAllRanges();
     for (const n of d.querySelectorAll('[class=""]')) n.removeAttribute('class');
+  }
+
+  /** Selects a sub-block inside the selected frame (or none): outline plus a ✕ to hide it. */
+  function selectItem(el) {
+    if (item && item !== el) {
+      item.classList.remove('cv-item-sel');
+      item.querySelector(':scope > .cv-item-x')?.remove();
+      if (!item.getAttribute('class')) item.removeAttribute('class');
+    }
+    item = el?.isConnected ? el : null;
+    if (item && !item.classList.contains('cv-item-sel')) {
+      item.classList.add('cv-item-sel');
+      const x = editorEl('button', 'cv-item-x');
+      x.type = 'button';
+      x.title = 'Hide this block (tick it again in the Blocks panel)';
+      x.textContent = '✕';
+      item.append(x);
+    }
   }
 
   /** ⇧+click: adds an object to the selection, or removes it. */
@@ -685,6 +707,19 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onL
       paste();
       return true;
     }
+    if (item) {
+      // A sub-block is selected: keys act on it, not on its frame.
+      const it = item;
+      if (e.key === 'Escape') selectItem(null);
+      else if ((e.key === 'Backspace' || e.key === 'Delete') && !mod) {
+        selectItem(null);
+        items.remove(it);
+      } else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && !mod) items.step(it, e.key === 'ArrowUp' ? -1 : 1);
+      else if (mod && key === 'd') items.duplicate(it);
+      else if (e.key === 'Enter' && !mod) editText(selected);
+      else if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return false;
+      return true;
+    }
     if (!selected) return false;
     if (e.key === 'Escape') {
       if (frameMode) select(null);
@@ -725,6 +760,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onL
     const d = doc();
     selection = [];
     selected = null;
+    item = null;
     frameMode = false;
     pushReady = false;
     ensureControls();
@@ -732,12 +768,25 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onL
       const target = e.target;
       const h = target.closest?.('.cv-h');
       if (h) return startResize(e, h.parentElement, h.dataset.dir);
-      if (target.closest?.('.cv-ctl')) return; // item controls (blocks.js)
+      const x = target.closest?.('.cv-item-x');
+      if (x) {
+        e.preventDefault();
+        const it = x.parentElement;
+        selectItem(null);
+        return items.remove(it);
+      }
       if (e.button !== 0) return;
       // ⌥+click: select the shape behind the text (e.g. the side stripe).
       const behind = e.altKey && d.elementsFromPoint(e.clientX, e.clientY).find((n) => n.matches('.page > .shape'));
       const obj = behind || target.closest?.('.page > .shape, .page > .frame');
       if (obj && obj === selected && !frameMode) return; // editing its text: normal text selection
+      // Second click inside the (only) selected frame: select the sub-block under the mouse; dragging moves it.
+      const sub = !e.shiftKey && !behind && frameMode && selection.length === 1 && obj === selected
+        ? target.closest?.('.item') : null;
+      if (sub && obj.contains(sub)) {
+        selectItem(sub);
+        return items.drag(e, sub);
+      }
       if (obj && e.shiftKey) {
         e.preventDefault();
         return toggle(obj);

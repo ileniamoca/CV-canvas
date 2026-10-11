@@ -131,10 +131,10 @@ const blocks = createBlocks({
   },
   onChange: afterChange,
   toast: (msg) => toast(msg),
-  removeItem: (el) => library.remove(el),
+  removeItem: (el) => library.setVisible(el, false),
 });
 
-const library = createLibrary({ doc, attr: EDITOR_ATTR, history: blocks });
+const library = createLibrary({ doc, history: blocks });
 
 const canvas = createCanvas({
   doc,
@@ -143,6 +143,12 @@ const canvas = createCanvas({
   snapEnabled: () => $('#snapToggle').checked,
   pushEnabled: () => $('#pushToggle').checked,
   onLayout: (r) => updateLayoutStatus(r),
+  items: {
+    drag: (e, el) => blocks.drag(e, el),
+    remove: (el) => blocks.remove(el), // hides it (see removeItem above)
+    duplicate: (el) => blocks.duplicate(el),
+    step: (el, dir) => library.step(el, dir),
+  },
   toast: (msg) => toast(msg),
 });
 
@@ -586,8 +592,6 @@ const ICON = {
   up: '<path d="m6 15 6-6 6 6"/>',
   down: '<path d="m6 9 6 6 6-6"/>',
   move: '<path d="M4 8h14l-3-3M20 16H6l3 3"/>',
-  remove: '<path d="M6 12h12"/>',
-  add: '<path d="M12 6v12M6 12h12"/>',
   forget: '<path d="m7 7 10 10M17 7 7 17"/>',
 };
 const icon = (name) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICON[name]}</svg>`;
@@ -596,11 +600,11 @@ const escapeText = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt
 function renderLibrary() {
   const box = $('#libraryList');
   if (!doc()?.querySelector('.page')) return box.replaceChildren();
-  const { sections, library: groups } = library.state();
-  // A <select> laid over an icon: picking an option moves/adds the block to that section.
-  const sectionPicker = (cls, title, iconName, exclude) => `
-    <label class="lib-ico lib-pick ${cls}" title="${title}">${icon(iconName)}
-      <select><option value="" selected disabled>${title}…</option>${sections.map((s, i) =>
+  const sections = library.state();
+  // A <select> laid over an icon: picking a section moves the block there.
+  const sectionPicker = (exclude) => `
+    <label class="lib-ico lib-pick" title="Move to another section">${icon('move')}
+      <select><option value="" selected disabled>Move to section…</option>${sections.map((s, i) =>
         s.frame === exclude ? '' : `<option value="${i}">${escapeText(s.title)}</option>`).join('')}</select>
     </label>`;
 
@@ -609,25 +613,15 @@ function renderLibrary() {
     <div class="lib-section">
       <div class="lib-title">${escapeText(s.title)}</div>
       ${s.items.map((it, ii) => `
-        <div class="lib-row" data-section="${si}" data-index="${ii}">
-          <button class="lib-label" title="Show in the CV">${escapeText(it.label)}</button>
+        <div class="lib-row${it.visible ? '' : ' off'}" data-section="${si}" data-index="${ii}">
+          <input type="checkbox" class="lib-check" ${it.visible ? 'checked' : ''} title="${it.visible ? 'Shown in the CV: untick to hide it' : 'Hidden: tick to show it again'}">
+          <button class="lib-label" title="${it.visible ? 'Show in the CV' : 'Hidden from the CV'}">${escapeText(it.label)}</button>
           <button class="lib-ico" data-act="up" title="Move up" ${ii === 0 ? 'disabled' : ''}>${icon('up')}</button>
           <button class="lib-ico" data-act="down" title="Move down" ${ii === s.items.length - 1 ? 'disabled' : ''}>${icon('down')}</button>
-          ${sectionPicker('', 'Move to section', 'move', s.frame)}
-          <button class="lib-ico" data-act="remove" title="Remove from the CV (stays in the library)">${icon('remove')}</button>
+          ${sectionPicker(s.frame)}
+          ${it.visible ? '' : `<button class="lib-ico" data-act="forget" title="Delete for good">${icon('forget')}</button>`}
         </div>`).join('')}
-    </div>`).join('') + `
-    <div class="lib-section lib-library">
-      <div class="lib-title">Library <small>not in the CV</small></div>
-      ${groups.map((g) => `
-        <div class="lib-group">${escapeText(g.group)}</div>
-        ${g.items.map((it) => `
-          <div class="lib-row" data-id="${it.id}">
-            <span class="lib-label">${escapeText(it.label)}</span>
-            ${sectionPicker('lib-add', 'Add to section', 'add', null)}
-            <button class="lib-ico" data-act="forget" title="Delete for good">${icon('forget')}</button>
-          </div>`).join('')}`).join('') || '<div class="lib-empty">Blocks you remove appear here, ready to add back.</div>'}
-    </div>`;
+    </div>`).join('');
 
   const itemOf = (row) => sections[row.dataset.section].items[row.dataset.index].el;
   box.onclick = (e) => {
@@ -637,15 +631,14 @@ function renderLibrary() {
     if (btn.classList.contains('lib-label')) return library.reveal(itemOf(row));
     const act = btn.dataset.act;
     if (act === 'up' || act === 'down') library.step(itemOf(row), act === 'up' ? -1 : 1);
-    if (act === 'remove') library.remove(itemOf(row));
-    if (act === 'forget' && confirm('Delete this block for good? It will no longer be in the library.')) library.forget(row.dataset.id);
+    if (act === 'forget' && confirm('Delete this block for good?')) library.forget(itemOf(row));
   };
   box.onchange = (e) => {
     const row = e.target.closest('.lib-row');
+    if (!row) return;
+    if (e.target.matches('.lib-check')) return library.setVisible(itemOf(row), e.target.checked);
     const target = sections[e.target.value]?.frame;
-    if (!row || !target) return;
-    if (row.dataset.id) library.add(row.dataset.id, target);
-    else library.moveTo(itemOf(row), target);
+    if (target) library.moveTo(itemOf(row), target);
   };
 }
 

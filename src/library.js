@@ -1,32 +1,15 @@
-// Block library: the items (.item) of a CV — a job, a project, a degree… — can be reordered,
-// moved between sections, removed and added back. Removed items are not deleted: they are kept
-// in the CV itself, in <template id="cv-library"> (never rendered or printed), so every copy made
-// from a CV carries all of its blocks.
-//
-// Each item gets a stable id (data-item) and the section it was first registered in (data-group),
-// used to group the library.
-
-const LIBRARY_ID = 'cv-library';
+// Blocks: the items (.item) of a CV — a job, a project, a degree… — can be reordered, moved
+// between sections and switched off. A switched-off item keeps its exact place in the CV but
+// carries the `hidden` attribute, so it isn't shown or printed; switching it on brings it back
+// where it was. Each item gets a stable id (data-item), saved with the CV.
 
 /**
  * @param {object} o
  * @param {() => Document} o.doc
- * @param {string} o.attr                 attribute marking what the editor injects
  * @param {{snapshot: () => void, committed: () => void}} o.history
  */
-export function createLibrary({ doc, attr, history }) {
+export function createLibrary({ doc, history }) {
   const page = () => doc()?.querySelector('.page');
-
-  function template() {
-    const d = doc();
-    let t = d.getElementById(LIBRARY_ID);
-    if (!t) {
-      t = d.createElement('template');
-      t.id = LIBRARY_ID;
-      d.body.append(t);
-    }
-    return t;
-  }
 
   /** Section title of a frame: its h2 without the right-hand detail (h2 .meta). */
   function sectionTitle(frame) {
@@ -52,34 +35,39 @@ export function createLibrary({ doc, attr, history }) {
     return text.length > 48 ? `${text.slice(0, 46)}…` : text || 'Untitled block';
   }
 
-  /** Gives every item on the page an id and a group (done once; ids are saved with the CV). */
+  const itemsOf = (frame) => [...frame.querySelectorAll(':scope > .item')];
+
+  function insertAtEnd(frame, item) {
+    const items = itemsOf(frame);
+    const after = items[items.length - 1] ?? frame.querySelector(':scope > h2');
+    if (after) after.after(item);
+    else frame.prepend(item);
+  }
+
+  /** Gives every item an id (once; ids are saved with the CV). */
   function register() {
+    const d = doc();
+    // Blocks removed with an earlier version of the editor were kept in <template id="cv-library">:
+    // put them back in their section, switched off.
+    const legacy = d?.getElementById('cv-library');
+    if (legacy) {
+      for (const item of [...legacy.content.children].filter((c) => c.matches('.item'))) {
+        const home = sections().find((f) => sectionTitle(f) === item.dataset.group) ?? sections()[0];
+        const node = d.importNode(item, true);
+        node.hidden = true;
+        if (home) insertAtEnd(home, node);
+      }
+      legacy.remove();
+    }
     const seen = new Set();
     for (const f of sections()) {
-      for (const item of f.querySelectorAll(':scope > .item')) {
+      for (const item of itemsOf(f)) {
         if (!item.dataset.item || seen.has(item.dataset.item)) {
           item.dataset.item = `b${Math.random().toString(36).slice(2, 8)}`;
         }
         seen.add(item.dataset.item);
-        if (!item.dataset.group) item.dataset.group = sectionTitle(f);
       }
     }
-  }
-
-  /** Copy of an item without anything the editor injected. */
-  function clean(item) {
-    const c = item.cloneNode(true);
-    c.querySelectorAll(`[${attr}]`).forEach((n) => n.remove());
-    c.classList.remove(...[...c.classList].filter((k) => k.startsWith('cv-')));
-    return c;
-  }
-
-  /** Where a new item goes in a frame: after its last item (or its title). */
-  function insertAtEnd(frame, item) {
-    const items = frame.querySelectorAll(':scope > .item');
-    const after = items[items.length - 1] ?? frame.querySelector(':scope > h2');
-    if (after) after.after(item);
-    else frame.prepend(item);
   }
 
   const change = (fn) => {
@@ -88,34 +76,17 @@ export function createLibrary({ doc, attr, history }) {
     history.committed();
   };
 
-  /** Removes an item from the page and keeps it in the library. */
-  function remove(item) {
+  /** Shows or hides an item, in place. */
+  function setVisible(item, visible) {
+    if (item.hidden === !visible) return;
     change(() => {
-      template().content.append(clean(item));
-      item.remove();
+      item.hidden = !visible;
     });
-  }
-
-  /** Adds a library item back, at the end of `frame`. */
-  function add(id, frame) {
-    const stored = template().content.querySelector(`[data-item="${id}"]`);
-    if (!stored || !frame) return;
-    change(() => {
-      const item = doc().importNode(stored, true);
-      stored.remove();
-      insertAtEnd(frame, item);
-    });
-  }
-
-  /** Deletes a library item for good. */
-  function forget(id) {
-    const stored = template().content.querySelector(`[data-item="${id}"]`);
-    if (stored) change(() => stored.remove());
   }
 
   /** Moves an item one place up (-1) or down (+1) within its section. */
   function step(item, dir) {
-    const siblings = [...item.parentElement.querySelectorAll(':scope > .item')];
+    const siblings = itemsOf(item.parentElement);
     const other = siblings[siblings.indexOf(item) + dir];
     if (!other) return;
     change(() => (dir < 0 ? other.before(item) : other.after(item)));
@@ -127,25 +98,23 @@ export function createLibrary({ doc, attr, history }) {
     change(() => insertAtEnd(frame, item));
   }
 
-  /** Everything the panel needs: sections with their items, and the library grouped by section. */
+  /** Deletes an item for good. */
+  function forget(item) {
+    change(() => item.remove());
+  }
+
+  /** Sections with their items (shown and hidden), for the Blocks panel. */
   function state() {
-    const secs = sections().map((frame) => ({
+    return sections().map((frame) => ({
       frame,
       title: sectionTitle(frame),
-      items: [...frame.querySelectorAll(':scope > .item')].map((el) => ({ el, id: el.dataset.item, label: label(el) })),
+      items: itemsOf(frame).map((el) => ({ el, label: label(el), visible: !el.hidden })),
     }));
-    const groups = new Map();
-    // (`:scope >` doesn't work on a template's fragment, so walk its children)
-    for (const el of [...template().content.children].filter((c) => c.matches('.item'))) {
-      const g = el.dataset.group || 'Other';
-      if (!groups.has(g)) groups.set(g, []);
-      groups.get(g).push({ id: el.dataset.item, label: label(el), group: g });
-    }
-    return { sections: secs, library: [...groups].map(([group, items]) => ({ group, items })) };
   }
 
   /** Scrolls an item into view and flashes it. */
   function reveal(item) {
+    if (item.hidden) return;
     item.scrollIntoView({ block: 'center', behavior: 'smooth' });
     item.classList.add('cv-flash');
     setTimeout(() => {
@@ -154,6 +123,5 @@ export function createLibrary({ doc, attr, history }) {
     }, 1200);
   }
 
-  return { register, state, remove, add, forget, step, moveTo, reveal, sectionTitle };
+  return { register, state, setVisible, step, moveTo, forget, reveal };
 }
-
