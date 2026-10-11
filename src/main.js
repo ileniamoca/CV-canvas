@@ -793,10 +793,6 @@ document.querySelectorAll('#toolbar [data-cmd]').forEach((b) => {
   b.addEventListener('mousedown', (e) => e.preventDefault()); // keep the selection
   b.addEventListener('click', () => exec(b.dataset.cmd));
 });
-$('#sizeSelect').addEventListener('change', (e) => {
-  if (e.target.value) exec('fontSize', e.target.value);
-  e.target.value = '';
-});
 $('#foreColor').addEventListener('input', (e) => exec('foreColor', e.target.value));
 $('#hiliteColor').addEventListener('input', (e) => exec('hiliteColor', e.target.value));
 $('#btnLink').addEventListener('mousedown', (e) => e.preventDefault());
