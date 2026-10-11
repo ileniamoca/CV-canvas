@@ -46,6 +46,7 @@ const board = createBoard({
   load: (kind, name) => api(docUrl(kind, name)),
   onActivate: (kind, name) => openDoc(kind, name),
   onPinch: (deltaY) => setZoom(state.zoom * Math.exp(-deltaY * 0.01)),
+  onCenter: (kind, name) => openDoc(kind, name, { glide: false, auto: true }),
 });
 
 // ---------- Sidebar list ----------
@@ -183,12 +184,28 @@ function serialize() {
 
 /**
  * Makes a document the active sheet (the one being edited) and glides the board to it.
- * Leaving a sheet with unsaved changes saves them first. `force` reloads the active one from disk.
+ * Leaving a sheet with unsaved changes saves them first. `force` reloads the active one from disk;
+ * `auto` means it was triggered by scrolling (no dialogs: a template with unsaved changes stays active).
  */
-async function openDoc(kind, name, { force = false } = {}) {
+let switching = false;
+async function openDoc(kind, name, { force = false, glide = true, auto = false } = {}) {
   const same = state.current?.kind === kind && state.current?.name === name;
-  if (same && !force) return board.glideTo(kind, name);
-  if (!same && state.dirty && !(await save())) return;
+  if (same && !force) return glide ? board.glideTo(kind, name) : undefined;
+  if (auto && switching) return;
+  if (auto && state.dirty && state.current?.kind === 'templates' && !state.confirmedTemplates.has(state.current.name)) {
+    toast('The template has unsaved changes: save it (⌘S) before moving to another page.');
+    return;
+  }
+  switching = true;
+  try {
+    if (!same && state.dirty && !(await save())) return;
+    await activate(kind, name, glide);
+  } finally {
+    switching = false;
+  }
+}
+
+async function activate(kind, name, glide) {
   try {
     const html = await api(docUrl(kind, name));
     if (!board.has(kind, name)) await refreshList(); // a document just created
@@ -201,7 +218,7 @@ async function openDoc(kind, name, { force = false } = {}) {
     $('#banner').hidden = true;
     updateChrome();
     refreshList();
-    board.glideTo(kind, name);
+    if (glide) board.glideTo(kind, name);
   } catch (err) {
     toast(err.message, true);
   }

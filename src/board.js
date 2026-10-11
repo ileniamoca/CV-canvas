@@ -1,7 +1,8 @@
 // The board: every template and page side by side on one big pasteboard (like InDesign or Figma).
 // Pan with the trackpad (two fingers), pinch to zoom. One sheet is active: it is the document being
 // edited (main.js attaches the editor to its iframe); the others are live previews that become
-// active when clicked. Clicking a page in the sidebar glides the view to it.
+// active when clicked, or when scrolling stops with them in the middle of the view. Clicking a page in
+// the sidebar glides the view to it.
 
 const PAGE_W = 794; // A4 at 96 dpi
 const PAGE_H = 1123;
@@ -29,8 +30,9 @@ const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
  * @param {(kind: string, name: string) => Promise<string>} o.load   fetches a document's HTML
  * @param {(kind: string, name: string) => void} o.onActivate        a preview was clicked
  * @param {(deltaY: number, e: WheelEvent) => void} o.onPinch        trackpad pinch (ctrl + wheel)
+ * @param {(kind: string, name: string) => void} [o.onCenter]       scrolling stopped with this sheet centered
  */
-export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, onPinch }) {
+export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, onPinch, onCenter = () => {} }) {
   const sheets = new Map(); // key → { el, iframe, kind, name, mtime }
   let active = null;
   let anim = null;
@@ -148,18 +150,46 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
     }
     const duration = Math.min(900, Math.max(350, dist * 0.5));
     const t0 = performance.now();
+    gliding = true;
     const step = (now) => {
       const t = Math.min(1, (now - t0) / duration);
       const k = easeInOut(t);
       board.scrollTo(from.left + (to.left - from.left) * k, from.top + (to.top - from.top) * k);
       if (t < 1) anim = requestAnimationFrame(step);
+      else gliding = false;
     };
     anim = requestAnimationFrame(step);
   }
 
+  /** The sheet whose center is closest to the center of the view. */
+  function centered() {
+    const view = board.getBoundingClientRect();
+    const cx = view.left + view.width / 2;
+    let best = null;
+    for (const s of sheets.values()) {
+      const r = s.el.querySelector('.sheet-frame').getBoundingClientRect();
+      const d = Math.abs(r.left + r.width / 2 - cx);
+      if (r.right > view.left && r.left < view.right && (!best || d < best.d)) best = { d, s };
+    }
+    return best?.s ?? null;
+  }
+
+  // When scrolling stops (and it isn't a glide on its way to a sheet), the centered sheet takes over.
+  let gliding = false;
+  let settle;
+  board.addEventListener('scroll', () => {
+    clearTimeout(settle);
+    settle = setTimeout(() => {
+      if (gliding) return;
+      const s = centered();
+      if (s) onCenter(s.kind, s.name);
+    }, 250);
+  });
+
   // The user scrolling or pinching takes over from an ongoing glide.
   board.addEventListener('wheel', (e) => {
     cancelAnimationFrame(anim);
+    gliding = false;
     if (!e.ctrlKey) return;
     e.preventDefault();
     onPinch(e.deltaY, e);
