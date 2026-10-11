@@ -114,6 +114,7 @@ const blocks = createBlocks({
     const d = doc();
     canvas.select(null);
     d.body.innerHTML = st.body;
+    d.querySelectorAll('.page > .frame[contenteditable]').forEach((n) => n.removeAttribute('contenteditable'));
     const css = styleSheetEl(d);
     if (css && st.styles != null) css.textContent = st.styles;
     if (st.fonts) d.getElementById('cv-fonts')?.setAttribute('href', st.fonts);
@@ -190,8 +191,9 @@ function setupEditing() {
   style.setAttribute(EDITOR_ATTR, '');
   d.head.append(style);
   applyZoom();
-  // contentEditable (not designMode) so the block controls are not editable.
-  d.body.contentEditable = 'true';
+  // Free-form CVs: only the frame being edited becomes contentEditable (see canvas.js).
+  // Older flow CVs without frames: the whole body is editable.
+  if (!d.querySelector('.page > .frame')) d.body.contentEditable = 'true';
   try { d.execCommand('defaultParagraphSeparator', false, 'p'); } catch {}
   blocks.attach();
   canvas.attach();

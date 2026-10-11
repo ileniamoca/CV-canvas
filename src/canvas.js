@@ -1,7 +1,8 @@
 // Free-form layout on the A4 page (InDesign/Canva style).
 //  - Frame (.frame): text box with left/top/width; its height comes from its content.
 //  - Shape (.shape): colored rectangle with left/top/width/height (backgrounds, lines).
-// Move with the ✥ handle (or by dragging the shape), resize with the handles,
+// Like Canva: a click selects a frame or shape as an object (drag or arrow keys to move it);
+// double-click or Enter edits a frame's text, Esc goes back. Resize with the handles,
 // soft snap to the edges/centers of the page and of other elements (⌥ disables it).
 
 const GAP = 16; // standard spacing between sections
@@ -59,7 +60,7 @@ export const CANVAS_CSS = `
  */
 export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onSelect, onLayout, toast }) {
   let selected = null;
-  let frameMode = false; // true: the frame is selected as an object (not editing its text)
+  let frameMode = false; // true: selected as an object; false: editing the selected frame's text
   let resizeObserver = null;
   let heights = new WeakMap(); // last known height of each frame
   let pushReady = false; // don't push until fonts have loaded (they change every height)
@@ -161,9 +162,34 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
     selected = el && el.isConnected ? el : null;
     frameMode = Boolean(selected) && asObject;
     selected?.classList.add('cv-selected');
+    setEditable(selected && !frameMode ? selected : null);
     if (frameMode) doc().getSelection()?.removeAllRanges();
     for (const n of doc().querySelectorAll('[class=""]')) n.removeAttribute('class');
     onSelect(selected);
+  }
+
+  /** Only the frame being edited is contentEditable, so text can't be selected elsewhere. */
+  function setEditable(frame) {
+    for (const f of page()?.querySelectorAll(':scope > .frame[contenteditable]') ?? []) {
+      if (f !== frame) f.removeAttribute('contenteditable');
+    }
+    if (frame && !frame.isContentEditable) frame.contentEditable = 'true';
+  }
+
+  /** Enters text editing in a frame, with the caret at the clicked point (or at the end). */
+  function editText(frame, x, y) {
+    select(frame, false);
+    const d = doc();
+    frame.focus();
+    let range = x == null ? null : d.caretRangeFromPoint?.(x, y);
+    if (!range || !frame.contains(range.startContainer) || range.startContainer.parentElement?.closest(`[${attr}]`)) {
+      range = d.createRange();
+      range.selectNodeContents([...frame.querySelectorAll(`:scope > :not([${attr}])`)].at(-1) ?? frame);
+      range.collapse(false);
+    }
+    const sel = d.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
   }
 
   // ---------- Snap ----------
@@ -246,6 +272,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
     handle.setPointerCapture?.(e.pointerId);
     select(el, true);
     const d = doc();
+    d.defaultView.focus(); // so arrow keys reach the editor
     const s = scale();
     const start = geom(el);
     const sx = e.clientX;
@@ -520,6 +547,10 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
     }
     if (!frameMode) return false;
     const mod = e.metaKey || e.ctrlKey;
+    if (e.key === 'Enter' && !mod && selected.classList.contains('frame')) {
+      editText(selected);
+      return true;
+    }
     const step = e.shiftKey ? 10 : 1;
     const moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
     if (moves[e.key] && !mod) {
@@ -564,9 +595,15 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
       const shape = target.closest?.('.page > .shape');
       if (shape) return startMove(e, shape);
       const frame = target.closest?.('.page > .frame');
-      if (frame) return select(frame, false); // edit text
+      if (frame && frame === selected && !frameMode) return; // editing its text: normal text selection
+      if (frame) return startMove(e, frame); // click selects the frame, drag moves it
       select(null);
     }, true);
+    d.addEventListener('dblclick', (e) => {
+      const frame = e.target.closest?.('.page > .frame');
+      if (!frame || e.target.closest(`[${attr}]`) || (frame === selected && !frameMode)) return;
+      editText(frame, e.clientX, e.clientY);
+    });
   }
 
   return {

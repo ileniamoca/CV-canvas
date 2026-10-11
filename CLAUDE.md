@@ -73,7 +73,9 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 - `server/pdf.js` — HTML → PDF with the installed Chrome/Brave.
 - `src/main.js` — editor: the CV is loaded in an iframe with `body.contentEditable`; whatever the editor injects
   carries `data-cv-editor` (and `cv-*` classes) and is removed on save.
-- `src/canvas.js` — free-form layout: select/move/resize frames and shapes, snapping with guides, keyboard,
+- `src/canvas.js` — free-form layout, Canva-style: a click selects a frame/shape as an object (drag or arrow keys
+  to move); double-click or Enter edits a frame's text (only that frame is `contentEditable`), Esc goes back;
+  move/resize frames and shapes, snapping with guides, keyboard,
   pushing frames down as text grows, overlap warnings, alignment, adding elements.
 - `src/blocks.js` — items (.item): drag between frames or into a new frame, duplicate, delete; plus the
   shared undo history (body + styles).
