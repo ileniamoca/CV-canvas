@@ -111,13 +111,13 @@ function renderItem(kind, f) {
   const more = document.createElement('button');
   more.className = 'mini more';
   more.textContent = '⋯';
-  more.title = kind === 'templates' ? 'Edit, rename or duplicate' : 'Rename, duplicate or delete';
+  more.title = { templates: 'Edit, rename, duplicate or export', pages: 'Rename, duplicate, export or delete', pdf: 'Rename or delete' }[kind];
   more.addEventListener('click', (e) => {
     e.stopPropagation();
     openItemMenu(more, [
       ...(kind === 'templates' ? [['Edit template', () => openDoc(kind, f.name)]] : []),
       ['Rename', () => startRename(li, kind, f)],
-      ...(kind !== 'pdf' ? [['Duplicate', () => duplicateDoc(kind, f.name)]] : []),
+      ...(kind !== 'pdf' ? [['Duplicate', () => duplicateDoc(kind, f.name)], ['Export PDF', () => exportPdf(kind, f.name)]] : []),
       ...(kind !== 'templates' ? [['Delete', () => deleteDoc(kind, f.name), 'danger']] : []),
     ]);
   });
@@ -650,22 +650,29 @@ async function saveCopy() {
   }
 }
 
-async function exportPdf() {
-  if (!state.current) return;
+/**
+ * Exports a document to PDF: the active one as it is on screen (unsaved changes included), or any
+ * other template/page (from the sidebar ⋯ menu) as it was last saved.
+ */
+async function exportPdf(kind = state.current?.kind, docName = state.current?.name) {
+  if (!kind || !docName) return;
+  const isActive = state.current?.kind === kind && state.current?.name === docName;
   if (!state.chrome) {
+    if (!isActive) return toast('Chrome not found, so the PDF cannot be generated. Open the page and use Print → "Save as PDF".', true);
     toast('Chrome not found, so the PDF cannot be generated; use "Save as PDF" in the print dialog.');
     return printDoc();
   }
-  const name = await askName('Export PDF', stem(state.current.name), 'Export');
+  const name = await askName('Export PDF', stem(docName), 'Export');
   if (!name) return;
   const btn = $('#btnPdf');
   btn.disabled = true;
   btn.textContent = 'Generating…';
   try {
+    const html = isActive ? serialize() : await api(docUrl(kind, docName));
     const res = await api('/api/pdf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, html: serialize() }),
+      body: JSON.stringify({ name, html }),
     });
     toast(`PDF created: <a href="${res.url}" target="_blank">${res.name}</a>`, false, true);
     refreshList();
@@ -1369,7 +1376,7 @@ $('#btnAddPage').addEventListener('click', () => newDoc('pages'));
 $('#btnNewTemplate').addEventListener('click', () => newDoc('templates'));
 $('#btnSave').addEventListener('click', save);
 $('#btnSaveCopy').addEventListener('click', saveCopy);
-$('#btnPdf').addEventListener('click', exportPdf);
+$('#btnPdf').addEventListener('click', () => exportPdf());
 $('#btnPrint').addEventListener('click', printDoc);
 $('#bannerReload').addEventListener('click', () => openDoc(state.current.kind, state.current.name, { force: true }));
 $('#bannerDismiss').addEventListener('click', () => ($('#banner').hidden = true));
