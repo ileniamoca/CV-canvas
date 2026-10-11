@@ -1,4 +1,4 @@
-// Editor UI themes, all in the "Mint Matcha" style: Quicksand, rounded corners, a pastel gradient
+// Editor UI themes, all in one style: Quicksand, rounded corners, a pastel gradient
 // title bar and soft buttons. Only the colors change. Each theme overrides the CSS variables
 // defined in style.css (:root). The theme picker (bubble in the bottom-right corner) is a
 // temporary tool to choose a look.
@@ -22,45 +22,45 @@ function theme(id, name, note, c) {
 }
 
 export const THEMES = [
-  theme('mint', 'Mint Matcha', 'Fresh mint greens with a hint of lime.', {
-    accent: '#3fae84', soft: '#e2f5ea', g1: '#c9f0dc', g2: '#e6f7c9', text: '#2f4a3e', muted: '#7a978a',
-    border: '#d4ebde', bg: '#f4faf6', canvas: '#edf6f0', desk: '#eaf4ed',
+  theme('peach-fuzz', 'Peach Fuzz', 'Velvety peach, soft and warm.', {
+    accent: '#e8875e', soft: '#ffece2', g1: '#ffd6c0', g2: '#ffe9dc', text: '#4f3a30', muted: '#a68979',
+    border: '#f6dfd2', bg: '#fff8f4', canvas: '#fcf0e9', desk: '#faede5',
   }),
-  theme('pistachio', 'Pistachio', 'Soft pistachio green with buttery yellow.', {
-    accent: '#86ad45', soft: '#eef6dc', g1: '#e0f1c2', g2: '#fff4c4', text: '#3d4a2a', muted: '#8a9672',
-    border: '#e1ebcc', bg: '#fafcf2', canvas: '#f2f6e6', desk: '#eff4e3',
-  }),
-  theme('seafoam', 'Seafoam', 'Aqua and seafoam, like a calm beach.', {
-    accent: '#2aa9a6', soft: '#dcf4f3', g1: '#bdeeea', g2: '#d6ecff', text: '#24474a', muted: '#76999a',
-    border: '#cfe9e8', bg: '#f3fbfb', canvas: '#eaf6f6', desk: '#e6f3f3',
-  }),
-  theme('sage', 'Sage & Cream', 'Muted sage green on warm cream.', {
-    accent: '#76956f', soft: '#e9f0e5', g1: '#dbe7d3', g2: '#f6efdc', text: '#3a4637', muted: '#8b9886',
-    border: '#e0e7da', bg: '#f9faf5', canvas: '#f1f3ea', desk: '#eef1e7',
-  }),
-  theme('latte', 'Matcha Latte', 'Matcha green with a milky coffee touch.', {
-    accent: '#7d9a55', soft: '#eef2e1', g1: '#dfe8c8', g2: '#efe2cf', text: '#44402f', muted: '#968f78',
-    border: '#e6e3d2', bg: '#fbfaf4', canvas: '#f4f1e6', desk: '#f1eee3',
+  theme('apricot', 'Apricot', 'Warm apricot and peach with a sunny glow.', {
+    accent: '#ee8a5a', soft: '#ffebe0', g1: '#ffd3b8', g2: '#ffe7a8', text: '#4d3a30', muted: '#a28675',
+    border: '#f5ddcc', bg: '#fff8f3', canvas: '#fbf0e8', desk: '#f9eee6',
   }),
   theme('strawberry', 'Strawberry Milk', 'Sweet strawberry pink and milky peach.', {
     accent: '#ec6a8c', soft: '#ffe4ea', g1: '#ffd1dc', g2: '#ffe9d6', text: '#533843', muted: '#a88592',
     border: '#f6dae2', bg: '#fff7f9', canvas: '#fbedf1', desk: '#f9eaee',
   }),
-  theme('apricot', 'Apricot', 'Warm apricot and peach, cozy and friendly.', {
-    accent: '#ee8a5a', soft: '#ffebe0', g1: '#ffd3b8', g2: '#ffe7a8', text: '#4d3a30', muted: '#a28675',
-    border: '#f5ddcc', bg: '#fff8f3', canvas: '#fbf0e8', desk: '#f9eee6',
+  theme('peach-blossom', 'Peach Blossom', 'Pink-peach petals, delicate and romantic.', {
+    accent: '#ea7f7f', soft: '#ffe7e4', g1: '#ffd4cf', g2: '#ffe6d8', text: '#523a3a', muted: '#a98886',
+    border: '#f6dcd8', bg: '#fff8f7', canvas: '#fcefed', desk: '#faecea',
   }),
-  theme('butter', 'Butter', 'Buttery yellow and cream, sunny and soft.', {
-    accent: '#d39a12', soft: '#fff3cc', g1: '#fff0b3', g2: '#ffe1c4', text: '#4a432c', muted: '#9a9072',
-    border: '#f0e5c0', bg: '#fffdf4', canvas: '#faf6e6', desk: '#f8f3e1',
+  theme('coral', 'Coral Candy', 'Playful coral with a peachy finish.', {
+    accent: '#ef6f5c', soft: '#ffe5df', g1: '#ffc9bd', g2: '#ffe2cf', text: '#52352f', muted: '#a8847c',
+    border: '#f7d9d1', bg: '#fff7f5', canvas: '#fcede9', desk: '#faeae5',
   }),
-  theme('lilac', 'Lilac Mint', 'Lilac with a minty finish.', {
-    accent: '#9b74d6', soft: '#f1e9fb', g1: '#e3d3fb', g2: '#d3f0e7', text: '#43385a', muted: '#958aac',
-    border: '#e7def5', bg: '#faf7fe', canvas: '#f2edf9', desk: '#efe9f7',
+  theme('melon', 'Melon', 'Cantaloupe orange melting into cream.', {
+    accent: '#ef8c66', soft: '#ffeadf', g1: '#ffd4c2', g2: '#fff0d4', text: '#4e3b2f', muted: '#a58a76',
+    border: '#f6dfcf', bg: '#fffaf5', canvas: '#fcf2ea', desk: '#faefe6',
   }),
-  theme('baby-blue', 'Baby Blue', 'Baby blue fading into mint.', {
-    accent: '#4f9fdf', soft: '#e3f0fc', g1: '#cfe8ff', g2: '#dff7f0', text: '#2e3d52', muted: '#8193a8',
-    border: '#d9e7f6', bg: '#f5f9ff', canvas: '#eef4fb', desk: '#ebf2fa',
+  theme('rose-petal', 'Rose Petal', 'Dusty rose with a warm peach blush.', {
+    accent: '#d9758f', soft: '#fbe6ec', g1: '#f7d2de', g2: '#fde5da', text: '#4f3640', muted: '#a3868f',
+    border: '#f1dbe2', bg: '#fdf8f9', canvas: '#f8eef1', desk: '#f6ebee',
+  }),
+  theme('guava', 'Guava', 'Juicy guava pink with tropical peach.', {
+    accent: '#e5688a', soft: '#ffe3eb', g1: '#ffc8d6', g2: '#ffdfc6', text: '#55333f', muted: '#ab8290',
+    border: '#f7d6df', bg: '#fff6f8', canvas: '#fcecf0', desk: '#fae8ed',
+  }),
+  theme('vanilla-peach', 'Vanilla Peach', 'Creamy vanilla with a hint of peach.', {
+    accent: '#e2925f', soft: '#fdeedf', g1: '#ffe2cb', g2: '#fff4dd', text: '#4c3d31', muted: '#a38d7b',
+    border: '#f3e3d2', bg: '#fffbf6', canvas: '#fbf4ec', desk: '#f9f1e8',
+  }),
+  theme('grapefruit', 'Grapefruit', 'Pink grapefruit, bright and zesty.', {
+    accent: '#ec6b67', soft: '#ffe3e1', g1: '#ffc6c0', g2: '#ffdcc8', text: '#533634', muted: '#aa8582',
+    border: '#f7d7d4', bg: '#fff6f5', canvas: '#fcecea', desk: '#fae8e6',
   }),
 ];
 

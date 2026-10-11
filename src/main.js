@@ -654,7 +654,7 @@ $('#themeFab').addEventListener('click', () => ($('#themePop').hidden = !$('#the
 $('#themeClose').addEventListener('click', () => ($('#themePop').hidden = true));
 let savedTheme = null;
 try { savedTheme = localStorage.getItem('cv-editor:theme'); } catch {}
-setTheme(savedTheme ?? 'mint');
+setTheme(savedTheme ?? THEMES[0].id);
 $('#themePop').hidden = Boolean(savedTheme); // first visit: open, so the picker is noticed
 
 // Collapsible inspector panels: remember which ones are open.
