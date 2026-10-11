@@ -22,6 +22,8 @@ export const FONTS = [
   { name: 'Roboto Condensed', stack: '"Roboto Condensed", sans-serif', weights: [400, 500, 700], ital: true },
   { name: 'Roboto Mono', stack: '"Roboto Mono", monospace', weights: [400, 500, 700], ital: true },
   { name: 'Tinos', stack: '"Tinos", serif', weights: [400, 700], ital: true },
+  // Not on Google Fonts: Georgia Pro if installed, otherwise the system Georgia (macOS/Windows).
+  { name: 'Georgia Pro', stack: '"Georgia Pro", Georgia, serif', weights: [400, 700], ital: true, system: true },
   { name: 'Inter', stack: '"Inter", sans-serif', weights: [400, 500, 700], ital: false },
   { name: 'IBM Plex Sans', stack: '"IBM Plex Sans", sans-serif', weights: [400, 500, 700], ital: true },
   { name: 'IBM Plex Mono', stack: '"IBM Plex Mono", monospace', weights: [400, 500, 700], ital: true },
@@ -76,7 +78,7 @@ export function updateFontsLink(d, values) {
   const used = new Map();
   for (const s of TEXT_STYLES) {
     const f = fontByStack(values[s.id].font);
-    if (f) used.set(f.name, f);
+    if (f && !f.system) used.set(f.name, f);
   }
   const families = [...used.values()].sort((a, b) => a.name.localeCompare(b.name)).map((f) => {
     const name = f.name.replace(/ /g, '+');

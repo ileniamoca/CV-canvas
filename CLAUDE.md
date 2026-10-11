@@ -32,6 +32,8 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
   `detail` (.detail, .where, .meta) and `note` (.note). To change the typography of the whole document, change
   these variables, not the rules. `spacing` (letter spacing) is stored in `em` and shown in the editor in Canva
   units (thousandths of an em: `0.05em` = 50); `leading` (line spacing) is a unitless multiplier, as in Canva. Fonts are loaded with `<link id="cv-fonts">` (the editor regenerates it).
+  Fonts marked `system: true` in `src/styles.js` (e.g. Georgia Pro → Georgia) are not on Google Fonts and come
+  from the computer, so they are left out of that link.
 - To convert an old flow CV (`main`/`aside`) to this format: `node backups/convert-free.mjs <input> <output>`.
 
 ## A4 format

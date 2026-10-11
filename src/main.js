@@ -628,7 +628,7 @@ function ensureFontsLoaded() {
   link.id = 'ui-fonts';
   link.rel = 'stylesheet';
   link.href = 'https://fonts.googleapis.com/css2?' +
-    FONTS.map((f) => `family=${f.name.replace(/ /g, '+')}:wght@${f.weights.join(';')}`).join('&') + '&display=swap';
+    FONTS.filter((f) => !f.system).map((f) => `family=${f.name.replace(/ /g, '+')}:wght@${f.weights.join(';')}`).join('&') + '&display=swap';
   document.head.append(link);
 }
 
