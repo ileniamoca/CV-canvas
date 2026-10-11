@@ -4,7 +4,7 @@
 // Like Canva: a click selects a frame or shape as an object (drag or arrow keys to move it);
 // dragging on an empty area draws a selection box, ⇧+click adds/removes, ⌘A selects all, and
 // several objects move together. Double-click or Enter edits a frame's text (the only way to
-// select text), Esc goes back. Resize with the handles,
+// select text), Esc goes back. ⌘C/⌘X/⌘V copy, cut and paste objects. Drag any edge or corner to resize,
 // soft snap to the edges/centers of the page and of other elements (⌥ disables it).
 
 const GAP = 16; // standard spacing between sections
@@ -14,22 +14,18 @@ export const CANVAS_CSS = `
   .page > .frame:hover, .page > .shape:hover { outline: 1px dashed rgba(43,87,151,.45); outline-offset: 2px; }
   .page > .shape { cursor: move; }
   .page > .cv-selected { outline: 1.5px solid #2b5797 !important; outline-offset: 2px; }
-  .cv-ctl-frame { top: -32px; left: -3px; padding-bottom: 8px; }
-  .page > .frame:hover > .cv-ctl-frame, .page > .shape:hover > .cv-ctl-frame,
-  .page > .cv-selected > .cv-ctl-frame { display: flex; }
-  .cv-h {
-    position: absolute; z-index: 21; width: 10px; height: 10px; display: none;
-    background: #fff; border: 1.5px solid #2b5797; border-radius: 2px; box-sizing: border-box;
-  }
+  /* Resize: invisible strips just outside each edge (and corner) of the selected object. */
+  .cv-h { position: absolute; z-index: 21; display: none; }
   .page > .cv-selected > .cv-h { display: block; }
-  .cv-h[data-dir="e"] { right: -8px; top: calc(50% - 5px); cursor: ew-resize; }
-  .cv-h[data-dir="w"] { left: -8px; top: calc(50% - 5px); cursor: ew-resize; }
-  .cv-h[data-dir="n"] { top: -8px; left: calc(50% - 5px); cursor: ns-resize; }
-  .cv-h[data-dir="s"] { bottom: -8px; left: calc(50% - 5px); cursor: ns-resize; }
-  .cv-h[data-dir="ne"] { top: -8px; right: -8px; cursor: nesw-resize; }
-  .cv-h[data-dir="nw"] { top: -8px; left: -8px; cursor: nwse-resize; }
-  .cv-h[data-dir="se"] { bottom: -8px; right: -8px; cursor: nwse-resize; }
-  .cv-h[data-dir="sw"] { bottom: -8px; left: -8px; cursor: nesw-resize; }
+  .cv-h[data-dir="n"] { top: -7px; left: 0; right: 0; height: 7px; cursor: ns-resize; }
+  .cv-h[data-dir="s"] { bottom: -7px; left: 0; right: 0; height: 7px; cursor: ns-resize; }
+  .cv-h[data-dir="e"] { right: -7px; top: 0; bottom: 0; width: 7px; cursor: ew-resize; }
+  .cv-h[data-dir="w"] { left: -7px; top: 0; bottom: 0; width: 7px; cursor: ew-resize; }
+  .cv-h[data-dir="ne"], .cv-h[data-dir="nw"], .cv-h[data-dir="se"], .cv-h[data-dir="sw"] { z-index: 22; width: 11px; height: 11px; }
+  .cv-h[data-dir="ne"] { top: -9px; right: -9px; cursor: nesw-resize; }
+  .cv-h[data-dir="nw"] { top: -9px; left: -9px; cursor: nwse-resize; }
+  .cv-h[data-dir="se"] { bottom: -9px; right: -9px; cursor: nwse-resize; }
+  .cv-h[data-dir="sw"] { bottom: -9px; left: -9px; cursor: nesw-resize; }
   .cv-guide { position: absolute; z-index: 40; pointer-events: none; background: #e8178a; }
   .cv-guide.v { width: 1px; margin-left: -0.5px; }
   .cv-guide.h { height: 1px; margin-top: -0.5px; }
@@ -44,7 +40,7 @@ export const CANVAS_CSS = `
   }
   .page > .cv-overlap { outline: 2px solid #f29900 !important; outline-offset: 2px; }
   .page > .cv-outside { outline: 2px solid #d93025 !important; outline-offset: 2px; }
-  body.cv-multi .page > .cv-selected > .cv-h, body.cv-multi .page > .cv-selected > .cv-ctl-frame { display: none; }
+  body.cv-multi .page > .cv-selected > .cv-h { display: none; }
   .cv-marquee {
     position: absolute; z-index: 45; pointer-events: none;
     border: 1px solid #2b5797; background: rgba(43,87,151,.08);
@@ -72,6 +68,9 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
   let resizeObserver = null;
   let heights = new WeakMap(); // last known height of each frame
   let pushReady = false; // don't push until fonts have loaded (they change every height)
+  let resizing = false; // dragging an edge: the frame grows on purpose, don't push the ones below
+  let clipboard = []; // copied objects (⌘C / ⌘X)
+  let pastes = 0; // each paste lands a bit further from the original
 
   const page = () => doc()?.querySelector('.page');
   const objects = () => [...(page()?.querySelectorAll(':scope > .frame, :scope > .shape') ?? [])];
@@ -91,38 +90,19 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
   }
 
   // ---------- Controls ----------
-  function controls(isShape) {
-    const box = editorEl('div', 'cv-ctl cv-ctl-frame');
-    for (const [act, icon, title] of [
-      ['move', '✥', isShape ? 'Move shape' : 'Move frame (⌥ to move without snapping)'],
-      ['dup', '⧉', 'Duplicate (⌘D)'],
-      ['del', '✕', 'Delete (⌫ with the frame selected)'],
-    ]) {
-      const b = doc().createElement('button');
-      b.type = 'button';
-      b.dataset.act = act;
-      b.title = title;
-      b.textContent = icon;
-      box.append(b);
-    }
-    return box;
-  }
-
   function ensureControls() {
     const p = page();
     if (!p) return;
-    p.querySelectorAll('.cv-ctl-frame, .cv-h').forEach((c) => {
+    p.querySelectorAll('.cv-ctl-frame').forEach((c) => c.remove()); // old move/duplicate/delete buttons
+    p.querySelectorAll('.cv-h').forEach((c) => {
       if (!c.parentElement?.matches('.page > .frame, .page > .shape')) c.remove();
     });
     for (const el of objects()) {
-      if (!el.querySelector(':scope > .cv-ctl-frame')) {
-        const isShape = el.classList.contains('shape');
-        el.append(controls(isShape));
-        for (const dir of isShape ? ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'] : ['e', 'w']) {
-          const h = editorEl('div', 'cv-h');
-          h.dataset.dir = dir;
-          el.append(h);
-        }
+      if (el.querySelector(':scope > .cv-h')) continue;
+      for (const dir of ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']) {
+        const h = editorEl('div', 'cv-h');
+        h.dataset.dir = dir;
+        el.append(h);
       }
     }
     // Watch frame heights (they grow while typing): push the ones below and flag overlaps.
@@ -139,7 +119,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
 
   /** If a frame changes height, shift the frames right below it by the same amount. */
   function onFramesResized() {
-    if (pushReady && pushEnabled()) {
+    if (pushReady && pushEnabled() && !resizing) {
       const list = frames().sort((a, b) => a.offsetTop - b.offsetTop);
       for (const f of list) {
         const old = heights.get(f);
@@ -462,8 +442,11 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
     const sy = e.clientY;
     const t = targets([el]);
     const isShape = el.classList.contains('shape');
-    const min = isShape ? 1 : 40;
+    // A text frame is never shorter than its text: its bottom edge sets a min-height.
+    const minW = isShape ? 1 : 40;
+    const minH = isShape ? 1 : naturalHeight(el);
     history.snapshot();
+    resizing = true;
     d.body.classList.add('cv-moving');
 
     const onMove = (ev) => {
@@ -477,36 +460,35 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
       if (dir.includes('e')) {
         let r = l + w + dx;
         if (snap && (snapX = nearest([{ pos: r }], t.xs, th))) r += snapX.d;
-        w = Math.max(min, r - l);
+        w = Math.max(minW, r - l);
       }
       if (dir.includes('w')) {
         let nl = l + dx;
         if (snap && (snapX = nearest([{ pos: nl }], t.xs, th))) nl += snapX.d;
-        nl = Math.min(nl, l + w - min);
+        nl = Math.min(nl, l + w - minW);
         w = l + w - nl;
         l = nl;
       }
       if (dir.includes('s')) {
         let b = tp + h + dy;
         if (snap && (snapY = nearest([{ pos: b }], t.ys, th))) b += snapY.d;
-        h = Math.max(min, b - tp);
+        h = Math.max(minH, b - tp);
       }
       if (dir.includes('n')) {
         let nt = tp + dy;
         if (snap && (snapY = nearest([{ pos: nt }], t.ys, th))) nt += snapY.d;
-        nt = Math.min(nt, tp + h - min);
+        nt = Math.min(nt, tp + h - minH);
         h = tp + h - nt;
         tp = nt;
       }
       el.style.left = `${Math.round(l)}px`;
       el.style.width = `${Math.round(w)}px`;
-      if (isShape) {
-        el.style.top = `${Math.round(tp)}px`;
-        el.style.height = `${Math.round(h)}px`;
-      }
+      el.style.top = `${Math.round(tp)}px`;
+      if (isShape) el.style.height = `${Math.round(h)}px`;
+      else el.style.minHeight = h > minH + 0.5 ? `${Math.round(h)}px` : '';
       const box = geom(el);
       drawGuides(box, [el], snapY);
-      badge(isShape ? `${box.w} × ${box.h}` : `width ${box.w}`, box);
+      badge(`${box.w} × ${box.h}`, box);
     };
 
     const onUp = () => {
@@ -515,6 +497,8 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
       handle.removeEventListener('pointercancel', onUp);
       d.body.classList.remove('cv-moving');
       clearGuides();
+      rememberHeights();
+      resizing = false;
       history.committed();
       select(el, true);
     };
@@ -565,13 +549,61 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
     onSelect(selected, selection.length);
   }
 
+  /** Height a text frame needs for its text (ignoring any min-height set by dragging its bottom edge). */
+  function naturalHeight(frame) {
+    const mh = frame.style.minHeight;
+    frame.style.minHeight = '';
+    const h = frame.offsetHeight;
+    frame.style.minHeight = mh;
+    return h;
+  }
+
+  // ---------- Clipboard (objects, not text) ----------
+  function copy() {
+    clipboard = selection.map((o) => {
+      const c = o.cloneNode(true);
+      c.querySelectorAll(`[${attr}]`).forEach((n) => n.remove());
+      c.classList.remove('cv-selected', 'cv-overlap', 'cv-outside');
+      return c;
+    });
+    pastes = 0;
+  }
+
+  function cut() {
+    copy();
+    remove();
+  }
+
+  function paste() {
+    const p = page();
+    if (!clipboard.length || !p) return;
+    pastes++;
+    history.snapshot();
+    const clones = clipboard.map((c) => {
+      const n = c.cloneNode(true);
+      n.style.left = `${parseFloat(c.style.left) + GAP * pastes}px`;
+      n.style.top = `${parseFloat(c.style.top) + GAP * pastes}px`;
+      if (n.classList.contains('shape')) p.insertBefore(n, p.querySelector(':scope > .frame')); // shapes behind text
+      else p.append(n);
+      return n;
+    });
+    ensureControls();
+    history.committed();
+    setSelection(clones);
+  }
+
   /** Changes position/size of the selection (from the inspector). */
   function setGeometry(patch) {
     if (!selected || selection.length > 1) return;
     history.snapshot();
     for (const [k, v] of Object.entries(patch)) {
-      if (k === 'height' && !selected.classList.contains('shape')) continue;
-      if (Number.isFinite(v)) selected.style[k] = `${Math.round(v)}px`;
+      if (!Number.isFinite(v)) continue;
+      if (k === 'height' && !selected.classList.contains('shape')) {
+        const min = naturalHeight(selected);
+        selected.style.minHeight = v > min ? `${Math.round(v)}px` : '';
+        continue;
+      }
+      selected.style[k] = `${Math.round(v)}px`;
     }
     history.committed();
     onSelect(selected, selection.length);
@@ -696,6 +728,11 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
       setSelection(objects());
       return true;
     }
+    const key = e.key.toLowerCase();
+    if (mod && key === 'v' && (frameMode || !selected) && clipboard.length) {
+      paste();
+      return true;
+    }
     if (!selected) return false;
     if (e.key === 'Escape') {
       if (frameMode) select(null);
@@ -717,8 +754,16 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
       remove();
       return true;
     }
-    if (mod && e.key.toLowerCase() === 'd') {
+    if (mod && key === 'd') {
       duplicate();
+      return true;
+    }
+    if (mod && key === 'c') {
+      copy();
+      return true;
+    }
+    if (mod && key === 'x') {
+      cut();
       return true;
     }
     return false;
@@ -735,16 +780,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
       const target = e.target;
       const h = target.closest?.('.cv-h');
       if (h) return startResize(e, h.parentElement, h.dataset.dir);
-      const btn = target.closest?.('.cv-ctl-frame button');
-      if (btn) {
-        const el = btn.parentElement.parentElement;
-        if (btn.dataset.act === 'move') return startMove(e, el);
-        e.preventDefault();
-        if (btn.dataset.act === 'dup') duplicate(el);
-        if (btn.dataset.act === 'del') remove(el);
-        return;
-      }
-      if (target.closest?.('.cv-ctl')) return; // block controls
+      if (target.closest?.('.cv-ctl')) return; // item controls (blocks.js)
       if (e.button !== 0) return;
       // ⌥+click: select the shape behind the text (e.g. the side stripe).
       const behind = e.altKey && d.elementsFromPoint(e.clientX, e.clientY).find((n) => n.matches('.page > .shape'));

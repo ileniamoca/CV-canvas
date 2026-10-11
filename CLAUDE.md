@@ -21,7 +21,8 @@ Local tool (Vite) to edit Ilenia's CVs as if in Word, save copies and export PDF
 CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 210 × 297 mm = 794 × 1123 px):
 
 - **Frame** = `.page > .frame` (usually `<section class="frame">`) with an inline absolute position:
-  `style="left: 40px; top: 129px; width: 516px;"`. Its height comes from its content. Main column: x 40, width 516;
+  `style="left: 40px; top: 129px; width: 516px;"`. Its height comes from its content (plus an optional
+  `min-height` when its bottom edge has been dragged down). Main column: x 40, width 516;
   side column: x 606, width 166; standard spacing between frames: 16 px.
 - **Shape** = `.page > .shape` with `left/top/width/height/background` (grey side stripe, header rule…).
   Shapes come before the frames in the HTML (so they sit behind them).
@@ -77,6 +78,7 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
   to move); drag on an empty area = selection box, ⇧+click adds/removes, ⌘A selects all, and several objects
   move/align/delete together; double-click or Enter edits a frame's text (only that frame is `contentEditable`,
   so text is never selected otherwise), Esc goes back;
+  resize by dragging any edge or corner (invisible strips, no buttons), ⌘C/⌘X/⌘V copy objects;
   move/resize frames and shapes, snapping and smart guides (Canva/InDesign-style alignment lines), keyboard,
   pushing frames down as text grows, overlap warnings, alignment, adding elements.
 - `src/blocks.js` — items (.item): drag between frames or into a new frame, duplicate, delete; plus the

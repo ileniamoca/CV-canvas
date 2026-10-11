@@ -602,8 +602,8 @@ function updateInspector(el, count = 1) {
   $('#geoY').value = el.offsetTop;
   $('#geoW').value = el.offsetWidth;
   $('#geoH').value = el.offsetHeight;
-  $('#geoH').disabled = !isShape;
-  $('#geoH').title = isShape ? '' : 'A text frame’s height is set by its content';
+  $('#geoH').disabled = false;
+  $('#geoH').title = isShape ? '' : 'A text frame is never shorter than its text';
   $('#colorRow').hidden = !isShape;
   if (isShape) $('#shapeColor').value = toHex(doc().defaultView.getComputedStyle(el).backgroundColor);
 }
