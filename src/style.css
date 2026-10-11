@@ -175,6 +175,14 @@ button.attention { border-color: #f29900; background: #fff4e0; color: #8a5a00; }
   width: 100%; padding: 4px 6px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); font-size: 13px;
 }
 .geo.margins { grid-template-columns: repeat(4, 1fr); }
+.shape-panel .prop { display: grid; gap: 4px; font-size: 11px; color: var(--muted); margin: 4px 0 10px; }
+.shape-panel .slider { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.shape-panel .slider input[type="range"] { flex: 1; min-width: 0; accent-color: var(--accent); }
+.shape-panel .slider input[type="number"], .prop-color input[type="text"] {
+  width: 64px; padding: 4px 6px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); font-size: 13px;
+}
+.prop-color { display: flex; align-items: center; gap: 8px; }
+.prop-color input[type="text"] { width: 90px; font-family: ui-monospace, monospace; text-transform: lowercase; }
 .margin-region { padding: 6px; margin: 0 -6px 4px; border-radius: var(--radius); }
 .margin-region:hover, .margin-region:focus-within { background: var(--accent-soft); }
 .margin-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; }

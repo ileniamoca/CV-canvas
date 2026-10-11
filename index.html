@@ -85,6 +85,20 @@
     </main>
 
     <aside class="inspector" id="inspector">
+      <!-- Shown only while a shape (line, stripe, rectangle) is selected -->
+      <details class="panel shape-panel" data-panel="shape" id="shapePanel" open hidden>
+        <summary id="shapeTitle">Shape</summary>
+        <label class="prop">Color
+          <span class="prop-color"><input type="color" id="shapeColor" /><input type="text" id="shapeHex" maxlength="7" spellcheck="false" /></span>
+        </label>
+        <label class="prop" id="thicknessRow">Thickness
+          <span class="slider"><input type="range" id="shapeThicknessRange" min="1" max="20" step="1" /><input type="number" id="shapeThickness" min="1" step="1" /> px</span>
+        </label>
+        <div class="geo" id="sizeRow">
+          <label>Width <input type="number" id="shapeW" min="1" step="1" /></label>
+          <label>Height <input type="number" id="shapeH" min="1" step="1" /></label>
+        </div>
+      </details>
       <details class="panel" data-panel="blocks" open>
         <summary>Blocks</summary>
         <p class="hint">Untick a block to hide it from the CV; it keeps its place here and comes back where it was. Drag the blocks to reorder them, or onto another section to move them there. On the page: click a section, then click a block inside it to drag it or hide it (✕).</p>

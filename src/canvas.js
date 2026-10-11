@@ -62,10 +62,11 @@ export const CANVAS_CSS = `
  * @param {() => boolean} o.snapEnabled
  * @param {() => boolean} o.pushEnabled          when a frame grows, shift the ones below
  * @param {(r: {outside: number, overlaps: number}) => void} o.onLayout
+ * @param {(objects: Element[]) => void} [o.onSelect]  selection changed (or a selected object's geometry)
  * @param {(msg: string) => void} o.toast
  * @param {{drag: Function, remove: Function, duplicate: Function, step: Function}} o.items  sub-block actions
  */
-export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onLayout, toast, items }) {
+export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onLayout, toast, items, onSelect = () => {} }) {
   let selection = []; // selected objects (frames/shapes)
   let item = null; // selected sub-block (.item) inside the selected frame
   let selected = null; // main selected object (the last one clicked)
@@ -166,6 +167,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onL
     setEditable(selected && !frameMode ? selected : null);
     if (frameMode || !selected) d.getSelection()?.removeAllRanges();
     for (const n of d.querySelectorAll('[class=""]')) n.removeAttribute('class');
+    onSelect(frameMode ? selection : []);
   }
 
   /** Selects a sub-block inside the selected frame (or none): outline plus a ✕ to hide it. */
@@ -578,6 +580,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onL
     }
     history.committed();
     flashGuides(bbox(selection), selection);
+    onSelect(selection);
   }
 
   /** Height a text frame needs for its text (ignoring any min-height set by dragging its bottom edge). */
@@ -621,6 +624,23 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onL
     ensureControls();
     history.committed();
     setSelection(clones);
+  }
+
+  /** Changes style/size of the selected shapes (from the inspector). `commit: false` while dragging a slider. */
+  let shapeEditing = false;
+  function setShape(fn, commit = true) {
+    const shapes = selection.filter((o) => o.classList.contains('shape'));
+    if (!shapes.length) return;
+    if (!shapeEditing) {
+      history.snapshot();
+      shapeEditing = true;
+    }
+    shapes.forEach(fn);
+    if (commit) {
+      shapeEditing = false;
+      history.committed();
+    }
+    checkLayout();
   }
 
   function add(type) {
@@ -805,6 +825,6 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onL
   return {
     attach, ensureControls, checkLayout, onKeyDown, enablePush,
     select,
-    add, duplicate, remove, resolveOverlaps,
+    add, duplicate, remove, resolveOverlaps, setShape,
   };
 }

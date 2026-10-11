@@ -143,6 +143,7 @@ const canvas = createCanvas({
   snapEnabled: () => $('#snapToggle').checked,
   pushEnabled: () => $('#pushToggle').checked,
   onLayout: (r) => updateLayoutStatus(r),
+  onSelect: (objects) => updateShapePanel(objects),
   items: {
     drag: (e, el) => blocks.drag(e, el),
     remove: (el) => blocks.remove(el), // hides it (see removeItem above)
@@ -585,6 +586,74 @@ function handleShortcuts(e) {
 function setZoom(z) {
   state.zoom = Math.min(2, Math.max(0.5, Math.round(z * 10) / 10));
   applyZoom();
+}
+
+// ---------- Inspector: shape properties ----------
+let selectedShapes = [];
+// A line is a shape much longer than it is thick (stays a line while its thickness grows).
+const isLine = (el) => {
+  const thin = Math.min(el.offsetWidth, el.offsetHeight);
+  return thin <= 20 && Math.max(el.offsetWidth, el.offsetHeight) >= 5 * thin;
+};
+const shapeColor = (el) => toHex(doc().defaultView.getComputedStyle(el).backgroundColor);
+
+function updateShapePanel(objects = selectedShapes) {
+  selectedShapes = objects.filter((o) => o.isConnected && o.classList.contains('shape'));
+  const panel = $('#shapePanel');
+  panel.hidden = !selectedShapes.length;
+  if (!selectedShapes.length) return;
+  const first = selectedShapes[0];
+  const lines = selectedShapes.filter(isLine);
+  const single = selectedShapes.length === 1;
+  $('#shapeTitle').textContent = single ? (isLine(first) ? 'Line' : 'Shape') : `${selectedShapes.length} shapes`;
+  const color = shapeColor(first);
+  if (document.activeElement !== $('#shapeHex')) $('#shapeHex').value = color;
+  $('#shapeColor').value = color;
+  // Thickness for lines (their thin side); width/height for a single rectangle.
+  $('#thicknessRow').hidden = !lines.length;
+  if (lines.length) {
+    const t = Math.min(lines[0].offsetWidth, lines[0].offsetHeight);
+    $('#shapeThickness').value = t;
+    $('#shapeThicknessRange').value = t;
+  }
+  $('#sizeRow').hidden = !(single && !isLine(first));
+  if (single) {
+    $('#shapeW').value = first.offsetWidth;
+    $('#shapeH').value = first.offsetHeight;
+  }
+}
+
+const setColor = (hex, commit) => canvas.setShape((o) => { o.style.background = hex; }, commit);
+$('#shapeColor').addEventListener('input', (e) => {
+  $('#shapeHex').value = e.target.value;
+  setColor(e.target.value, false);
+});
+$('#shapeColor').addEventListener('change', (e) => setColor(e.target.value, true));
+$('#shapeHex').addEventListener('change', (e) => {
+  const v = e.target.value.trim().replace(/^#?/, '#');
+  if (/^#[0-9a-f]{6}$/i.test(v)) setColor(v, true);
+  else updateShapePanel();
+});
+
+/** A line's thickness is its thin side: height for horizontal lines, width for vertical ones. */
+const setThickness = (t, commit) => {
+  const px = `${Math.max(1, Math.round(t))}px`;
+  canvas.setShape((o) => {
+    if (!isLine(o)) return;
+    if (o.offsetWidth >= o.offsetHeight) o.style.height = px;
+    else o.style.width = px;
+  }, commit);
+  $('#shapeThickness').value = parseInt(px, 10);
+  $('#shapeThicknessRange').value = parseInt(px, 10);
+};
+$('#shapeThicknessRange').addEventListener('input', (e) => setThickness(+e.target.value, false));
+$('#shapeThicknessRange').addEventListener('change', (e) => setThickness(+e.target.value, true));
+$('#shapeThickness').addEventListener('change', (e) => setThickness(+e.target.value || 1, true));
+for (const [id, prop] of [['#shapeW', 'width'], ['#shapeH', 'height']]) {
+  $(id).addEventListener('change', (e) => {
+    const v = Math.max(1, Math.round(+e.target.value || 1));
+    canvas.setShape((o) => { o.style[prop] = `${v}px`; });
+  });
 }
 
 // ---------- Inspector: blocks & library ----------
