@@ -63,6 +63,8 @@ async function refreshList() {
   $('#empty').hidden = sheets.length > 0;
   $('#board').hidden = !sheets.length;
   board.sync(sheets);
+  // Don't rebuild the list under a name being edited (it's rebuilt when the rename ends).
+  if (document.querySelector('.sidebar input.rename')) return;
   for (const kind of ['templates', 'pages', 'pdf']) {
     const ul = $(`#list-${kind}`);
     ul.replaceChildren();
@@ -90,23 +92,133 @@ function renderItem(kind, f) {
   if (kind === 'pdf') {
     li.addEventListener('click', () => window.open(`/files/pdf/${encodeURIComponent(f.name)}`, '_blank'));
   } else {
-    li.addEventListener('click', () => openDoc(kind, f.name));
+    // A second click renames. (The first one may re-render the list, so a native dblclick wouldn't fire:
+    // the click count still reaches the new element.)
+    li.addEventListener('click', (e) => (e.detail >= 2 ? startRename(li, kind, f) : openDoc(kind, f.name)));
   }
-  if (kind !== 'templates') {
-    const del = document.createElement('button');
-    del.className = 'mini del';
-    del.textContent = '✕';
-    del.title = 'Delete';
-    del.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      if (!confirm(`Delete "${f.name}"? This cannot be undone.`)) return;
-      await api(docUrl(kind, f.name), { method: 'DELETE' });
-      if (state.current?.kind === kind && state.current?.name === f.name) closeDoc();
-      refreshList();
-    });
-    li.append(del);
-  }
+  const more = document.createElement('button');
+  more.className = 'mini more';
+  more.textContent = '⋯';
+  more.title = 'Rename, duplicate or delete';
+  more.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openItemMenu(more, [
+      ['Rename', () => startRename(li, kind, f)],
+      ...(kind !== 'pdf' ? [['Duplicate', () => duplicateDoc(kind, f.name)]] : []),
+      ...(kind !== 'templates' ? [['Delete', () => deleteDoc(kind, f.name), 'danger']] : []),
+    ]);
+  });
+  li.append(more);
   return li;
+}
+
+// ---------- Sidebar: rename, duplicate, delete ----------
+function closeItemMenu() {
+  document.querySelector('.item-menu')?.remove();
+}
+
+/** A small menu under `anchor`: [label, action, className?][] */
+function openItemMenu(anchor, entries) {
+  closeItemMenu();
+  const menu = document.createElement('div');
+  menu.className = 'item-menu';
+  for (const [label, action, cls] of entries) {
+    const b = document.createElement('button');
+    b.textContent = label;
+    if (cls) b.className = cls;
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeItemMenu();
+      action();
+    });
+    menu.append(b);
+  }
+  document.body.append(menu);
+  const r = anchor.getBoundingClientRect();
+  menu.style.left = `${Math.min(r.left, window.innerWidth - menu.offsetWidth - 8)}px`;
+  menu.style.top = `${r.bottom + 4}px`;
+  setTimeout(() => document.addEventListener('pointerdown', (e) => {
+    if (!menu.contains(e.target)) closeItemMenu();
+  }, { once: true }));
+}
+
+/** Turns a sidebar entry's name into a text field: Enter (or clicking away) renames, Esc cancels. */
+function startRename(li, kind, f) {
+  const label = li.querySelector('.label');
+  if (!label) return;
+  const input = document.createElement('input');
+  input.className = 'rename';
+  input.value = stem(f.name);
+  label.replaceWith(input);
+  input.focus();
+  input.select();
+  let done = false;
+  const finish = (ok) => {
+    if (done) return;
+    done = true;
+    const value = input.value;
+    input.replaceWith(label); // the list can be rebuilt again
+    if (ok) renameDoc(kind, f.name, value);
+    else refreshList();
+  };
+  input.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') finish(true);
+    if (e.key === 'Escape') finish(false);
+  });
+  input.addEventListener('blur', () => finish(true));
+  input.addEventListener('click', (e) => e.stopPropagation());
+  input.addEventListener('dblclick', (e) => e.stopPropagation());
+}
+
+async function renameDoc(kind, name, newName) {
+  newName = newName.trim();
+  if (!newName || newName === stem(name)) return refreshList();
+  try {
+    markOwnWrite(kind, name);
+    const res = await api(docUrl(kind, name), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName }),
+    });
+    markOwnWrite(kind, res.name);
+    board.rename(kind, name, res.name);
+    if (state.current?.kind === kind && state.current?.name === name) {
+      state.current = { kind, name: res.name };
+      try { localStorage.setItem('cv-editor:last', JSON.stringify(state.current)); } catch {}
+      updateChrome();
+    }
+    toast(`Renamed to “${stem(res.name)}”`);
+  } catch (err) {
+    toast(err.message, true);
+  }
+  refreshList();
+}
+
+async function duplicateDoc(kind, name) {
+  try {
+    const html = await api(docUrl(kind, name));
+    const res = await api(`/api/docs/${kind}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: `${stem(name)} copy`, html }),
+    });
+    await refreshList();
+    toast(`Duplicated as “${stem(res.name)}”`);
+  } catch (err) {
+    toast(err.message, true);
+  }
+}
+
+async function deleteDoc(kind, name) {
+  if (!confirm(`Delete "${stem(name)}"? This cannot be undone.`)) return;
+  try {
+    await api(docUrl(kind, name), { method: 'DELETE' });
+    if (state.current?.kind === kind && state.current?.name === name) closeDoc();
+    refreshList();
+  } catch (err) {
+    toast(err.message, true);
+  }
 }
 
 // ---------- Document ----------

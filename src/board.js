@@ -45,7 +45,8 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
       <div class="sheet-frame"><iframe tabindex="-1" aria-label="CV page"></iframe><div class="sheet-cover" title="Click to edit"></div></div>`;
     el.querySelector('.kind').textContent = kindLabel(kind);
     el.querySelector('.name').textContent = name.replace(/\.html$/i, '');
-    const activate = () => onActivate(kind, name);
+    el.dataset.name = name;
+    const activate = () => onActivate(kind, el.dataset.name); // read at click time: the sheet may be renamed
     el.querySelector('.sheet-cover').addEventListener('click', activate);
     el.querySelector('.sheet-label').addEventListener('click', activate);
     return el;
@@ -64,8 +65,13 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
   async function preview(key) {
     const s = sheets.get(key);
     if (!s || key === active) return;
-    const html = await load(s.kind, s.name);
-    if (key === active) return;
+    let html;
+    try {
+      html = await load(s.kind, s.name);
+    } catch {
+      return; // e.g. deleted or renamed meanwhile; the next sync takes care of it
+    }
+    if (key === active || sheets.get(key) !== s) return;
     s.iframe.onload = () => {
       const d = s.iframe.contentDocument;
       const style = d.createElement('style');
@@ -195,5 +201,19 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
     onPinch(e.deltaY, e);
   }, { passive: false });
 
-  return { sync, setActive, glideTo, resize, forwardPinch, has: (kind, name) => sheets.has(keyOf(kind, name)) };
+  /** A document was renamed: the sheet keeps its iframe (and the editing in progress, if active). */
+  function rename(kind, oldName, newName) {
+    const oldKey = keyOf(kind, oldName);
+    const s = sheets.get(oldKey);
+    if (!s) return;
+    const newKey = keyOf(kind, newName);
+    sheets.delete(oldKey);
+    sheets.set(newKey, s);
+    s.name = newName;
+    s.el.dataset.name = newName;
+    s.el.querySelector('.name').textContent = newName.replace(/\.html$/i, '');
+    if (active === oldKey) active = newKey;
+  }
+
+  return { sync, setActive, glideTo, resize, forwardPinch, rename, has: (kind, name) => sheets.has(keyOf(kind, name)) };
 }

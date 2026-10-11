@@ -153,6 +153,16 @@ export function cvApi() {
               await fsp.writeFile(file, html, 'utf8');
               return send(res, 200, { ok: true, kind, name: path.basename(file) });
             }
+            // PATCH { name: newName } → renames the document (never overwrites another one)
+            if (req.method === 'PATCH') {
+              const { name: newName } = await readBody(req);
+              const dirKind = path.basename(path.dirname(file));
+              const target = path.join(path.dirname(file), cleanName(newName, EXT[dirKind]));
+              if (target === file) return send(res, 200, { ok: true, kind: dirKind, name: path.basename(file) });
+              if (fs.existsSync(target)) throw httpError(409, `There is already a document called "${path.basename(target)}".`);
+              await fsp.rename(file, target);
+              return send(res, 200, { ok: true, kind: dirKind, name: path.basename(target) });
+            }
             if (req.method === 'DELETE' && kind !== 'templates') {
               await fsp.unlink(file);
               return send(res, 200, { ok: true });
