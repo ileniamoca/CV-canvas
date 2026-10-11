@@ -146,6 +146,24 @@
     </form>
   </dialog>
 
+  <!-- Theme picker (temporary, to choose the look of the editor) -->
+  <div class="theme-bubble" id="themeBubble">
+    <div class="theme-pop" id="themePop" hidden>
+      <div class="theme-pop-head">
+        <strong>Try a look ✨</strong>
+        <button id="themeClose" title="Close">✕</button>
+      </div>
+      <div class="theme-pick">
+        <button id="themePrev" title="Previous look">‹</button>
+        <select id="themeSelect" title="Editor look"></select>
+        <button id="themeNext" title="Next look">›</button>
+      </div>
+      <p class="hint" id="themeNote"></p>
+      <div class="theme-swatches" id="themeSwatches"></div>
+    </div>
+    <button class="theme-fab" id="themeFab" title="Try a different look for the editor">🎨</button>
+  </div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

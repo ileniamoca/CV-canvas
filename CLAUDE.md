@@ -89,5 +89,6 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 - `src/blocks.js` — items (.item): drag between frames or into a new frame, duplicate, delete; plus the
   shared undo history (body + styles).
 - `src/margins.js` — regions and margins: read/write `data-margins`, guides, adjusting frames when a margin changes.
+- `src/themes.js` — editor UI themes (CSS variables of `src/style.css`); the 🎨 bubble is a temporary picker.
 - `src/styles.js` — text styles: read/write the variables, apply a style to a paragraph, font catalog.
 - Start: `npm run dev` → http://localhost:5180

@@ -6,6 +6,7 @@ import {
 import {
   REGIONS, SIDES, MARGINS_CSS, regionRects, readMargins, initMargins, setMargin, drawMarginGuides,
 } from './margins.js';
+import { THEMES, applyTheme } from './themes.js';
 import TEMPLATE from '../templates/blank.html?raw';
 
 const $ = (sel) => document.querySelector(sel);
@@ -253,7 +254,7 @@ function applyZoom() {
   if (style) {
     style.textContent = BLOCKS_CSS + CANVAS_CSS + MARGINS_CSS + `
       html { zoom: ${state.zoom}; }
-      @media screen { body { background: #ebebeb; } } /* desk around the page, lighter than the CVs' own grey */
+      @media screen { body { background: ${desk()}; } } /* desk around the page (theme), not the CVs' own grey */
       @media print { html { zoom: 1 !important; } }
       a { cursor: text; }
       .page { position: relative; }
@@ -616,6 +617,41 @@ function updateMarginInputs() {
     if (v != null && document.activeElement !== input) input.value = v;
   }
 }
+
+// ---------- Editor theme (temporary picker) ----------
+const desk = () => getComputedStyle(document.documentElement).getPropertyValue('--desk').trim() || '#ebebeb';
+
+function setTheme(id) {
+  const theme = applyTheme(id);
+  try { localStorage.setItem('cv-editor:theme', theme.id); } catch {}
+  $('#themeSelect').value = theme.id;
+  $('#themeNote').textContent = theme.note;
+  document.querySelectorAll('#themeSwatches button').forEach((b) => b.classList.toggle('current', b.dataset.theme === theme.id));
+  applyZoom(); // the desk color inside the editor follows the theme
+}
+
+$('#themeSelect').innerHTML = THEMES.map((t) => `<option value="${t.id}">${t.name}</option>`).join('');
+$('#themeSwatches').replaceChildren(...THEMES.map((t) => {
+  const b = document.createElement('button');
+  b.dataset.theme = t.id;
+  b.title = t.name;
+  b.style.background = `linear-gradient(135deg, ${t.swatch[0]} 50%, ${t.swatch[1]} 50%)`;
+  b.addEventListener('click', () => setTheme(t.id));
+  return b;
+}));
+const stepTheme = (d) => {
+  const i = THEMES.findIndex((t) => t.id === $('#themeSelect').value);
+  setTheme(THEMES[(i + d + THEMES.length) % THEMES.length].id);
+};
+$('#themeSelect').addEventListener('change', (e) => setTheme(e.target.value));
+$('#themePrev').addEventListener('click', () => stepTheme(-1));
+$('#themeNext').addEventListener('click', () => stepTheme(1));
+$('#themeFab').addEventListener('click', () => ($('#themePop').hidden = !$('#themePop').hidden));
+$('#themeClose').addEventListener('click', () => ($('#themePop').hidden = true));
+let savedTheme = null;
+try { savedTheme = localStorage.getItem('cv-editor:theme'); } catch {}
+setTheme(savedTheme ?? 'classic');
+$('#themePop').hidden = Boolean(savedTheme); // first visit: open, so the picker is noticed
 
 // Collapsible inspector panels: remember which ones are open.
 for (const panel of document.querySelectorAll('.inspector .panel')) {
