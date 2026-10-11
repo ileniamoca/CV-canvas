@@ -25,6 +25,9 @@ const state = {
   docs: { templates: [], pages: [] }, // last list received (for the "new page/template" dialog)
   ownWrites: new Map(), // "kind/name" → timestamp of our last save
   confirmedTemplates: new Set(), // templates she already agreed to overwrite this session
+  mode: 'pages', // 'pages': the board shows every page · 'template': only the template being edited
+  editing: null, // name of the template being edited (template mode)
+  returnTo: null, // page to go back to when leaving template mode
 };
 
 // ---------- API ----------
@@ -54,12 +57,15 @@ async function refreshList() {
   const data = await api('/api/docs');
   state.chrome = data.chrome;
   state.docs = data;
-  $('#empty').textContent = data.templates.length || data.pages.length
-    ? 'Pick a template or a page on the left to start editing.'
-    : 'No CVs yet. Click “+” next to Templates to create your first template.';
+  $('#empty').textContent = !data.templates.length
+    ? 'No CVs yet. Click “+” next to Templates to create your first template.'
+    : 'No pages yet. Click “+ Add page” to make a CV for a job from your template.';
   // Templates and pages keep their place on the board and in the list: oldest first, new ones at the end.
   for (const kind of ['templates', 'pages']) data[kind].sort((a, b) => a.created - b.created || a.name.localeCompare(b.name));
-  const sheets = ['templates', 'pages'].flatMap((kind) => data[kind].map((f) => ({ kind, name: f.name, mtime: f.mtime })));
+  // The board shows the pages; in template mode, only the template being edited.
+  const sheets = state.mode === 'template'
+    ? data.templates.filter((f) => f.name === state.editing).map((f) => ({ kind: 'templates', name: f.name, mtime: f.mtime }))
+    : data.pages.map((f) => ({ kind: 'pages', name: f.name, mtime: f.mtime, template: f.template }));
   $('#empty').hidden = sheets.length > 0;
   $('#board').hidden = !sheets.length;
   board.sync(sheets);
@@ -87,6 +93,12 @@ function renderItem(kind, f) {
   date.className = 'date';
   date.textContent = new Date(f.mtime).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
   label.append(date);
+  if (kind === 'pages' && f.template) {
+    const tpl = document.createElement('span');
+    tpl.className = 'tpl';
+    tpl.textContent = `Template: ${f.template}`;
+    label.append(tpl);
+  }
   li.append(label);
 
   if (kind === 'pdf') {
@@ -99,10 +111,11 @@ function renderItem(kind, f) {
   const more = document.createElement('button');
   more.className = 'mini more';
   more.textContent = '⋯';
-  more.title = 'Rename, duplicate or delete';
+  more.title = kind === 'templates' ? 'Edit, rename or duplicate' : 'Rename, duplicate or delete';
   more.addEventListener('click', (e) => {
     e.stopPropagation();
     openItemMenu(more, [
+      ...(kind === 'templates' ? [['Edit template', () => openDoc(kind, f.name)]] : []),
       ['Rename', () => startRename(li, kind, f)],
       ...(kind !== 'pdf' ? [['Duplicate', () => duplicateDoc(kind, f.name)]] : []),
       ...(kind !== 'templates' ? [['Delete', () => deleteDoc(kind, f.name), 'danger']] : []),
@@ -301,6 +314,11 @@ function serialize() {
  */
 let switching = false;
 async function openDoc(kind, name, { force = false, glide = true, auto = false } = {}) {
+  if (kind === 'templates') return editTemplate(name, { force });
+  if (state.mode === 'template') {
+    if (auto) return;
+    return leaveTemplate({ next: { kind, name } });
+  }
   const same = state.current?.kind === kind && state.current?.name === name;
   if (same && !force) return glide ? board.glideTo(kind, name) : undefined;
   if (auto && switching) return;
@@ -335,6 +353,68 @@ async function activate(kind, name, glide) {
     toast(err.message, true);
   }
 }
+
+// ---------- Template mode ----------
+/** Opens a template on its own (no pages around it) until it's saved or discarded. */
+async function editTemplate(name, { force = false } = {}) {
+  if (state.mode === 'template' && state.editing === name && !force) return;
+  if (state.mode === 'template' && state.editing !== name && !(await leaveTemplate({ reopen: false }))) return;
+  if (state.mode === 'pages' && state.dirty && !(await save())) return; // the page we leave keeps its changes
+  if (state.mode === 'pages' && state.current?.kind === 'pages') state.returnTo = state.current;
+  state.mode = 'template';
+  state.editing = name;
+  state.confirmedTemplates.add(name); // edited on purpose: no "you're changing the template" warning
+  document.body.classList.add('template-mode');
+  $('#templateBar').hidden = false;
+  $('#templateBarName').textContent = stem(name);
+  board.setActive(null);
+  await refreshList();
+  await activate('templates', name, false);
+  board.glideTo('templates', name, { instant: true });
+}
+
+/**
+ * Back to all the pages. Unsaved template changes are saved or discarded (`saveFirst`; asked if
+ * undefined). Then opens `next`, or the page she was on before. Returns false if cancelled.
+ */
+async function leaveTemplate({ saveFirst, next, reopen = true } = {}) {
+  if (state.mode !== 'template') return true;
+  if (state.dirty) {
+    if (saveFirst === undefined) saveFirst = confirm('Save your changes to the template?\n\nOK: save · Cancel: discard them');
+    if (saveFirst && !(await save())) return false;
+  }
+  state.mode = 'pages';
+  state.editing = null;
+  document.body.classList.remove('template-mode');
+  $('#templateBar').hidden = true;
+  state.current = null;
+  state.dirty = false;
+  iframe = null;
+  board.setActive(null);
+  await refreshList();
+  if (!reopen) return true;
+  const pages = state.docs.pages ?? [];
+  const target = next ?? (pages.some((f) => f.name === state.returnTo?.name) ? state.returnTo : null)
+    ?? (pages[0] && { kind: 'pages', name: pages[0].name });
+  if (target) await activate(target.kind, target.name, true);
+  else updateChrome();
+  return true;
+}
+
+$('#btnTemplateSave').addEventListener('click', () => leaveTemplate({ saveFirst: true }));
+$('#btnTemplateDiscard').addEventListener('click', () => {
+  if (state.dirty && !confirm('Discard your changes to the template?')) return;
+  leaveTemplate({ saveFirst: false });
+});
+
+/** Records in a page which template it was made from. */
+function withTemplate(html, templateName) {
+  const meta = `<meta name="cv-template" content="${escapeHtml(stem(templateName))}">`;
+  return /<meta name="cv-template"[^>]*>/.test(html)
+    ? html.replace(/<meta name="cv-template"[^>]*>/, meta)
+    : html.replace(/<head>/i, `<head>\n${meta}`);
+}
+const withoutTemplate = (html) => html.replace(/\s*<meta name="cv-template"[^>]*>/, '');
 
 function closeDoc() {
   state.current = null;
@@ -548,7 +628,7 @@ async function saveCopy() {
   const base = stem(state.current.name).replace(/ - \d{4}-\d{2}-\d{2}( \(\d+\))?$/, '');
   const name = await askName('Save as page', `${base} - ${today}`);
   if (!name) return;
-  const html = serialize();
+  const html = state.current.kind === 'templates' ? withTemplate(serialize(), state.current.name) : serialize();
   try {
     const res = await api('/api/docs/pages', {
       method: 'POST',
@@ -556,12 +636,15 @@ async function saveCopy() {
       body: JSON.stringify({ name, html }),
     });
     markOwnWrite('pages', res.name);
-    state.current = { kind: 'pages', name: res.name };
-    try { localStorage.setItem('cv-editor:last', JSON.stringify(state.current)); } catch {}
-    state.savedHtml = html;
-    setDirty(false);
+    // What was on screen now lives in the new page; the document we were on stays as it was saved.
+    state.dirty = false;
+    const next = { kind: 'pages', name: res.name };
+    if (state.mode === 'template') await leaveTemplate({ saveFirst: false, next });
+    else {
+      await refreshList();
+      await activate(next.kind, next.name, true);
+    }
     toast(`Page saved: ${res.name}`);
-    refreshList();
   } catch (err) {
     toast(err.message, true);
   }
@@ -611,12 +694,14 @@ const KIND_LABEL = { templates: 'Templates', pages: 'Pages' };
 async function newDoc(kind) {
   const choice = await askNew(kind);
   if (!choice) return;
-  if (state.dirty && !confirm('You have unsaved changes. Discard them?')) return;
   const { name, source } = choice;
   try {
-    const html = source
+    let html = source
       ? await api(docUrl(source.kind, source.name))
       : TEMPLATE.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(stem(name))}</title>`);
+    // A page remembers its template (a page copied from another page keeps that page's template).
+    if (kind === 'pages' && source?.kind === 'templates') html = withTemplate(html, source.name);
+    if (kind === 'templates') html = withoutTemplate(html);
     const res = await api(`/api/docs/${kind}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1299,6 +1384,7 @@ listenForChanges();
 refreshList().then(() => {
   let last = null;
   try { last = JSON.parse(localStorage.getItem('cv-editor:last')); } catch {}
-  const lastItem = last && [...document.querySelectorAll(`#list-${last.kind} li`)].find((li) => li.title === last.name);
-  (lastItem ?? document.querySelector('#list-templates li:not(.none)'))?.click();
+  // Start on the pages (the last one used, or the first); templates open only on purpose.
+  const lastItem = last?.kind === 'pages' && [...document.querySelectorAll('#list-pages li')].find((li) => li.title === last.name);
+  (lastItem || document.querySelector('#list-pages li:not(.none)'))?.click();
 });

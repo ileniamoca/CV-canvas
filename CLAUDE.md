@@ -11,7 +11,9 @@ Local tool (Vite) to edit Ilenia's CVs as if in Word/Canva: templates, one page 
 
 - `documents/templates/` — **templates**: the base CVs (self-contained HTML, styles inside `<style>`) every new page
   starts from. Changing a template doesn't change pages already made from it.
-- `documents/pages/` — **pages**: one CV per job application ("+ Add page", or "Save as page…").
+- `documents/pages/` — **pages**: one CV per job application ("+ Add page", or "Save as page…"). Each page records
+  its template in `<meta name="cv-template" content="Template name">` (shown in the sidebar and on the board;
+  renaming a template updates its pages). When creating a page by hand, add that meta.
 - `documents/pdf/` — exported PDFs (A4, generated with Chrome via puppeteer-core).
 - `templates/blank.html` (in the repo, not in `documents/`) — the **blank layout** (two columns, generic sample
   text, no personal data; it *is* pushed). "+" next to Templates can start a new template from it.
@@ -83,7 +85,8 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 - `server/pdf.js` — HTML → PDF with the installed Chrome/Brave.
 - `src/main.js` — editor: the CV is loaded in an iframe with `body.contentEditable`; whatever the editor injects
   carries `data-cv-editor` (and `cv-*` classes) and is removed on save.
-- `src/board.js` — the board: all templates and pages side by side on a pasteboard (trackpad pan, pinch zoom);
+- `src/board.js` — the board: all pages side by side on a pasteboard (trackpad pan, pinch zoom). Templates aren't
+  on it: clicking one opens template mode (main.js), where it's edited alone until "Save & close" or "Discard";
   the active sheet's iframe is the document being edited, the others are live previews; clicking a page
   glides the view to it. Leaving a sheet with unsaved changes saves it.
 - `src/canvas.js` — free-form layout, Canva-style: a click selects a frame/shape as an object (drag or arrow keys

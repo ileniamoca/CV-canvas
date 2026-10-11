@@ -75,6 +75,13 @@
     </nav>
 
     <main class="canvas">
+      <!-- Template mode: the template is edited on its own until saved or discarded -->
+      <div class="template-bar" id="templateBar" hidden>
+        <span class="tb-tag">Template</span>
+        <span class="tb-text">Editing <strong id="templateBarName"></strong> · new pages start from it; pages already made don't change</span>
+        <button id="btnTemplateDiscard" title="Go back to the pages without saving">Discard</button>
+        <button id="btnTemplateSave" class="primary" title="Save the template and go back to the pages">Save &amp; close</button>
+      </div>
       <div class="banner" id="banner" hidden>
         <span>This file has changed on disk.</span>
         <button id="bannerReload">Reload</button>

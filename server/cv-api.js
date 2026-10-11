@@ -52,14 +52,38 @@ function httpError(status, message) {
   return Object.assign(new Error(message), { status });
 }
 
+// A page records the template it was made from: <meta name="cv-template" content="Template name">
+const TEMPLATE_META = /<meta name="cv-template" content="([^"]*)">/;
+const unescapeAttr = (s) => s.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+const escapeAttr = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/** After a template is renamed, its pages point to the new name. */
+async function retargetPages(oldStem, newStem) {
+  for (const name of await fsp.readdir(DIRS.pages)) {
+    if (!name.endsWith('.html')) continue;
+    const file = path.join(DIRS.pages, name);
+    const html = await fsp.readFile(file, 'utf8');
+    const m = html.match(TEMPLATE_META);
+    if (m && unescapeAttr(m[1]) === oldStem) {
+      await fsp.writeFile(file, html.replace(TEMPLATE_META, `<meta name="cv-template" content="${escapeAttr(newStem)}">`), 'utf8');
+    }
+  }
+}
+
 async function listDir(kind) {
   const entries = await fsp.readdir(DIRS[kind], { withFileTypes: true });
   const files = await Promise.all(
     entries
       .filter((e) => e.isFile() && e.name.endsWith(EXT[kind]))
       .map(async (e) => {
-        const st = await fsp.stat(path.join(DIRS[kind], e.name));
-        return { name: e.name, mtime: st.mtimeMs, created: st.birthtimeMs || st.ctimeMs, size: st.size };
+        const file = path.join(DIRS[kind], e.name);
+        const st = await fsp.stat(file);
+        const doc = { name: e.name, mtime: st.mtimeMs, created: st.birthtimeMs || st.ctimeMs, size: st.size };
+        if (kind === 'pages') {
+          const m = (await fsp.readFile(file, 'utf8')).match(TEMPLATE_META);
+          doc.template = m ? unescapeAttr(m[1]) : null;
+        }
+        return doc;
       }),
   );
   return files.sort((a, b) => b.mtime - a.mtime);
@@ -161,6 +185,9 @@ export function cvApi() {
               if (target === file) return send(res, 200, { ok: true, kind: dirKind, name: path.basename(file) });
               if (fs.existsSync(target)) throw httpError(409, `There is already a document called "${path.basename(target)}".`);
               await fsp.rename(file, target);
+              if (dirKind === 'templates') {
+                await retargetPages(path.basename(file, '.html'), path.basename(target, '.html'));
+              }
               return send(res, 200, { ok: true, kind: dirKind, name: path.basename(target) });
             }
             if (req.method === 'DELETE' && kind !== 'templates') {

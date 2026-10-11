@@ -303,6 +303,19 @@ input[type="color"] { width: 40px; height: 26px; padding: 0 2px; border: 1px sol
   padding: 8px 16px; background: #fff4ce; color: #5c4400; border-bottom: 1px solid #e8d48a;
 }
 .banner span { flex: 1; }
+.template-bar {
+  display: flex; align-items: center; gap: 10px; padding: 9px 16px;
+  background: var(--accent-soft); border-bottom: 1px solid var(--border); color: var(--text);
+}
+.template-bar .tb-tag {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  padding: 2px 8px; border-radius: 999px; background: var(--accent); color: var(--on-accent);
+}
+.template-bar .tb-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+/* In template mode the pages fade into the background of the sidebar */
+body.template-mode #list-pages, body.template-mode #btnAddPage { opacity: .5; }
+.sidebar li .tpl { display: block; font-size: 11px; color: var(--accent); margin-top: 1px; }
+.sheet-label .from { color: var(--muted); font-size: 12px; }
 
 #pageCount.warn { color: #d93025; font-weight: 600; }
 .statusbar {

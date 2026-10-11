@@ -41,7 +41,7 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
     const el = document.createElement('div');
     el.className = 'sheet';
     el.innerHTML = `
-      <div class="sheet-label"><span class="kind"></span><span class="name"></span></div>
+      <div class="sheet-label"><span class="kind"></span><span class="name"></span><span class="from"></span></div>
       <div class="sheet-frame"><iframe tabindex="-1" aria-label="CV page"></iframe><div class="sheet-cover" title="Click to edit"></div></div>`;
     el.querySelector('.kind').textContent = kindLabel(kind);
     el.querySelector('.name').textContent = name.replace(/\.html$/i, '');
@@ -101,6 +101,7 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
         sheets.set(key, s);
       }
       strip.append(s.el); // keeps the order of `docs`
+      s.el.querySelector('.from').textContent = d.template ? `· from ${d.template}` : '';
       if (s.mtime !== d.mtime) {
         s.mtime = d.mtime;
         if (key !== active) preview(key);
