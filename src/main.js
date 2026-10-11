@@ -607,6 +607,11 @@ $('#btnResolve').addEventListener('click', () => doc() && canvas.resolveOverlaps
 // ---------- Inspector: text styles ----------
 const WEIGHT_NAMES = { 400: 'Regular', 500: 'Medium', 700: 'Bold' };
 const num = (v) => parseFloat(v) || 0;
+/** Letter spacing in Canva units (thousandths of an em); older CVs may still store it in px. */
+const canvaSpacing = (v) => {
+  const n = num(v.spacing);
+  return Math.round(String(v.spacing).trim().endsWith('px') ? (n / (num(v.size) * 4 / 3)) * 1000 : n * 1000);
+};
 let styleValues = null;
 let styleEditing = false;
 
@@ -679,19 +684,22 @@ function styleRow(s) {
     <label class="wide">Font <select data-p="font">${fontOptions}</select></label>
     <label>Size <span class="unit"><input type="number" data-p="size" step="0.25" min="4"> pt</span></label>
     <label>Weight <select data-p="weight">${weights}</select></label>
-    <label>Line height <input type="number" data-p="leading" step="0.05" min="0.8"></label>
-    <label>Letter spacing <span class="unit"><input type="number" data-p="spacing" step="0.1"> px</span></label>
+    <label class="wide">Letter spacing <span class="slider"><input type="range" data-r="spacing" min="-200" max="800" step="1"
+      ><input type="number" data-p="spacing" step="1"></span></label>
+    <label class="wide">Line spacing <span class="slider"><input type="range" data-r="leading" min="0.5" max="2.5" step="0.01"
+      ><input type="number" data-p="leading" step="0.01" min="0.5"></span></label>
     <label>Before <span class="unit"><input type="number" data-p="before" step="0.25" min="0"> pt</span></label>
     <label>After <span class="unit"><input type="number" data-p="after" step="0.25" min="0"> pt</span></label>
     <label>Color <input type="color" data-p="color"></label>
     <label class="check"><input type="checkbox" data-p="style"> Italic</label>
     <label class="check"><input type="checkbox" data-p="case"> UPPERCASE</label>`;
   const fields = Object.fromEntries([...form.querySelectorAll('[data-p]')].map((f) => [f.dataset.p, f]));
+  const ranges = Object.fromEntries([...form.querySelectorAll('[data-r]')].map((f) => [f.dataset.r, f]));
   fields.font.value = v.font;
   fields.size.value = num(v.size);
   fields.weight.value = v.weight;
-  fields.leading.value = num(v.leading);
-  fields.spacing.value = num(v.spacing);
+  fields.leading.value = ranges.leading.value = num(v.leading);
+  fields.spacing.value = ranges.spacing.value = canvaSpacing(v);
   fields.before.value = num(v.before);
   fields.after.value = num(v.after);
   fields.color.value = toHex(v.color);
@@ -703,7 +711,7 @@ function styleRow(s) {
     size: (f) => `${num(f.value)}pt`,
     weight: (f) => f.value,
     leading: (f) => `${num(f.value)}`,
-    spacing: (f) => `${num(f.value)}px`,
+    spacing: (f) => `${num(f.value) / 1000}em`,
     before: (f) => `${num(f.value)}pt`,
     after: (f) => `${num(f.value)}pt`,
     color: (f) => f.value,
@@ -711,13 +719,21 @@ function styleRow(s) {
     case: (f) => (f.checked ? 'uppercase' : 'none'),
   };
   form.addEventListener('input', (e) => {
-    const p = e.target.dataset.p;
+    // Each slider and its number box mirror each other; the number box holds the value.
+    let field = e.target;
+    if (field.dataset.r) {
+      fields[field.dataset.r].value = field.value;
+      field = fields[field.dataset.r];
+    } else if (ranges[field.dataset.p]) {
+      ranges[field.dataset.p].value = field.value;
+    }
+    const p = field.dataset.p;
     if (!p) return;
     if (!styleEditing) {
       blocks.snapshot();
       styleEditing = true;
     }
-    styleValues[s.id][p] = read[p](e.target);
+    styleValues[s.id][p] = read[p](field);
     if (p === 'font') {
       // Match the available weights to the new font.
       const f = fontByStack(e.target.value);

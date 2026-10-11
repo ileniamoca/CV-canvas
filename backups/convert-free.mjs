@@ -13,7 +13,7 @@ const TEXT_STYLES = `
     --name-weight: 700;
     --name-style: normal;
     --name-case: none;
-    --name-spacing: 1px;
+    --name-spacing: 0.0357em;
     --name-leading: 1.2;
     --name-color: #222222;
     --name-before: 0pt;
@@ -24,7 +24,7 @@ const TEXT_STYLES = `
     --role-weight: 400;
     --role-style: normal;
     --role-case: none;
-    --role-spacing: 0.5px;
+    --role-spacing: 0.0238em;
     --role-leading: 1.2;
     --role-color: #222222;
     --role-before: 3pt;
@@ -35,7 +35,7 @@ const TEXT_STYLES = `
     --section-weight: 700;
     --section-style: normal;
     --section-case: uppercase;
-    --section-spacing: 1px;
+    --section-spacing: 0.0769em;
     --section-leading: 1.28;
     --section-color: #222222;
     --section-before: 12pt;
@@ -46,7 +46,7 @@ const TEXT_STYLES = `
     --subheading-weight: 700;
     --subheading-style: normal;
     --subheading-case: none;
-    --subheading-spacing: 0px;
+    --subheading-spacing: 0em;
     --subheading-leading: 1.28;
     --subheading-color: #222222;
     --subheading-before: 6.75pt;
@@ -57,7 +57,7 @@ const TEXT_STYLES = `
     --body-weight: 400;
     --body-style: normal;
     --body-case: none;
-    --body-spacing: 0px;
+    --body-spacing: 0em;
     --body-leading: 1.28;
     --body-color: #222222;
     --body-before: 0pt;
@@ -68,7 +68,7 @@ const TEXT_STYLES = `
     --detail-weight: 400;
     --detail-style: normal;
     --detail-case: none;
-    --detail-spacing: 0px;
+    --detail-spacing: 0em;
     --detail-leading: 1.45;
     --detail-color: #222222;
     --detail-before: 0pt;
@@ -79,7 +79,7 @@ const TEXT_STYLES = `
     --note-weight: 400;
     --note-style: normal;
     --note-case: none;
-    --note-spacing: 0px;
+    --note-spacing: 0em;
     --note-leading: 1.28;
     --note-color: #999999;
     --note-before: 0pt;
