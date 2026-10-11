@@ -245,6 +245,7 @@ function applyZoom() {
   if (style) {
     style.textContent = BLOCKS_CSS + CANVAS_CSS + `
       html { zoom: ${state.zoom}; }
+      @media screen { body { background: #ebebeb; } } /* desk around the page, lighter than the CVs' own grey */
       @media print { html { zoom: 1 !important; } }
       a { cursor: text; }
       .page { position: relative; }
