@@ -589,8 +589,7 @@ function setZoom(z) {
 
 // ---------- Inspector: blocks & library ----------
 const ICON = {
-  up: '<path d="m6 15 6-6 6 6"/>',
-  down: '<path d="m6 9 6 6 6-6"/>',
+  grip: '<path class="dot" d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"/>',
   move: '<path d="M4 8h14l-3-3M20 16H6l3 3"/>',
   forget: '<path d="m7 7 10 10M17 7 7 17"/>',
 };
@@ -613,14 +612,13 @@ function renderLibrary() {
 
   // Sections without blocks (e.g. a summary paragraph) aren't listed, but can still receive blocks.
   box.innerHTML = sections.map((s, si) => !s.items.length ? '' : `
-    <div class="lib-section">
+    <div class="lib-section" data-section="${si}">
       <div class="lib-title">${escapeText(s.title)}</div>
       ${s.items.map((it, ii) => `
-        <div class="lib-row${it.visible ? '' : ' off'}" data-section="${si}" data-index="${ii}">
+        <div class="lib-row${it.visible ? '' : ' off'}" data-section="${si}" data-index="${ii}" draggable="true">
+          <span class="lib-grip" title="Drag to reorder, or to another section">${icon('grip')}</span>
           <input type="checkbox" class="lib-check" ${it.visible ? 'checked' : ''} title="${it.visible ? 'Shown in the CV: untick to hide it' : 'Hidden: tick to show it again'}">
           <button class="lib-label" title="${it.visible ? 'Show in the CV' : 'Hidden from the CV'}">${escapeText(it.label)}</button>
-          <button class="lib-ico" data-act="up" title="Move up" ${ii === 0 ? 'disabled' : ''}>${icon('up')}</button>
-          <button class="lib-ico" data-act="down" title="Move down" ${ii === s.items.length - 1 ? 'disabled' : ''}>${icon('down')}</button>
           ${sectionPicker(s.frame)}
           ${it.visible ? '' : `<button class="lib-ico" data-act="forget" title="Delete for good">${icon('forget')}</button>`}
         </div>`).join('')}
@@ -633,7 +631,6 @@ function renderLibrary() {
     if (!row || !btn) return;
     if (btn.classList.contains('lib-label')) return library.reveal(itemOf(row));
     const act = btn.dataset.act;
-    if (act === 'up' || act === 'down') library.step(itemOf(row), act === 'up' ? -1 : 1);
     if (act === 'forget' && confirm('Delete this block for good?')) library.forget(itemOf(row));
   };
   box.onchange = (e) => {
@@ -642,6 +639,55 @@ function renderLibrary() {
     if (e.target.matches('.lib-check')) return library.setVisible(itemOf(row), e.target.checked);
     const target = sections[e.target.value]?.frame;
     if (target) library.moveTo(itemOf(row), target);
+  };
+
+  // Drag and drop rows: within a section to reorder, or onto another section to move the block there.
+  let dragged = null;
+  const clearMarks = () => box.querySelectorAll('.drop-before, .drop-after, .drop-end, .dragging')
+    .forEach((n) => n.classList.remove('drop-before', 'drop-after', 'drop-end', 'dragging'));
+  /** Where a drop at this event would land: { section, before (item element or null = end), mark } */
+  const dropAt = (e) => {
+    const row = e.target.closest('.lib-row');
+    if (row) {
+      const s = sections[row.dataset.section];
+      const r = row.getBoundingClientRect();
+      const after = e.clientY > r.top + r.height / 2;
+      const i = Number(row.dataset.index) + (after ? 1 : 0);
+      return { section: s, before: s.items[i]?.el ?? null, mark: [row, after ? 'drop-after' : 'drop-before'] };
+    }
+    const sec = e.target.closest('.lib-section');
+    if (!sec) return null;
+    const s = sections[sec.dataset.section];
+    return { section: s, before: null, mark: [sec.querySelector('.lib-row:last-of-type') ?? sec, 'drop-after'] };
+  };
+  box.ondragstart = (e) => {
+    const row = e.target.closest?.('.lib-row');
+    if (!row) return;
+    dragged = itemOf(row);
+    row.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', '');
+  };
+  box.ondragover = (e) => {
+    if (!dragged) return;
+    const at = dropAt(e);
+    if (!at) return;
+    e.preventDefault();
+    box.querySelectorAll('.drop-before, .drop-after').forEach((n) => n.classList.remove('drop-before', 'drop-after'));
+    at.mark[0].classList.add(at.mark[1]);
+  };
+  box.ondrop = (e) => {
+    const at = dragged && dropAt(e);
+    const item = dragged;
+    dragged = null;
+    clearMarks();
+    if (!at) return;
+    e.preventDefault();
+    library.place(item, at.section.frame, at.before);
+  };
+  box.ondragend = () => {
+    dragged = null;
+    clearMarks();
   };
 }
 

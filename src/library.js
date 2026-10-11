@@ -92,6 +92,14 @@ export function createLibrary({ doc, history }) {
     change(() => (dir < 0 ? other.before(item) : other.after(item)));
   }
 
+  /** Puts an item in `frame`, before `before` (another item of that frame) or at the end. */
+  function place(item, frame, before = null) {
+    if (!frame || before === item) return;
+    const siblings = itemsOf(frame);
+    if (before ? siblings[siblings.indexOf(before) - 1] === item : siblings.at(-1) === item) return; // already there
+    change(() => (before ? before.before(item) : insertAtEnd(frame, item)));
+  }
+
   /** Moves an item to the end of another section. */
   function moveTo(item, frame) {
     if (!frame || frame === item.parentElement) return;
@@ -123,5 +131,5 @@ export function createLibrary({ doc, history }) {
     }, 1200);
   }
 
-  return { register, state, setVisible, step, moveTo, forget, reveal };
+  return { register, state, setVisible, step, place, moveTo, forget, reveal };
 }
