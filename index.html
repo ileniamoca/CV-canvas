@@ -85,16 +85,8 @@
     </main>
 
     <aside class="inspector" id="inspector">
-      <section>
-        <h2>Layout</h2>
-        <label class="switch"><input type="checkbox" id="snapToggle" checked /> Soft snap
-          <small>· hold ⌥ while dragging to move freely</small></label>
-        <label class="switch"><input type="checkbox" id="pushToggle" checked /> Push frames below down when text grows</label>
-        <div class="btn-row">
-          <button data-add="text" title="New text frame">+ Text</button>
-          <button data-add="rect" title="New rectangle">+ Shape</button>
-          <button data-add="line" title="New line">+ Line</button>
-        </div>
+      <details class="panel" data-panel="selection" open>
+        <summary>Selection</summary>
         <p class="hint" id="selHint">Click a text frame or shape to select it (⌥+click if the shape is behind text), or drag on an empty area to select several (⇧+click adds or removes, ⌘A selects all). Drag or use the arrow keys to move them, and drag any edge or corner to resize. Double-click a text frame (or press Enter) to edit its text.</p>
         <div id="selPanel" hidden>
           <div class="sel-title" id="selTitle">Frame</div>
@@ -119,19 +111,30 @@
           </div>
           <p class="hint">Arrows: move 1 px (⇧ 10 px) · Enter / double-click edit text · ⌘C ⌘V copy & paste · ⌘D duplicate · ⌫ delete · Esc deselect</p>
         </div>
+      </details>
+      <details class="panel" data-panel="layout" open>
+        <summary>Layout</summary>
+        <label class="switch"><input type="checkbox" id="snapToggle" checked /> Soft snap
+          <small>· hold ⌥ while dragging to move freely</small></label>
+        <label class="switch"><input type="checkbox" id="pushToggle" checked /> Push frames below down when text grows</label>
+        <div class="btn-row">
+          <button data-add="text" title="New text frame">+ Text</button>
+          <button data-add="rect" title="New rectangle">+ Shape</button>
+          <button data-add="line" title="New line">+ Line</button>
+        </div>
         <button id="btnResolve" class="full" title="Push overlapping frames down">Resolve overlaps</button>
-      </section>
-      <section>
-        <h2>Margins</h2>
+      </details>
+      <details class="panel" data-panel="margins" open>
+        <summary>Margins</summary>
         <label class="switch"><input type="checkbox" id="marginsToggle" /> Always show margin guides</label>
         <p class="hint">The side stripe and the header rule split the page into four regions, each with its own margins (px). Frames on a margin follow it when you change it. The guides appear while you move or resize something.</p>
         <div id="marginsList"></div>
-      </section>
-      <section>
-        <h2>Text styles</h2>
+      </details>
+      <details class="panel" data-panel="styles" open>
+        <summary>Text styles</summary>
         <p class="hint">Click to apply to the paragraph · ✎ to change the style across the document</p>
         <div id="stylesList"></div>
-      </section>
+      </details>
     </aside>
   </div>
 

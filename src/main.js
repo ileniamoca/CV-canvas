@@ -620,6 +620,21 @@ function updateMarginInputs() {
   }
 }
 
+// Collapsible inspector panels: remember which ones are open.
+for (const panel of document.querySelectorAll('.inspector .panel')) {
+  try {
+    const saved = JSON.parse(localStorage.getItem('cv-editor:panels') || '{}');
+    if (panel.dataset.panel in saved) panel.open = saved[panel.dataset.panel];
+  } catch {}
+  panel.addEventListener('toggle', () => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('cv-editor:panels') || '{}');
+      saved[panel.dataset.panel] = panel.open;
+      localStorage.setItem('cv-editor:panels', JSON.stringify(saved));
+    } catch {}
+  });
+}
+
 try { $('#marginsToggle').checked = localStorage.getItem('cv-editor:margins') === 'shown'; } catch {}
 $('#marginsToggle').addEventListener('change', (e) => {
   doc()?.body.classList.toggle('cv-hide-margins', !e.target.checked);
