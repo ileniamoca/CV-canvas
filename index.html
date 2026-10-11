@@ -95,7 +95,7 @@
           <button data-add="rect" title="New rectangle">+ Shape</button>
           <button data-add="line" title="New line">+ Line</button>
         </div>
-        <p class="hint" id="selHint">Click a text frame or shape to select it (⌥+click if the shape is behind text), then drag or use the arrow keys to move it. Double-click a text frame (or press Enter) to edit its text.</p>
+        <p class="hint" id="selHint">Click a text frame or shape to select it (⌥+click if the shape is behind text), or drag on an empty area to select several (⇧+click adds or removes, ⌘A selects all). Drag or use the arrow keys to move them. Double-click a text frame (or press Enter) to edit its text.</p>
         <div id="selPanel" hidden>
           <div class="sel-title" id="selTitle">Frame</div>
           <div class="geo">
@@ -105,7 +105,7 @@
             <label>Height <input type="number" id="geoH" min="1" /></label>
           </div>
           <label class="color-row" id="colorRow">Color <input type="color" id="shapeColor" /></label>
-          <div class="btn-row icons" title="Align to page">
+          <div class="btn-row icons" title="Align to the page (one element) or to each other (several)">
             <button data-align="left" title="Align to page left">⇤</button>
             <button data-align="hcenter" title="Center horizontally">↔</button>
             <button data-align="right" title="Align to page right">⇥</button>

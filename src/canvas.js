@@ -2,7 +2,9 @@
 //  - Frame (.frame): text box with left/top/width; its height comes from its content.
 //  - Shape (.shape): colored rectangle with left/top/width/height (backgrounds, lines).
 // Like Canva: a click selects a frame or shape as an object (drag or arrow keys to move it);
-// double-click or Enter edits a frame's text, Esc goes back. Resize with the handles,
+// dragging on an empty area draws a selection box, ⇧+click adds/removes, ⌘A selects all, and
+// several objects move together. Double-click or Enter edits a frame's text (the only way to
+// select text), Esc goes back. Resize with the handles,
 // soft snap to the edges/centers of the page and of other elements (⌥ disables it).
 
 const GAP = 16; // standard spacing between sections
@@ -42,9 +44,14 @@ export const CANVAS_CSS = `
   }
   .page > .cv-overlap { outline: 2px solid #f29900 !important; outline-offset: 2px; }
   .page > .cv-outside { outline: 2px solid #d93025 !important; outline-offset: 2px; }
+  body.cv-multi .page > .cv-selected > .cv-h, body.cv-multi .page > .cv-selected > .cv-ctl-frame { display: none; }
+  .cv-marquee {
+    position: absolute; z-index: 45; pointer-events: none;
+    border: 1px solid #2b5797; background: rgba(43,87,151,.08);
+  }
   body.cv-moving, body.cv-moving * { user-select: none !important; }
   body.cv-moving .cv-ctl { display: none !important; }
-  @media print { .cv-h, .cv-guide, .cv-badge { display: none !important; } .page > * { outline: none !important; } }
+  @media print { .cv-h, .cv-guide, .cv-badge, .cv-marquee { display: none !important; } .page > * { outline: none !important; } }
 `;
 
 /**
@@ -54,13 +61,14 @@ export const CANVAS_CSS = `
  * @param {{snapshot: () => void, committed: () => void}} o.history
  * @param {() => boolean} o.snapEnabled
  * @param {() => boolean} o.pushEnabled          when a frame grows, shift the ones below
- * @param {(el: Element|null) => void} o.onSelect   selection or geometry changed
+ * @param {(el: Element|null, count: number) => void} o.onSelect   selection or geometry changed (el: main object)
  * @param {(r: {outside: number, overlaps: number}) => void} o.onLayout
  * @param {(msg: string) => void} o.toast
  */
 export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onSelect, onLayout, toast }) {
-  let selected = null;
-  let frameMode = false; // true: selected as an object; false: editing the selected frame's text
+  let selection = []; // selected objects (frames/shapes)
+  let selected = null; // main selected object (the last one clicked)
+  let frameMode = false; // true: selected as object(s); false: editing the selected frame's text
   let resizeObserver = null;
   let heights = new WeakMap(); // last known height of each frame
   let pushReady = false; // don't push until fonts have loaded (they change every height)
@@ -158,14 +166,26 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
 
   // ---------- Selection ----------
   function select(el, asObject = false) {
-    if (selected && selected !== el) selected.classList.remove('cv-selected');
-    selected = el && el.isConnected ? el : null;
-    frameMode = Boolean(selected) && asObject;
-    selected?.classList.add('cv-selected');
+    setSelection(el ? [el] : [], asObject);
+  }
+
+  /** Selects several objects at once (always as objects, unless editing a single frame). */
+  function setSelection(list, asObject = true) {
+    selection = list.filter((el) => el?.isConnected);
+    selected = selection.at(-1) ?? null;
+    frameMode = Boolean(selected) && (asObject || selection.length > 1);
+    const d = doc();
+    for (const el of objects()) el.classList.toggle('cv-selected', selection.includes(el));
+    d.body.classList.toggle('cv-multi', selection.length > 1);
     setEditable(selected && !frameMode ? selected : null);
-    if (frameMode) doc().getSelection()?.removeAllRanges();
-    for (const n of doc().querySelectorAll('[class=""]')) n.removeAttribute('class');
-    onSelect(selected);
+    if (frameMode || !selected) d.getSelection()?.removeAllRanges();
+    for (const n of d.querySelectorAll('[class=""]')) n.removeAttribute('class');
+    onSelect(selected, selection.length);
+  }
+
+  /** ⇧+click: adds an object to the selection, or removes it. */
+  function toggle(el) {
+    setSelection(selection.includes(el) ? selection.filter((o) => o !== el) : [...selection, el]);
   }
 
   /** Only the frame being edited is contentEditable, so text can't be selected elsewhere. */
@@ -193,7 +213,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
   }
 
   // ---------- Snap ----------
-  function targets(exclude) {
+  function targets(exclude = []) {
     const p = page();
     const W = p.offsetWidth;
     const H = p.offsetHeight;
@@ -202,7 +222,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
     const gapTop = []; // where a frame can start: below another + GAP
     const gapBottom = []; // where a frame can end: above another − GAP
     for (const el of objects()) {
-      if (el === exclude) continue;
+      if (exclude.includes(el)) continue;
       const g = geom(el);
       xs.push(g.l, g.l + g.w / 2, g.l + g.w);
       ys.push(g.t, g.t + g.h / 2, g.t + g.h);
@@ -266,18 +286,30 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
   }
 
   // ---------- Move and resize ----------
+  /** Bounding box of several objects. */
+  function bbox(list) {
+    const gs = list.map(geom);
+    const l = Math.min(...gs.map((g) => g.l));
+    const t = Math.min(...gs.map((g) => g.t));
+    return { l, t, w: Math.max(...gs.map((g) => g.l + g.w)) - l, h: Math.max(...gs.map((g) => g.t + g.h)) - t };
+  }
+
   function startMove(e, el) {
     e.preventDefault();
     const handle = e.target;
     handle.setPointerCapture?.(e.pointerId);
-    select(el, true);
+    // Dragging an object that is part of a multiple selection moves the whole group.
+    const group = selection.length > 1 && selection.includes(el) && frameMode;
+    if (!group) select(el, true);
+    const items = group ? [...selection] : [el];
+    const starts = items.map(geom);
     const d = doc();
     d.defaultView.focus(); // so arrow keys reach the editor
     const s = scale();
-    const start = geom(el);
+    const start = bbox(items);
     const sx = e.clientX;
     const sy = e.clientY;
-    const t = targets(el);
+    const t = targets(items);
     let moved = false;
     d.body.classList.add('cv-moving');
 
@@ -304,8 +336,12 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
         for (const g of [gT, gB]) if (g && (!snapY || Math.abs(g.d) <= Math.abs(snapY.d))) snapY = g;
         if (snapY) tp += snapY.d;
       }
-      el.style.left = `${Math.round(l)}px`;
-      el.style.top = `${Math.round(tp)}px`;
+      const dl = Math.round(l) - start.l;
+      const dt = Math.round(tp) - start.t;
+      items.forEach((o, i) => {
+        o.style.left = `${starts[i].l + dl}px`;
+        o.style.top = `${starts[i].t + dt}px`;
+      });
       const box = { l: Math.round(l), t: Math.round(tp), w: start.w, h: start.h };
       drawGuides(snapX, snapY, box);
       badge(`x ${box.l} · y ${box.t}`, box);
@@ -318,7 +354,56 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
       d.body.classList.remove('cv-moving');
       clearGuides();
       if (moved) history.committed();
-      select(el, true);
+      // A plain click on a member of the group selects just that object, like Canva.
+      setSelection(group && moved ? items : [el]);
+    };
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', onUp);
+  }
+
+  /** Drag on an empty area: draws a selection box and selects the objects it touches. */
+  function startMarquee(e, additive) {
+    e.preventDefault();
+    const d = doc();
+    const p = page();
+    d.defaultView.focus();
+    const handle = e.target;
+    handle.setPointerCapture?.(e.pointerId);
+    const s = scale();
+    const origin = p.getBoundingClientRect();
+    const toPage = (ev) => ({ x: (ev.clientX - origin.left) / s, y: (ev.clientY - origin.top) / s });
+    const a = toPage(e);
+    const before = additive ? [...selection] : [];
+    const box = editorEl('div', 'cv-marquee');
+    let started = false;
+    if (!additive) setSelection([]);
+
+    const onMove = (ev) => {
+      const b = toPage(ev);
+      if (!started && Math.hypot(b.x - a.x, b.y - a.y) * s < 3) return;
+      if (!started) {
+        started = true;
+        p.append(box);
+        d.body.classList.add('cv-moving');
+      }
+      const r = { l: Math.min(a.x, b.x), t: Math.min(a.y, b.y), r: Math.max(a.x, b.x), b: Math.max(a.y, b.y) };
+      Object.assign(box.style, { left: `${r.l}px`, top: `${r.t}px`, width: `${r.r - r.l}px`, height: `${r.b - r.t}px` });
+      // Frames are selected when the box touches them; shapes (often big backgrounds) only when fully inside.
+      const hit = objects().filter((o) => {
+        const g = geom(o);
+        return o.classList.contains('shape')
+          ? g.l >= r.l && g.t >= r.t && g.l + g.w <= r.r && g.t + g.h <= r.b
+          : g.l < r.r && g.l + g.w > r.l && g.t < r.b && g.t + g.h > r.t;
+      });
+      setSelection([...before, ...hit.filter((o) => !before.includes(o))]);
+    };
+    const onUp = () => {
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', onUp);
+      handle.removeEventListener('pointercancel', onUp);
+      box.remove();
+      d.body.classList.remove('cv-moving');
     };
     handle.addEventListener('pointermove', onMove);
     handle.addEventListener('pointerup', onUp);
@@ -335,7 +420,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
     const start = geom(el);
     const sx = e.clientX;
     const sy = e.clientY;
-    const t = targets(el);
+    const t = targets([el]);
     const isShape = el.classList.contains('shape');
     const min = isShape ? 1 : 40;
     history.snapshot();
@@ -399,69 +484,95 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
   }
 
   // ---------- Actions ----------
-  function duplicate(el = selected) {
-    if (!el) return;
+  function duplicate(el) {
+    const items = el ? [el] : selection;
+    if (!items.length) return;
     history.snapshot();
-    const clone = el.cloneNode(true);
-    clone.querySelectorAll(`[${attr}]`).forEach((n) => n.remove());
-    clone.classList.remove('cv-selected', 'cv-overlap', 'cv-outside');
-    clone.style.left = `${el.offsetLeft + GAP}px`;
-    clone.style.top = `${el.offsetTop + GAP}px`;
-    el.after(clone);
+    const clones = items.map((o) => {
+      const clone = o.cloneNode(true);
+      clone.querySelectorAll(`[${attr}]`).forEach((n) => n.remove());
+      clone.classList.remove('cv-selected', 'cv-overlap', 'cv-outside');
+      clone.style.left = `${o.offsetLeft + GAP}px`;
+      clone.style.top = `${o.offsetTop + GAP}px`;
+      o.after(clone);
+      return clone;
+    });
     ensureControls();
     history.committed();
-    select(clone, true);
+    setSelection(clones);
   }
 
-  function remove(el = selected) {
-    if (!el) return;
+  function remove(el) {
+    const items = el ? [el] : selection;
+    if (!items.length) return;
     history.snapshot();
-    if (el === selected) select(null);
-    el.remove();
+    setSelection(selection.filter((o) => !items.includes(o)));
+    items.forEach((o) => o.remove());
     history.committed();
-    toast('Element deleted · ⌘Z to undo');
+    toast(`${items.length > 1 ? `${items.length} elements` : 'Element'} deleted · ⌘Z to undo`);
+  }
+
+  /** Moves every selected object by (dx, dy). */
+  function nudge(dx, dy) {
+    if (!selection.length) return;
+    history.snapshot();
+    for (const o of selection) {
+      o.style.left = `${o.offsetLeft + dx}px`;
+      o.style.top = `${o.offsetTop + dy}px`;
+    }
+    history.committed();
+    onSelect(selected, selection.length);
   }
 
   /** Changes position/size of the selection (from the inspector). */
   function setGeometry(patch) {
-    if (!selected) return;
+    if (!selected || selection.length > 1) return;
     history.snapshot();
     for (const [k, v] of Object.entries(patch)) {
       if (k === 'height' && !selected.classList.contains('shape')) continue;
       if (Number.isFinite(v)) selected.style[k] = `${Math.round(v)}px`;
     }
     history.committed();
-    onSelect(selected);
+    onSelect(selected, selection.length);
   }
 
   function setColor(color) {
-    if (!selected?.classList.contains('shape')) return;
+    const shapes = selection.filter((o) => o.classList.contains('shape'));
+    if (!shapes.length) return;
     history.snapshot();
-    selected.style.background = color;
+    for (const o of shapes) o.style.background = color;
     history.committed();
   }
 
+  /** One object: aligns it to the page. Several: aligns them to each other (their bounding box). */
   function align(where) {
-    if (!selected) return;
+    if (!selection.length) return;
     const p = page();
-    const g = geom(selected);
-    const patch = {
-      left: { left: 0 },
-      hcenter: { left: (p.offsetWidth - g.w) / 2 },
-      right: { left: p.offsetWidth - g.w },
-      top: { top: 0 },
-      vcenter: { top: (p.offsetHeight - g.h) / 2 },
-      bottom: { top: p.offsetHeight - g.h },
-    }[where];
-    setGeometry(patch);
+    const area = selection.length > 1 ? bbox(selection) : { l: 0, t: 0, w: p.offsetWidth, h: p.offsetHeight };
+    history.snapshot();
+    for (const o of selection) {
+      const g = geom(o);
+      const pos = {
+        left: { left: area.l },
+        hcenter: { left: area.l + (area.w - g.w) / 2 },
+        right: { left: area.l + area.w - g.w },
+        top: { top: area.t },
+        vcenter: { top: area.t + (area.h - g.h) / 2 },
+        bottom: { top: area.t + area.h - g.h },
+      }[where];
+      for (const [k, v] of Object.entries(pos)) o.style[k] = `${Math.round(v)}px`;
+    }
+    history.committed();
+    onSelect(selected, selection.length);
   }
 
   function arrange(where) {
-    if (!selected) return;
+    if (!selection.length) return;
     const p = page();
     history.snapshot();
-    if (where === 'back') p.prepend(selected);
-    else p.append(selected);
+    const ordered = objects().filter((o) => selection.includes(o)); // keep their relative order
+    if (where === 'back') p.prepend(...ordered);
+    else p.append(...ordered);
     history.committed();
   }
 
@@ -539,6 +650,11 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
 
   // ---------- Events ----------
   function onKeyDown(e) {
+    const mod = e.metaKey || e.ctrlKey;
+    if (mod && e.key.toLowerCase() === 'a' && (frameMode || !selected) && page()) {
+      setSelection(objects());
+      return true;
+    }
     if (!selected) return false;
     if (e.key === 'Escape') {
       if (frameMode) select(null);
@@ -546,16 +662,14 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
       return true;
     }
     if (!frameMode) return false;
-    const mod = e.metaKey || e.ctrlKey;
-    if (e.key === 'Enter' && !mod && selected.classList.contains('frame')) {
+    if (e.key === 'Enter' && !mod && selection.length === 1 && selected.classList.contains('frame')) {
       editText(selected);
       return true;
     }
     const step = e.shiftKey ? 10 : 1;
     const moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
     if (moves[e.key] && !mod) {
-      const [dx, dy] = moves[e.key];
-      setGeometry({ left: selected.offsetLeft + dx, top: selected.offsetTop + dy });
+      nudge(...moves[e.key]);
       return true;
     }
     if ((e.key === 'Backspace' || e.key === 'Delete') && !mod) {
@@ -571,6 +685,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
 
   function attach() {
     const d = doc();
+    selection = [];
     selected = null;
     frameMode = false;
     pushReady = false;
@@ -589,14 +704,17 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
         return;
       }
       if (target.closest?.('.cv-ctl')) return; // block controls
+      if (e.button !== 0) return;
       // ⌥+click: select the shape behind the text (e.g. the side stripe).
       const behind = e.altKey && d.elementsFromPoint(e.clientX, e.clientY).find((n) => n.matches('.page > .shape'));
-      if (behind) return startMove(e, behind);
-      const shape = target.closest?.('.page > .shape');
-      if (shape) return startMove(e, shape);
-      const frame = target.closest?.('.page > .frame');
-      if (frame && frame === selected && !frameMode) return; // editing its text: normal text selection
-      if (frame) return startMove(e, frame); // click selects the frame, drag moves it
+      const obj = behind || target.closest?.('.page > .shape, .page > .frame');
+      if (obj && obj === selected && !frameMode) return; // editing its text: normal text selection
+      if (obj && e.shiftKey) {
+        e.preventDefault();
+        return toggle(obj);
+      }
+      if (obj) return startMove(e, obj); // click selects, drag moves (the whole group if it's selected)
+      if (page()) return startMarquee(e, e.shiftKey); // empty area: selection box
       select(null);
     }, true);
     d.addEventListener('dblclick', (e) => {
@@ -608,7 +726,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
 
   return {
     attach, ensureControls, checkLayout, onKeyDown, enablePush,
-    select, getSelected: () => selected, isFrameMode: () => frameMode,
+    select, getSelected: () => selected, getCount: () => selection.length, isFrameMode: () => frameMode,
     setGeometry, setColor, align, arrange, add, duplicate, remove, resolveOverlaps,
   };
 }

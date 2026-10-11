@@ -96,7 +96,7 @@ function afterChange() {
   canvas.checkLayout();
   setDirty(serialize() !== state.savedHtml);
   updateWordCount();
-  updateInspector(canvas.getSelected());
+  updateInspector(canvas.getSelected(), canvas.getCount());
 }
 
 const blocks = createBlocks({
@@ -130,7 +130,7 @@ const canvas = createCanvas({
   history: blocks,
   snapEnabled: () => $('#snapToggle').checked,
   pushEnabled: () => $('#pushToggle').checked,
-  onSelect: (el) => updateInspector(el),
+  onSelect: (el, count) => updateInspector(el, count),
   onLayout: (r) => updateLayoutStatus(r),
   toast: (msg) => toast(msg),
 });
@@ -580,11 +580,21 @@ const toHex = (c) => {
   return '#' + m.slice(0, 3).map((n) => Math.round(+n).toString(16).padStart(2, '0')).join('');
 };
 
-function updateInspector(el) {
+function updateInspector(el, count = 1) {
   const has = Boolean(el?.isConnected);
   $('#selPanel').hidden = !has;
   $('#selHint').hidden = has;
   if (!has) return;
+  const multi = count > 1;
+  for (const id of ['#geoX', '#geoY', '#geoW']) $(id).disabled = multi;
+  if (multi) {
+    // Several objects: they move, align and arrange together; geometry is edited one at a time.
+    $('#selTitle').textContent = `${count} elements selected`;
+    for (const id of ['#geoX', '#geoY', '#geoW', '#geoH']) $(id).value = '';
+    $('#geoH').disabled = true;
+    $('#colorRow').hidden = true;
+    return;
+  }
   const isShape = el.classList.contains('shape');
   const heading = el.querySelector('h1, h2, h3, p')?.textContent.trim().slice(0, 28);
   $('#selTitle').textContent = isShape ? 'Shape' : `Text frame${heading ? ` · ${heading}` : ''}`;
