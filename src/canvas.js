@@ -31,8 +31,8 @@ export const CANVAS_CSS = `
   .cv-h[data-dir="se"] { bottom: -8px; right: -8px; cursor: nwse-resize; }
   .cv-h[data-dir="sw"] { bottom: -8px; left: -8px; cursor: nesw-resize; }
   .cv-guide { position: absolute; z-index: 40; pointer-events: none; background: #e8178a; }
-  .cv-guide.v { width: 1px; top: 0; bottom: 0; }
-  .cv-guide.h { height: 1px; left: 0; right: 0; }
+  .cv-guide.v { width: 1px; margin-left: -0.5px; }
+  .cv-guide.h { height: 1px; margin-top: -0.5px; }
   .cv-guide.gap { background: none; border-left: 1px dashed #e8178a; width: 0; }
   .cv-guide.gap::after {
     content: attr(data-label); position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
@@ -251,12 +251,50 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
     page()?.querySelectorAll('.cv-guide, .cv-badge').forEach((g) => g.remove());
   }
 
-  function drawGuides(snapX, snapY, box) {
+  /**
+   * Smart guides (like Canva/InDesign): every edge or center of `box` that lines up with an edge or
+   * center of another object or of the page. Each guide spans from the box to what it lines up with.
+   */
+  function alignmentGuides(box, exclude) {
+    const p = page();
+    const xsOf = (g) => [g.l, g.l + g.w / 2, g.l + g.w];
+    const ysOf = (g) => [g.t, g.t + g.h / 2, g.t + g.h];
+    const near = (vals, v) => vals.some((m) => Math.abs(m - v) <= 0.5);
+    const mx = xsOf(box);
+    const my = ysOf(box);
+    const guides = new Map(); // "v:x" / "h:y" → { v, at, from, to }
+    const add = (v, at, from, to) => {
+      const key = `${v ? 'v' : 'h'}:${Math.round(at * 2) / 2}`;
+      const g = guides.get(key);
+      if (g) Object.assign(g, { from: Math.min(g.from, from), to: Math.max(g.to, to) });
+      else guides.set(key, { v, at, from, to });
+    };
+    const pageBox = { l: 0, t: 0, w: p.offsetWidth, h: p.offsetHeight };
+    for (const x of xsOf(pageBox)) if (near(mx, x)) add(true, x, 0, pageBox.h);
+    for (const y of ysOf(pageBox)) if (near(my, y)) add(false, y, 0, pageBox.w);
+    for (const o of objects()) {
+      if (exclude.includes(o)) continue;
+      const g = geom(o);
+      for (const x of xsOf(g)) {
+        if (near(mx, x)) add(true, x, Math.min(box.t, g.t), Math.max(box.t + box.h, g.t + g.h));
+      }
+      for (const y of ysOf(g)) {
+        if (near(my, y)) add(false, y, Math.min(box.l, g.l), Math.max(box.l + box.w, g.l + g.w));
+      }
+    }
+    return [...guides.values()];
+  }
+
+  let guideTimer;
+  function drawGuides(box, exclude, snapY) {
+    clearTimeout(guideTimer);
     clearGuides();
     const p = page();
-    if (snapX) {
-      const g = editorEl('div', 'cv-guide v');
-      g.style.left = `${snapX.at}px`;
+    for (const { v, at, from, to } of alignmentGuides(box, exclude)) {
+      const g = editorEl('div', `cv-guide ${v ? 'v' : 'h'}`);
+      Object.assign(g.style, v
+        ? { left: `${at}px`, top: `${from}px`, height: `${to - from}px` }
+        : { top: `${at}px`, left: `${from}px`, width: `${to - from}px` });
       p.append(g);
     }
     if (snapY) {
@@ -269,12 +307,14 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
         g.style.left = `${box.l + Math.min(box.w, snapY.target.w) / 2}px`;
         g.dataset.label = `${GAP}`;
         p.append(g);
-      } else {
-        const g = editorEl('div', 'cv-guide h');
-        g.style.top = `${snapY.at}px`;
-        p.append(g);
       }
     }
+  }
+
+  /** Shows the guides for a moment (after moving with the arrow keys). */
+  function flashGuides(box, exclude) {
+    drawGuides(box, exclude);
+    guideTimer = setTimeout(clearGuides, 900);
   }
 
   function badge(text, box) {
@@ -343,7 +383,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
         o.style.top = `${starts[i].t + dt}px`;
       });
       const box = { l: Math.round(l), t: Math.round(tp), w: start.w, h: start.h };
-      drawGuides(snapX, snapY, box);
+      drawGuides(box, items, snapY);
       badge(`x ${box.l} · y ${box.t}`, box);
     };
 
@@ -465,7 +505,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
         el.style.height = `${Math.round(h)}px`;
       }
       const box = geom(el);
-      drawGuides(snapX, snapY, box);
+      drawGuides(box, [el], snapY);
       badge(isShape ? `${box.w} × ${box.h}` : `width ${box.w}`, box);
     };
 
@@ -521,6 +561,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
       o.style.top = `${o.offsetTop + dy}px`;
     }
     history.committed();
+    flashGuides(bbox(selection), selection);
     onSelect(selected, selection.length);
   }
 

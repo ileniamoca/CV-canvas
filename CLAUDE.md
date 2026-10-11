@@ -77,7 +77,7 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
   to move); drag on an empty area = selection box, ⇧+click adds/removes, ⌘A selects all, and several objects
   move/align/delete together; double-click or Enter edits a frame's text (only that frame is `contentEditable`,
   so text is never selected otherwise), Esc goes back;
-  move/resize frames and shapes, snapping with guides, keyboard,
+  move/resize frames and shapes, snapping and smart guides (Canva/InDesign-style alignment lines), keyboard,
   pushing frames down as text grows, overlap warnings, alignment, adding elements.
 - `src/blocks.js` — items (.item): drag between frames or into a new frame, duplicate, delete; plus the
   shared undo history (body + styles).
