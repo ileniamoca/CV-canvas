@@ -1,5 +1,6 @@
 import { createBlocks, BLOCKS_CSS } from './blocks.js';
 import { createCanvas, CANVAS_CSS } from './canvas.js';
+import { createLibrary } from './library.js';
 import {
   TEXT_STYLES, FONTS, fontByStack, styleSheetEl, readStyles, writeStyles, detectStyle, applyStyle,
 } from './styles.js';
@@ -99,6 +100,8 @@ function afterChange() {
   blocks.ensureControls();
   canvas.ensureControls();
   canvas.checkLayout();
+  library.register();
+  renderLibrary();
   drawMargins();
   setDirty(serialize() !== state.savedHtml);
   updateWordCount();
@@ -128,7 +131,10 @@ const blocks = createBlocks({
   },
   onChange: afterChange,
   toast: (msg) => toast(msg),
+  removeItem: (el) => library.remove(el),
 });
+
+const library = createLibrary({ doc, attr: EDITOR_ATTR, history: blocks });
 
 const canvas = createCanvas({
   doc,
@@ -204,6 +210,8 @@ function setupEditing() {
   canvas.attach();
   initTooltips(d, { frameRect: () => iframe.getBoundingClientRect(), only: `[${EDITOR_ATTR}] *, [${EDITOR_ATTR}]` });
   initMargins(d.querySelector('.page')); // before the saved state is taken, so the doc doesn't look edited
+  library.register(); // block ids, saved with the CV
+  renderLibrary();
   d.body.classList.toggle('cv-hide-margins', !$('#marginsToggle').checked);
   drawMargins();
   renderMargins();
@@ -256,6 +264,7 @@ function applyZoom() {
   if (style) {
     style.textContent = BLOCKS_CSS + CANVAS_CSS + MARGINS_CSS + `
       html { zoom: ${state.zoom}; }
+      .item.cv-flash { outline: 2px solid ${accent()} !important; outline-offset: 3px; }
       @media screen { body { background: ${desk()}; } } /* desk around the page (theme), not the CVs' own grey */
       @media print { html { zoom: 1 !important; } }
       a { cursor: text; }
@@ -572,6 +581,74 @@ function setZoom(z) {
   applyZoom();
 }
 
+// ---------- Inspector: blocks & library ----------
+const ICON = {
+  up: '<path d="m6 15 6-6 6 6"/>',
+  down: '<path d="m6 9 6 6 6-6"/>',
+  move: '<path d="M4 8h14l-3-3M20 16H6l3 3"/>',
+  remove: '<path d="M6 12h12"/>',
+  add: '<path d="M12 6v12M6 12h12"/>',
+  forget: '<path d="m7 7 10 10M17 7 7 17"/>',
+};
+const icon = (name) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICON[name]}</svg>`;
+const escapeText = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+function renderLibrary() {
+  const box = $('#libraryList');
+  if (!doc()?.querySelector('.page')) return box.replaceChildren();
+  const { sections, library: groups } = library.state();
+  // A <select> laid over an icon: picking an option moves/adds the block to that section.
+  const sectionPicker = (cls, title, iconName, exclude) => `
+    <label class="lib-ico lib-pick ${cls}" title="${title}">${icon(iconName)}
+      <select><option value="" selected disabled>${title}…</option>${sections.map((s, i) =>
+        s.frame === exclude ? '' : `<option value="${i}">${escapeText(s.title)}</option>`).join('')}</select>
+    </label>`;
+
+  // Sections without blocks (e.g. a summary paragraph) aren't listed, but can still receive blocks.
+  box.innerHTML = sections.map((s, si) => !s.items.length ? '' : `
+    <div class="lib-section">
+      <div class="lib-title">${escapeText(s.title)}</div>
+      ${s.items.map((it, ii) => `
+        <div class="lib-row" data-section="${si}" data-index="${ii}">
+          <button class="lib-label" title="Show in the CV">${escapeText(it.label)}</button>
+          <button class="lib-ico" data-act="up" title="Move up" ${ii === 0 ? 'disabled' : ''}>${icon('up')}</button>
+          <button class="lib-ico" data-act="down" title="Move down" ${ii === s.items.length - 1 ? 'disabled' : ''}>${icon('down')}</button>
+          ${sectionPicker('', 'Move to section', 'move', s.frame)}
+          <button class="lib-ico" data-act="remove" title="Remove from the CV (stays in the library)">${icon('remove')}</button>
+        </div>`).join('')}
+    </div>`).join('') + `
+    <div class="lib-section lib-library">
+      <div class="lib-title">Library <small>not in the CV</small></div>
+      ${groups.map((g) => `
+        <div class="lib-group">${escapeText(g.group)}</div>
+        ${g.items.map((it) => `
+          <div class="lib-row" data-id="${it.id}">
+            <span class="lib-label">${escapeText(it.label)}</span>
+            ${sectionPicker('lib-add', 'Add to section', 'add', null)}
+            <button class="lib-ico" data-act="forget" title="Delete for good">${icon('forget')}</button>
+          </div>`).join('')}`).join('') || '<div class="lib-empty">Blocks you remove appear here, ready to add back.</div>'}
+    </div>`;
+
+  const itemOf = (row) => sections[row.dataset.section].items[row.dataset.index].el;
+  box.onclick = (e) => {
+    const row = e.target.closest('.lib-row');
+    const btn = e.target.closest('button');
+    if (!row || !btn) return;
+    if (btn.classList.contains('lib-label')) return library.reveal(itemOf(row));
+    const act = btn.dataset.act;
+    if (act === 'up' || act === 'down') library.step(itemOf(row), act === 'up' ? -1 : 1);
+    if (act === 'remove') library.remove(itemOf(row));
+    if (act === 'forget' && confirm('Delete this block for good? It will no longer be in the library.')) library.forget(row.dataset.id);
+  };
+  box.onchange = (e) => {
+    const row = e.target.closest('.lib-row');
+    const target = sections[e.target.value]?.frame;
+    if (!row || !target) return;
+    if (row.dataset.id) library.add(row.dataset.id, target);
+    else library.moveTo(itemOf(row), target);
+  };
+}
+
 // ---------- Inspector: margins ----------
 let hotRegion = null; // region whose controls are under the mouse: its guide is highlighted
 
@@ -623,7 +700,9 @@ function updateMarginInputs() {
 initTooltips(document);
 
 // ---------- Editor theme (temporary picker) ----------
-const desk = () => getComputedStyle(document.documentElement).getPropertyValue('--desk').trim() || '#ebebeb';
+const cssVar = (name, fallback) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+const desk = () => cssVar('--desk', '#ebebeb');
+const accent = () => cssVar('--accent', '#2b5797');
 
 function setTheme(id) {
   const theme = applyTheme(id);

@@ -91,6 +91,9 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
   pushing frames down as text grows, overlap warnings, alignment, adding elements.
 - `src/blocks.js` — items (.item): drag between frames or into a new frame, duplicate, delete; plus the
   shared undo history (body + styles).
+- `src/library.js` — block library: every `.item` gets a stable `data-item` id and its first section (`data-group`);
+  the Blocks panel reorders items, moves them between sections and removes them into
+  `<template id="cv-library">` inside the CV (not rendered or printed), from where they can be added back.
 - `src/margins.js` — regions and margins: read/write `data-margins`, guides, adjusting frames when a margin changes.
 - `src/themes.js` — editor UI themes, all in the same style (Quicksand, rounded, pastel gradient) with warm peachy
   different palettes (CSS variables of `src/style.css`); the 🎨 bubble is a temporary picker.

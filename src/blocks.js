@@ -46,8 +46,9 @@ export const BLOCKS_CSS = `
  * @param {(s: any) => void} o.setState
  * @param {() => void} o.onChange         after each structural change
  * @param {(msg: string) => void} o.toast
+ * @param {(el: Element) => void} [o.removeItem]  instead of deleting: e.g. keep the item in the block library
  */
-export function createBlocks({ doc, attr, getState, setState, onChange, toast }) {
+export function createBlocks({ doc, attr, getState, setState, onChange, toast, removeItem }) {
   let undoStack = [];
   let redoStack = [];
   let lastWasStructural = false;
@@ -61,7 +62,7 @@ export function createBlocks({ doc, attr, getState, setState, onChange, toast })
     for (const [act, icon, title] of [
       ['drag', '⠿', 'Drag block (elsewhere in the frame, to another frame or to an empty area)'],
       ['dup', '⧉', 'Duplicate block'],
-      ['del', '✕', 'Delete block'],
+      ['del', '✕', 'Remove block (it stays in the library)'],
     ]) {
       const b = d.createElement('button');
       b.type = 'button';
@@ -123,11 +124,17 @@ export function createBlocks({ doc, attr, getState, setState, onChange, toast })
     snapshot();
     const clone = el.cloneNode(true);
     clone.querySelectorAll(`[${attr}]`).forEach((n) => n.remove());
+    clone.removeAttribute('data-item'); // the copy is a new block (gets its own id)
     el.after(clone);
     committed();
   }
 
   function remove(el) {
+    if (removeItem) {
+      removeItem(el);
+      toast('Block removed · it stays in the library (Blocks panel)');
+      return;
+    }
     snapshot();
     el.remove();
     committed();

@@ -178,6 +178,30 @@ button.attention { border-color: #f29900; background: #fff4e0; color: #8a5a00; }
 .margin-region { padding: 6px; margin: 0 -6px 4px; border-radius: var(--radius); }
 .margin-region:hover, .margin-region:focus-within { background: var(--accent-soft); }
 .margin-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+
+/* Blocks panel: sections with their blocks, and the library of removed blocks */
+.lib-section { margin: 4px 0 12px; }
+.lib-title { font-size: 12px; font-weight: 700; margin: 0 0 4px; }
+.lib-title small { font-weight: 500; color: var(--muted); margin-left: 4px; }
+.lib-group { font-size: 11px; color: var(--muted); margin: 8px 0 2px; text-transform: uppercase; letter-spacing: .06em; }
+.lib-row { display: flex; align-items: center; gap: 1px; border-radius: var(--radius-sm); padding: 1px 2px 1px 0; }
+.lib-row:hover { background: var(--accent-soft); }
+.lib-label {
+  flex: 1; min-width: 0; text-align: left; border: 0; background: none; padding: 5px 6px; font-size: 13px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lib-library .lib-label { color: var(--muted); }
+.lib-ico {
+  position: relative; display: inline-grid; place-items: center; flex: none;
+  width: 26px; height: 26px; padding: 0; border: 0; background: none; border-radius: var(--radius-sm);
+  color: var(--muted); cursor: pointer;
+}
+.lib-ico .ico { width: 15px; height: 15px; }
+.lib-ico:hover:not(:disabled) { color: var(--accent); background: var(--panel); }
+.lib-ico:disabled { opacity: .25; }
+.lib-pick select { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.lib-add { color: var(--accent); }
+.lib-empty { font-size: 12px; color: var(--muted); font-style: italic; padding: 2px 6px; }
 input[type="color"] { width: 40px; height: 26px; padding: 0 2px; border: 1px solid var(--border); border-radius: 5px; background: var(--bg); }
 
 .style-row {
