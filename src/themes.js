@@ -1,107 +1,84 @@
-// Editor UI themes. Each theme overrides the CSS variables defined in style.css (:root);
-// "classic" overrides nothing, so it keeps the original look and follows the system dark mode.
-// The theme picker (bubble in the bottom-right corner) is a temporary tool to choose a look.
+// Editor UI themes, all in the "Mint Matcha" style: Quicksand, rounded corners, a pastel gradient
+// title bar and soft buttons. Only the colors change. Each theme overrides the CSS variables
+// defined in style.css (:root). The theme picker (bubble in the bottom-right corner) is a
+// temporary tool to choose a look.
+
+const FONT = 'Quicksand';
+
+/** Builds a theme from its palette; everything that isn't color is shared. */
+function theme(id, name, note, c) {
+  return {
+    id, name, note, font: FONT, swatch: [c.accent, c.g2],
+    vars: {
+      '--bg': c.bg, '--panel': '#ffffff', '--border': c.border, '--text': c.text, '--muted': c.muted,
+      '--accent': c.accent, '--accent-soft': c.soft, '--on-accent': '#ffffff', '--danger': '#d64545',
+      '--canvas': c.canvas, '--desk': c.desk,
+      '--titlebar': `linear-gradient(90deg, ${c.g1}, ${c.g2})`, '--titlebar-text': c.text,
+      '--titlebar-btn': 'rgba(255,255,255,.6)', '--titlebar-btn-border': 'rgba(255,255,255,.9)',
+      '--titlebar-primary': c.accent, '--titlebar-primary-text': '#ffffff',
+      '--radius': '14px', '--radius-sm': '10px', '--toast': c.text,
+    },
+  };
+}
 
 export const THEMES = [
-  {
-    id: 'classic', name: 'Classic', note: 'The original blue look. Follows your system dark mode.',
-    swatch: ['#2b5797', '#e5edf8'], vars: {},
-  },
-  {
-    id: 'cotton', name: 'Cotton Candy', note: 'Soft pink and lilac, rounded and airy.',
-    swatch: ['#e66fa6', '#d9c8f5'], font: 'Nunito',
-    vars: {
-      '--bg': '#fdf6fa', '--panel': '#ffffff', '--border': '#f1dbe7', '--text': '#4a3848', '--muted': '#9b8297',
-      '--accent': '#e66fa6', '--accent-soft': '#fde8f2', '--on-accent': '#ffffff', '--danger': '#d64545',
-      '--canvas': '#f8eef4', '--desk': '#f6ecf2',
-      '--titlebar': 'linear-gradient(90deg, #f9c6dd, #d9c8f5)', '--titlebar-text': '#4a3848',
-      '--titlebar-btn': 'rgba(255,255,255,.6)', '--titlebar-btn-border': 'rgba(255,255,255,.9)',
-      '--titlebar-primary': '#e66fa6', '--titlebar-primary-text': '#ffffff',
-      '--radius': '14px', '--radius-sm': '10px', '--toast': '#6b4a68',
-    },
-  },
-  {
-    id: 'mint', name: 'Mint Matcha', note: 'Fresh mint greens with a hint of lime.',
-    swatch: ['#3fae84', '#e6f7c9'], font: 'Quicksand',
-    vars: {
-      '--bg': '#f4faf6', '--panel': '#ffffff', '--border': '#d4ebde', '--text': '#2f4a3e', '--muted': '#7a978a',
-      '--accent': '#3fae84', '--accent-soft': '#e2f5ea', '--on-accent': '#ffffff', '--danger': '#d64545',
-      '--canvas': '#edf6f0', '--desk': '#eaf4ed',
-      '--titlebar': 'linear-gradient(90deg, #c9f0dc, #e6f7c9)', '--titlebar-text': '#2f4a3e',
-      '--titlebar-btn': 'rgba(255,255,255,.6)', '--titlebar-btn-border': 'rgba(255,255,255,.9)',
-      '--titlebar-primary': '#3fae84', '--titlebar-primary-text': '#ffffff',
-      '--radius': '14px', '--radius-sm': '10px', '--toast': '#2f4a3e',
-    },
-  },
-  {
-    id: 'peach', name: 'Peach Sorbet', note: 'Warm peach and apricot, cozy and friendly.',
-    swatch: ['#f08a5d', '#ffe7a8'], font: 'Nunito',
-    vars: {
-      '--bg': '#fff8f3', '--panel': '#ffffff', '--border': '#f5ddcc', '--text': '#4d3a30', '--muted': '#a28675',
-      '--accent': '#f08a5d', '--accent-soft': '#ffebe0', '--on-accent': '#ffffff', '--danger': '#d64545',
-      '--canvas': '#fbf0e8', '--desk': '#f9eee6',
-      '--titlebar': 'linear-gradient(90deg, #ffd3b8, #ffe7a8)', '--titlebar-text': '#4d3a30',
-      '--titlebar-btn': 'rgba(255,255,255,.6)', '--titlebar-btn-border': 'rgba(255,255,255,.9)',
-      '--titlebar-primary': '#f08a5d', '--titlebar-primary-text': '#ffffff',
-      '--radius': '14px', '--radius-sm': '10px', '--toast': '#6b4a3a',
-    },
-  },
-  {
-    id: 'lavender', name: 'Lavender Dream', note: 'Dreamy lavender fading into baby blue.',
-    swatch: ['#8b6fe0', '#c4e2ff'], font: 'Quicksand',
-    vars: {
-      '--bg': '#f8f6fe', '--panel': '#ffffff', '--border': '#e3ddf7', '--text': '#3b3558', '--muted': '#8c86ad',
-      '--accent': '#8b6fe0', '--accent-soft': '#efeafd', '--on-accent': '#ffffff', '--danger': '#d64545',
-      '--canvas': '#f1eefb', '--desk': '#efecf9',
-      '--titlebar': 'linear-gradient(90deg, #d8ccff, #c4e2ff)', '--titlebar-text': '#3b3558',
-      '--titlebar-btn': 'rgba(255,255,255,.6)', '--titlebar-btn-border': 'rgba(255,255,255,.9)',
-      '--titlebar-primary': '#8b6fe0', '--titlebar-primary-text': '#ffffff',
-      '--radius': '14px', '--radius-sm': '10px', '--toast': '#3b3558',
-    },
-  },
-  {
-    id: 'sky', name: 'Sky Cloud', note: 'Light sky blue, calm and clean.',
-    swatch: ['#4a9be8', '#e3f2ff'], font: 'Nunito',
-    vars: {
-      '--bg': '#f5f9ff', '--panel': '#ffffff', '--border': '#d9e7f6', '--text': '#2e3d52', '--muted': '#8193a8',
-      '--accent': '#4a9be8', '--accent-soft': '#e5f1fd', '--on-accent': '#ffffff', '--danger': '#d64545',
-      '--canvas': '#eef4fb', '--desk': '#ebf2fa',
-      '--titlebar': 'linear-gradient(90deg, #bfe0ff, #e3f2ff)', '--titlebar-text': '#2e3d52',
-      '--titlebar-btn': 'rgba(255,255,255,.6)', '--titlebar-btn-border': 'rgba(255,255,255,.95)',
-      '--titlebar-primary': '#4a9be8', '--titlebar-primary-text': '#ffffff',
-      '--radius': '14px', '--radius-sm': '10px', '--toast': '#2e3d52',
-    },
-  },
-  {
-    id: 'lemon', name: 'Lemon Cream', note: 'Buttery yellow and cream, sunny and soft.',
-    swatch: ['#e0a91b', '#ffe1c4'], font: 'Quicksand',
-    vars: {
-      '--bg': '#fffdf4', '--panel': '#ffffff', '--border': '#f0e5c0', '--text': '#4a432c', '--muted': '#9a9072',
-      '--accent': '#d99a0b', '--accent-soft': '#fff3cc', '--on-accent': '#ffffff', '--danger': '#d64545',
-      '--canvas': '#faf6e6', '--desk': '#f8f3e1',
-      '--titlebar': 'linear-gradient(90deg, #fff0b3, #ffe1c4)', '--titlebar-text': '#4a432c',
-      '--titlebar-btn': 'rgba(255,255,255,.6)', '--titlebar-btn-border': 'rgba(255,255,255,.95)',
-      '--titlebar-primary': '#d99a0b', '--titlebar-primary-text': '#ffffff',
-      '--radius': '14px', '--radius-sm': '10px', '--toast': '#4a432c',
-    },
-  },
+  theme('mint', 'Mint Matcha', 'Fresh mint greens with a hint of lime.', {
+    accent: '#3fae84', soft: '#e2f5ea', g1: '#c9f0dc', g2: '#e6f7c9', text: '#2f4a3e', muted: '#7a978a',
+    border: '#d4ebde', bg: '#f4faf6', canvas: '#edf6f0', desk: '#eaf4ed',
+  }),
+  theme('pistachio', 'Pistachio', 'Soft pistachio green with buttery yellow.', {
+    accent: '#86ad45', soft: '#eef6dc', g1: '#e0f1c2', g2: '#fff4c4', text: '#3d4a2a', muted: '#8a9672',
+    border: '#e1ebcc', bg: '#fafcf2', canvas: '#f2f6e6', desk: '#eff4e3',
+  }),
+  theme('seafoam', 'Seafoam', 'Aqua and seafoam, like a calm beach.', {
+    accent: '#2aa9a6', soft: '#dcf4f3', g1: '#bdeeea', g2: '#d6ecff', text: '#24474a', muted: '#76999a',
+    border: '#cfe9e8', bg: '#f3fbfb', canvas: '#eaf6f6', desk: '#e6f3f3',
+  }),
+  theme('sage', 'Sage & Cream', 'Muted sage green on warm cream.', {
+    accent: '#76956f', soft: '#e9f0e5', g1: '#dbe7d3', g2: '#f6efdc', text: '#3a4637', muted: '#8b9886',
+    border: '#e0e7da', bg: '#f9faf5', canvas: '#f1f3ea', desk: '#eef1e7',
+  }),
+  theme('latte', 'Matcha Latte', 'Matcha green with a milky coffee touch.', {
+    accent: '#7d9a55', soft: '#eef2e1', g1: '#dfe8c8', g2: '#efe2cf', text: '#44402f', muted: '#968f78',
+    border: '#e6e3d2', bg: '#fbfaf4', canvas: '#f4f1e6', desk: '#f1eee3',
+  }),
+  theme('strawberry', 'Strawberry Milk', 'Sweet strawberry pink and milky peach.', {
+    accent: '#ec6a8c', soft: '#ffe4ea', g1: '#ffd1dc', g2: '#ffe9d6', text: '#533843', muted: '#a88592',
+    border: '#f6dae2', bg: '#fff7f9', canvas: '#fbedf1', desk: '#f9eaee',
+  }),
+  theme('apricot', 'Apricot', 'Warm apricot and peach, cozy and friendly.', {
+    accent: '#ee8a5a', soft: '#ffebe0', g1: '#ffd3b8', g2: '#ffe7a8', text: '#4d3a30', muted: '#a28675',
+    border: '#f5ddcc', bg: '#fff8f3', canvas: '#fbf0e8', desk: '#f9eee6',
+  }),
+  theme('butter', 'Butter', 'Buttery yellow and cream, sunny and soft.', {
+    accent: '#d39a12', soft: '#fff3cc', g1: '#fff0b3', g2: '#ffe1c4', text: '#4a432c', muted: '#9a9072',
+    border: '#f0e5c0', bg: '#fffdf4', canvas: '#faf6e6', desk: '#f8f3e1',
+  }),
+  theme('lilac', 'Lilac Mint', 'Lilac with a minty finish.', {
+    accent: '#9b74d6', soft: '#f1e9fb', g1: '#e3d3fb', g2: '#d3f0e7', text: '#43385a', muted: '#958aac',
+    border: '#e7def5', bg: '#faf7fe', canvas: '#f2edf9', desk: '#efe9f7',
+  }),
+  theme('baby-blue', 'Baby Blue', 'Baby blue fading into mint.', {
+    accent: '#4f9fdf', soft: '#e3f0fc', g1: '#cfe8ff', g2: '#dff7f0', text: '#2e3d52', muted: '#8193a8',
+    border: '#d9e7f6', bg: '#f5f9ff', canvas: '#eef4fb', desk: '#ebf2fa',
+  }),
 ];
 
 const ALL_VARS = [...new Set(THEMES.flatMap((t) => Object.keys(t.vars)))];
 
 /** Applies a theme to the editor UI (not to the CV). Returns the theme applied. */
 export function applyTheme(id) {
-  const theme = THEMES.find((t) => t.id === id) ?? THEMES[0];
+  const chosen = THEMES.find((t) => t.id === id) ?? THEMES[0];
   const root = document.documentElement;
   for (const k of ALL_VARS) root.style.removeProperty(k);
   root.style.removeProperty('--font');
-  for (const [k, v] of Object.entries(theme.vars)) root.style.setProperty(k, v);
-  if (theme.font) {
-    root.style.setProperty('--font', `"${theme.font}", -apple-system, BlinkMacSystemFont, sans-serif`);
-    loadFont(theme.font);
+  for (const [k, v] of Object.entries(chosen.vars)) root.style.setProperty(k, v);
+  if (chosen.font) {
+    root.style.setProperty('--font', `"${chosen.font}", -apple-system, BlinkMacSystemFont, sans-serif`);
+    loadFont(chosen.font);
   }
-  root.dataset.theme = theme.id;
-  return theme;
+  root.dataset.theme = chosen.id;
+  return chosen;
 }
 
 function loadFont(name) {

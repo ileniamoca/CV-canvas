@@ -269,7 +269,7 @@ dialog menu { display: flex; justify-content: flex-end; gap: 8px; padding: 0; ma
 .theme-pick select { flex: 1; min-width: 0; }
 .theme-pick button { padding: 4px 10px; }
 .theme-pop .hint { color: var(--muted); font-size: 12px; margin: 8px 0 10px; line-height: 1.4; min-height: 2.8em; }
-.theme-swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.theme-swatches { display: grid; grid-template-columns: repeat(5, 28px); justify-content: space-between; row-gap: 10px; }
 .theme-swatches button {
   width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 2px solid var(--panel);
   box-shadow: 0 0 0 1px var(--border);
