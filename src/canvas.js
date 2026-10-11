@@ -60,11 +60,10 @@ export const CANVAS_CSS = `
  * @param {{snapshot: () => void, committed: () => void}} o.history
  * @param {() => boolean} o.snapEnabled
  * @param {() => boolean} o.pushEnabled          when a frame grows, shift the ones below
- * @param {(el: Element|null, count: number) => void} o.onSelect   selection or geometry changed (el: main object)
  * @param {(r: {outside: number, overlaps: number}) => void} o.onLayout
  * @param {(msg: string) => void} o.toast
  */
-export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onSelect, onLayout, toast }) {
+export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onLayout, toast }) {
   let selection = []; // selected objects (frames/shapes)
   let selected = null; // main selected object (the last one clicked)
   let frameMode = false; // true: selected as object(s); false: editing the selected frame's text
@@ -163,7 +162,6 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
     setEditable(selected && !frameMode ? selected : null);
     if (frameMode || !selected) d.getSelection()?.removeAllRanges();
     for (const n of d.querySelectorAll('[class=""]')) n.removeAttribute('class');
-    onSelect(selected, selection.length);
   }
 
   /** ⇧+click: adds an object to the selection, or removes it. */
@@ -558,7 +556,6 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
     }
     history.committed();
     flashGuides(bbox(selection), selection);
-    onSelect(selected, selection.length);
   }
 
   /** Height a text frame needs for its text (ignoring any min-height set by dragging its bottom edge). */
@@ -602,63 +599,6 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
     ensureControls();
     history.committed();
     setSelection(clones);
-  }
-
-  /** Changes position/size of the selection (from the inspector). */
-  function setGeometry(patch) {
-    if (!selected || selection.length > 1) return;
-    history.snapshot();
-    for (const [k, v] of Object.entries(patch)) {
-      if (!Number.isFinite(v)) continue;
-      if (k === 'height' && !selected.classList.contains('shape')) {
-        const min = naturalHeight(selected);
-        selected.style.minHeight = v > min ? `${Math.round(v)}px` : '';
-        continue;
-      }
-      selected.style[k] = `${Math.round(v)}px`;
-    }
-    history.committed();
-    onSelect(selected, selection.length);
-  }
-
-  function setColor(color) {
-    const shapes = selection.filter((o) => o.classList.contains('shape'));
-    if (!shapes.length) return;
-    history.snapshot();
-    for (const o of shapes) o.style.background = color;
-    history.committed();
-  }
-
-  /** One object: aligns it to the page. Several: aligns them to each other (their bounding box). */
-  function align(where) {
-    if (!selection.length) return;
-    const p = page();
-    const area = selection.length > 1 ? bbox(selection) : { l: 0, t: 0, w: p.offsetWidth, h: p.offsetHeight };
-    history.snapshot();
-    for (const o of selection) {
-      const g = geom(o);
-      const pos = {
-        left: { left: area.l },
-        hcenter: { left: area.l + (area.w - g.w) / 2 },
-        right: { left: area.l + area.w - g.w },
-        top: { top: area.t },
-        vcenter: { top: area.t + (area.h - g.h) / 2 },
-        bottom: { top: area.t + area.h - g.h },
-      }[where];
-      for (const [k, v] of Object.entries(pos)) o.style[k] = `${Math.round(v)}px`;
-    }
-    history.committed();
-    onSelect(selected, selection.length);
-  }
-
-  function arrange(where) {
-    if (!selection.length) return;
-    const p = page();
-    history.snapshot();
-    const ordered = objects().filter((o) => selection.includes(o)); // keep their relative order
-    if (where === 'back') p.prepend(...ordered);
-    else p.append(...ordered);
-    history.committed();
   }
 
   function add(type) {
@@ -815,7 +755,7 @@ export function createCanvas({ doc, attr, history, snapEnabled, pushEnabled, onS
 
   return {
     attach, ensureControls, checkLayout, onKeyDown, enablePush,
-    select, getSelected: () => selected, getCount: () => selection.length, isFrameMode: () => frameMode,
-    setGeometry, setColor, align, arrange, add, duplicate, remove, resolveOverlaps,
+    select,
+    add, duplicate, remove, resolveOverlaps,
   };
 }

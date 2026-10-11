@@ -85,33 +85,6 @@
     </main>
 
     <aside class="inspector" id="inspector">
-      <details class="panel" data-panel="selection" open>
-        <summary>Selection</summary>
-        <p class="hint" id="selHint">Click a text frame or shape to select it (⌥+click if the shape is behind text), or drag on an empty area to select several (⇧+click adds or removes, ⌘A selects all). Drag or use the arrow keys to move them, and drag any edge or corner to resize. Double-click a text frame (or press Enter) to edit its text.</p>
-        <div id="selPanel" hidden>
-          <div class="sel-title" id="selTitle">Frame</div>
-          <div class="geo">
-            <label>X <input type="number" id="geoX" /></label>
-            <label>Y <input type="number" id="geoY" /></label>
-            <label>Width <input type="number" id="geoW" min="1" /></label>
-            <label>Height <input type="number" id="geoH" min="1" /></label>
-          </div>
-          <label class="color-row" id="colorRow">Color <input type="color" id="shapeColor" /></label>
-          <div class="btn-row icons" title="Align to the page (one element) or to each other (several)">
-            <button data-align="left" title="Align to page left">⇤</button>
-            <button data-align="hcenter" title="Center horizontally">↔</button>
-            <button data-align="right" title="Align to page right">⇥</button>
-            <button data-align="top" title="Align top">⤒</button>
-            <button data-align="vcenter" title="Center vertically">↕</button>
-            <button data-align="bottom" title="Align bottom">⤓</button>
-          </div>
-          <div class="btn-row">
-            <button data-arrange="front" title="Bring to front">To front</button>
-            <button data-arrange="back" title="Send to back">To back</button>
-          </div>
-          <p class="hint">Arrows: move 1 px (⇧ 10 px) · Enter / double-click edit text · ⌘C ⌘V copy & paste · ⌘D duplicate · ⌫ delete · Esc deselect</p>
-        </div>
-      </details>
       <details class="panel" data-panel="layout" open>
         <summary>Layout</summary>
         <label class="switch"><input type="checkbox" id="snapToggle" checked /> Soft snap

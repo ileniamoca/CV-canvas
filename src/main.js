@@ -100,7 +100,6 @@ function afterChange() {
   drawMargins();
   setDirty(serialize() !== state.savedHtml);
   updateWordCount();
-  updateInspector(canvas.getSelected(), canvas.getCount());
   updateMarginInputs();
 }
 
@@ -135,7 +134,6 @@ const canvas = createCanvas({
   history: blocks,
   snapEnabled: () => $('#snapToggle').checked,
   pushEnabled: () => $('#pushToggle').checked,
-  onSelect: (el, count) => updateInspector(el, count),
   onLayout: (r) => updateLayoutStatus(r),
   toast: (msg) => toast(msg),
 });
@@ -207,7 +205,6 @@ function setupEditing() {
   drawMargins();
   renderMargins();
   renderStyles();
-  updateInspector(null);
   // Recompute pages/warnings when the height changes (text, moved blocks, loaded fonts…).
   new d.defaultView.ResizeObserver(() => updatePages()).observe(d.querySelector('.page') ?? d.body);
   d.fonts?.ready.then(() => {
@@ -658,41 +655,6 @@ const toHex = (c) => {
   return '#' + m.slice(0, 3).map((n) => Math.round(+n).toString(16).padStart(2, '0')).join('');
 };
 
-function updateInspector(el, count = 1) {
-  const has = Boolean(el?.isConnected);
-  $('#selPanel').hidden = !has;
-  $('#selHint').hidden = has;
-  if (!has) return;
-  const multi = count > 1;
-  for (const id of ['#geoX', '#geoY', '#geoW']) $(id).disabled = multi;
-  if (multi) {
-    // Several objects: they move, align and arrange together; geometry is edited one at a time.
-    $('#selTitle').textContent = `${count} elements selected`;
-    for (const id of ['#geoX', '#geoY', '#geoW', '#geoH']) $(id).value = '';
-    $('#geoH').disabled = true;
-    $('#colorRow').hidden = true;
-    return;
-  }
-  const isShape = el.classList.contains('shape');
-  const heading = el.querySelector('h1, h2, h3, p')?.textContent.trim().slice(0, 28);
-  $('#selTitle').textContent = isShape ? 'Shape' : `Text frame${heading ? ` · ${heading}` : ''}`;
-  $('#geoX').value = el.offsetLeft;
-  $('#geoY').value = el.offsetTop;
-  $('#geoW').value = el.offsetWidth;
-  $('#geoH').value = el.offsetHeight;
-  $('#geoH').disabled = false;
-  $('#geoH').title = isShape ? '' : 'A text frame is never shorter than its text';
-  $('#colorRow').hidden = !isShape;
-  if (isShape) $('#shapeColor').value = toHex(doc().defaultView.getComputedStyle(el).backgroundColor);
-}
-
-for (const [id, prop] of [['#geoX', 'left'], ['#geoY', 'top'], ['#geoW', 'width'], ['#geoH', 'height']]) {
-  $(id).addEventListener('change', (e) => canvas.setGeometry({ [prop]: parseFloat(e.target.value) }));
-}
-$('#shapeColor').addEventListener('change', (e) => canvas.setColor(e.target.value));
-document.querySelectorAll('[data-align]').forEach((b) => b.addEventListener('click', () => canvas.align(b.dataset.align)));
-document.querySelectorAll('[data-arrange]').forEach((b) => b.addEventListener('click', () => canvas.arrange(b.dataset.arrange)));
-document.querySelectorAll('[data-add]').forEach((b) => b.addEventListener('click', () => doc() && canvas.add(b.dataset.add)));
 $('#btnResolve').addEventListener('click', () => doc() && canvas.resolveOverlaps());
 
 // ---------- Inspector: text styles ----------
