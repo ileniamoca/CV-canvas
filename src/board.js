@@ -121,6 +121,10 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
         if (style) style.textContent = sheetCss(z);
       }
     }
+    // Room at both ends so that any sheet, the first and the last included, can sit in the middle of the view.
+    const side = `${Math.max(96, Math.round(board.clientWidth / 2 - (PAGE_W * z) / 2))}px`;
+    strip.style.paddingLeft = side;
+    strip.style.paddingRight = side;
   }
 
   /** Marks a sheet as the one being edited and returns its iframe (null if it isn't on the board). */
@@ -192,6 +196,9 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
       if (s) onCenter(s.kind, s.name);
     }, 250);
   });
+
+  // The end margins depend on the width of the view (window resized, side panels…).
+  new ResizeObserver(() => resize()).observe(board);
 
   // The user scrolling or pinching takes over from an ongoing glide.
   board.addEventListener('wheel', (e) => {
