@@ -51,13 +51,19 @@ body {
 }
 
 button, select, input { font: inherit; color: inherit; }
+/* Hooks for the UI styles (src/ui-styles.css): every --x below falls back to the default look. */
 button, select {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  background: var(--btn-bg, var(--panel));
+  border: var(--bw, 1px) solid var(--btn-border, var(--border));
+  border-radius: var(--btn-radius, var(--radius-sm));
+  box-shadow: var(--btn-shadow, none);
   padding: 5px 10px;
   cursor: pointer;
-  transition: background .15s, border-color .15s;
+  transition: background .15s, border-color .15s, box-shadow .15s, transform .15s;
+}
+.titlebar .brand, .sidebar h2, .inspector .panel > summary, .inspector-head .name, .lib-title,
+.tb-text strong, dialog h3, .theme-pop-head strong, .sidebar .pill-cta, .sheet-label .name, .margin-title {
+  font-family: var(--font-display, var(--font));
 }
 button:hover:not(:disabled), select:hover { border-color: var(--accent); }
 button:disabled { opacity: .45; cursor: default; }
@@ -70,6 +76,8 @@ button.active { background: var(--accent-soft); border-color: var(--accent); }
   padding: 8px 16px;
   background: var(--titlebar);
   color: var(--titlebar-text);
+  box-shadow: var(--titlebar-shadow, none);
+  position: relative; z-index: 1;
 }
 .titlebar .brand { font-weight: 700; }
 .titlebar .docname { flex: 1; opacity: .9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -82,8 +90,8 @@ button.active { background: var(--accent-soft); border-color: var(--accent); }
 .toolbar {
   display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px;
   padding: 6px 16px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
+  background: var(--panel-bg, var(--panel));
+  border-bottom: var(--bw, 1px) solid var(--border);
 }
 .toolbar .group { display: flex; align-items: center; gap: 2px; }
 .toolbar .group + .group { padding-left: 10px; border-left: 1px solid var(--border); }
@@ -126,8 +134,9 @@ body.hide-right .theme-bubble { right: 18px; }
 .toolbar .panel-toggle.on { color: var(--accent); }
 .toolbar .panel-toggle .fill { stroke-width: 1.6; }
 .sidebar {
-  background: var(--panel);
-  border-right: 1px solid var(--border);
+  background: var(--panel-bg, var(--panel));
+  border-right: var(--bw, 1px) solid var(--border);
+  box-shadow: var(--panel-shadow, none);
   overflow-y: auto;
   padding: 8px 0 24px;
 }
@@ -197,8 +206,9 @@ body.hide-right .theme-bubble { right: 18px; }
 
 /* Inspector (right panel) */
 .inspector {
-  background: var(--panel);
-  border-left: 1px solid var(--border);
+  background: var(--panel-bg, var(--panel));
+  border-left: var(--bw, 1px) solid var(--border);
+  box-shadow: var(--panel-shadow, none);
   overflow-y: auto;
   padding: 4px 14px 24px;
 }
@@ -313,7 +323,10 @@ input[type="color"] { width: 40px; height: 26px; padding: 0 2px; border: 1px sol
 /* Canvas */
 .canvas { position: relative; background: var(--canvas); min-height: 0; display: flex; flex-direction: column; }
 /* Board: all sheets side by side on a pasteboard; scroll/pinch with the trackpad */
-.board { flex: 1; min-height: 0; overflow: auto; background: var(--desk); overscroll-behavior: contain; }
+.board {
+  flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain;
+  background-color: var(--desk); background-image: var(--desk-image, none); background-size: var(--desk-size, auto);
+}
 .board-strip { display: flex; align-items: flex-start; gap: 72px; padding: 56px 96px 96px; width: max-content; }
 .sheet { flex: none; display: grid; gap: 10px; }
 .sheet-label {
@@ -326,9 +339,9 @@ input[type="color"] { width: 40px; height: 26px; padding: 0 2px; border: 1px sol
 }
 .sheet-label .name { overflow: hidden; text-overflow: ellipsis; }
 .sheet.active .sheet-label { color: var(--text); font-weight: 600; }
-.sheet-frame { position: relative; background: #fff; box-shadow: 0 4px 22px rgba(0,0,0,.10); transition: box-shadow .2s; }
+.sheet-frame { position: relative; background: #fff; box-shadow: var(--sheet-shadow, 0 4px 22px rgba(0,0,0,.10)); transition: box-shadow .2s; }
 .sheet:not(.active) .sheet-frame:hover { box-shadow: 0 0 0 3px var(--accent-soft), 0 6px 26px rgba(0,0,0,.14); }
-.sheet.active .sheet-frame { box-shadow: 0 0 0 2px var(--accent), 0 8px 30px rgba(0,0,0,.14); }
+.sheet.active .sheet-frame { box-shadow: var(--sheet-active-shadow, 0 0 0 2px var(--accent), 0 8px 30px rgba(0,0,0,.14)); }
 .sheet iframe { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
 .sheet-cover { position: absolute; inset: 0; cursor: pointer; }
 .sheet.active .sheet-cover { display: none; }
@@ -356,7 +369,7 @@ body.template-mode #list-pages, body.template-mode #btnAddPage { opacity: .5; }
 .statusbar {
   display: flex; justify-content: space-between; gap: 16px;
   padding: 4px 16px; font-size: 12px; color: var(--muted);
-  background: var(--panel); border-top: 1px solid var(--border);
+  background: var(--panel-bg, var(--panel)); border-top: var(--bw, 1px) solid var(--border);
 }
 
 dialog {
@@ -416,6 +429,8 @@ dialog menu { display: flex; justify-content: flex-end; gap: 8px; padding: 0; ma
 .theme-pop-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .theme-pop-head button { padding: 2px 7px; font-size: 12px; }
 .theme-pick { display: flex; gap: 6px; }
+.theme-pop .pick-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 2px 0 6px; }
+#paletteBox { border-top: 1px solid var(--border); padding-top: 10px; }
 .theme-pick select { flex: 1; min-width: 0; }
 .theme-pick button { padding: 4px 10px; }
 .theme-pop .hint { color: var(--muted); font-size: 12px; margin: 8px 0 10px; line-height: 1.4; min-height: 2.8em; }

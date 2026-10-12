@@ -123,7 +123,8 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
   items with a checkbox (unticked = `hidden` attribute: kept in place, not shown or printed), reorders them and
   moves them between sections.
 - `src/margins.js` — regions and margins: read/write `data-margins`, guides, adjusting frames when a margin changes.
-- `src/themes.js` — editor UI themes, all in the same style (Quicksand, rounded, pastel gradient) with warm peachy
-  different palettes (CSS variables of `src/style.css`); the 🎨 bubble is a temporary picker.
+- `src/themes.js` + `src/ui-styles.css` — editor UI looks (never the CV): 22 styles (Cute, Claymorphism, Cybercore,
+  Neo-Brutalism…, set as `<html data-style>`), and for "Cute" the color palettes (CSS variables of `src/style.css`,
+  which exposes hooks such as `--btn-*`, `--panel-*`, `--desk-image`, `--font-display`). Picked in the 🎨 bubble.
 - `src/styles.js` — text styles: read/write the variables, apply a style to a paragraph, font catalog.
 - Start: `npm run dev` → http://localhost:5180

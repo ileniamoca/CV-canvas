@@ -6,6 +6,7 @@
   <title>CV Designer</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5' y='3' width='22' height='26' rx='3' fill='%232b5797'/><path d='M10 10h12M10 15h12M10 20h8' stroke='white' stroke-width='2' stroke-linecap='round'/></svg>" />
   <link rel="stylesheet" href="/src/style.css" />
+  <link rel="stylesheet" href="/src/ui-styles.css" />
 </head>
 <body>
   <header class="titlebar">
@@ -214,13 +215,23 @@
         <strong>Try a look ✨</strong>
         <button id="themeClose" title="Close">✕</button>
       </div>
+      <div class="pick-label">Style</div>
       <div class="theme-pick">
-        <button id="themePrev" title="Previous look">‹</button>
-        <select id="themeSelect" title="Editor look"></select>
-        <button id="themeNext" title="Next look">›</button>
+        <button id="stylePrev" title="Previous style">‹</button>
+        <select id="styleSelect" title="Editor style"></select>
+        <button id="styleNext" title="Next style">›</button>
       </div>
-      <p class="hint" id="themeNote"></p>
-      <div class="theme-swatches" id="themeSwatches"></div>
+      <p class="hint" id="styleNote"></p>
+      <div id="paletteBox">
+        <div class="pick-label">Palette</div>
+        <div class="theme-pick">
+          <button id="themePrev" title="Previous palette">‹</button>
+          <select id="themeSelect" title="Palette"></select>
+          <button id="themeNext" title="Next palette">›</button>
+        </div>
+        <p class="hint" id="themeNote"></p>
+        <div class="theme-swatches" id="themeSwatches"></div>
+      </div>
     </div>
     <button class="theme-fab" id="themeFab" title="Try a different look for the editor">🎨</button>
   </div>

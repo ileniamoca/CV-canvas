@@ -133,3 +133,57 @@ function loadFont(name) {
   link.href = `https://fonts.googleapis.com/css2?family=${name.replace(/ /g, '+')}:wght@400;500;600;700&display=swap`;
   document.head.append(link);
 }
+
+// ---------- UI styles (src/ui-styles.css) ----------
+// A style is a whole look for the editor (fonts, shapes, textures and its own colors). "cute" is the
+// default look colored by the palettes above; any other style replaces the palette while it's on.
+// `fonts` are Google Fonts "family" parameters (only weights each font really has).
+export const STYLES = [
+  { id: 'cute', name: 'Cute (palettes)', note: 'Rounded and soft, in the palette you choose below.', fonts: [] },
+  { id: 'clay', name: 'Claymorphism', note: 'Puffy, inflated shapes with soft inner light, like modelling clay.', fonts: ['Nunito:wght@400;600;700', 'Fredoka:wght@500;600'] },
+  { id: 'cybercore', name: 'Cybercore', note: 'Terminal-dark with cyan glow, mono type and a grid.', fonts: ['Share+Tech+Mono', 'Orbitron:wght@500;700'] },
+  { id: 'brutal', name: 'Neo-Brutalism', note: 'Thick black outlines, hard offset shadows and loud flat colors.', fonts: ['Space+Grotesk:wght@400;500;700', 'Archivo+Black'] },
+  { id: 'surreal', name: 'Surrealism', note: 'A dreamlike sky with a melting sun; asymmetric, soft shapes.', fonts: ['DM+Sans:wght@400;500;700', 'Fraunces:ital,wght@0,600;1,600'] },
+  { id: 'y2k', name: 'Y2K Aesthetic', note: 'Glossy chrome, bubble buttons and iridescent pastels.', fonts: ['Nunito:wght@400;600;700', 'Audiowide'] },
+  { id: 'pixel', name: 'Pixel art', note: '8-bit type, square corners and chunky pixel borders.', fonts: ['VT323', 'Press+Start+2P'] },
+  { id: 'synthwave', name: 'Synthwave', note: '80s neon: magenta and cyan glow over a retro sunset grid.', fonts: ['Exo+2:wght@400;600;700', 'Orbitron:wght@500;700'] },
+  { id: 'glass', name: 'Glassmorphism', note: 'Frosted glass panels floating over colorful blurred blobs.', fonts: ['Inter:wght@400;500;600;700'] },
+  { id: 'neu', name: 'Neumorphism', note: 'Everything carved from one soft surface: light and shadow only.', fonts: ['Nunito:wght@400;600;700'] },
+  { id: 'bento', name: 'Bento grid', note: 'Everything in rounded tiles with gaps, like a bento box.', fonts: ['Manrope:wght@400;500;600;700'] },
+  { id: 'editorial', name: 'Editorial design', note: 'Magazine layout: serif type, hairline rules, small caps, red ink.', fonts: ['Source+Serif+4:wght@400;600', 'Playfair+Display:ital,wght@0,700;1,700'] },
+  { id: 'swiss', name: 'Swiss design', note: 'International style: grid, black and white, one strong red, sans-serif.', fonts: ['Inter:wght@400;600;800;900'] },
+  { id: 'minimal', name: 'Minimalism', note: 'Almost nothing: white space, light type, hairlines, black accent.', fonts: ['Inter:wght@300;400;500'] },
+  { id: 'maximal', name: 'Maximalism', note: 'More is more: rainbow, patterns, dots, stacked shadows.', fonts: ['DM+Sans:wght@400;500;700', 'Bricolage+Grotesque:wght@600;800'] },
+  { id: 'luxury', name: 'Luxury typography', note: 'Black and gold, Roman capitals and wide letter-spacing.', fonts: ['Cormorant+Garamond:wght@400;500;600', 'Cinzel:wght@500;600'] },
+  { id: 'sketch', name: 'Conceptual sketch', note: 'Hand-drawn: wobbly ink outlines, handwriting, grid paper.', fonts: ['Patrick+Hand', 'Caveat:wght@600;700'] },
+  { id: 'ethereal', name: 'Ethereal', note: 'Airy pastel haze, soft glows and light italic serif.', fonts: ['Nunito+Sans:wght@300;400;600', 'Cormorant+Garamond:ital,wght@1,500'] },
+  { id: 'boho', name: 'Bohemian', note: 'Earthy terracotta, mustard and olive with woven patterns.', fonts: ['Lora:wght@400;600', 'Yeseva+One'] },
+  { id: 'victorian', name: 'Victorian', note: 'Burgundy and gold, double frames, fleurons and old-style type.', fonts: ['EB+Garamond:wght@400;600', 'IM+Fell+English+SC'] },
+  { id: 'cyberpunk', name: 'Cyberpunk', note: 'Yellow and black, cut corners, cyan and red glitch shadows.', fonts: ['Rajdhani:wght@500;600;700', 'Orbitron:wght@600;800'] },
+  { id: 'wabisabi', name: 'Wabi-sabi', note: 'Imperfect and calm: earthy greys, paper texture, uneven corners.', fonts: ['Zen+Kaku+Gothic+New:wght@400;500', 'Shippori+Mincho:wght@500;600'] },
+];
+
+/** Applies a UI style; `palette` is the palette to use when going back to "cute". */
+export function applyStyle(id, palette) {
+  const style = STYLES.find((s) => s.id === id) ?? STYLES[0];
+  const root = document.documentElement;
+  if (style.id === 'cute') {
+    delete root.dataset.style;
+    applyTheme(palette);
+  } else {
+    // The style brings its own colors: drop the palette's inline variables (they would win over the CSS).
+    for (const k of [...ALL_VARS, '--font']) root.style.removeProperty(k);
+    root.dataset.style = style.id;
+    if (style.fonts.length) {
+      const id = `style-fonts-${style.id}`;
+      if (!document.getElementById(id)) {
+        const link = document.createElement('link');
+        link.id = id;
+        link.rel = 'stylesheet';
+        link.href = `https://fonts.googleapis.com/css2?${style.fonts.map((f) => `family=${f}`).join('&')}&display=swap`;
+        document.head.append(link);
+      }
+    }
+  }
+  return style;
+}

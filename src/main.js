@@ -8,7 +8,7 @@ import {
 import {
   REGIONS, SIDES, MARGINS_CSS, regionRects, readMargins, initMargins, setMargin, drawMarginGuides,
 } from './margins.js';
-import { THEMES, applyTheme } from './themes.js';
+import { THEMES, applyTheme, STYLES, applyStyle as applyUiStyle } from './themes.js';
 import { initTooltips } from './tooltips.js';
 import TEMPLATE from '../templates/blank.html?raw';
 
@@ -1148,8 +1148,9 @@ initTooltips(document);
 const cssVar = (name, fallback) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 const accent = () => cssVar('--accent', '#2b5797');
 
+let currentStyle = 'cute';
 function setTheme(id) {
-  const theme = applyTheme(id);
+  const theme = currentStyle === 'cute' ? applyTheme(id) : THEMES.find((t) => t.id === id) ?? THEMES[0];
   try { localStorage.setItem('cv-editor:theme', theme.id); } catch {}
   $('#themeSelect').value = theme.id;
   $('#themeNote').textContent = theme.note;
@@ -1184,6 +1185,28 @@ let savedTheme = null;
 try { savedTheme = localStorage.getItem('cv-editor:theme'); } catch {}
 setTheme(savedTheme ?? THEMES[0].id);
 $('#themePop').hidden = Boolean(savedTheme); // first visit: open, so the picker is noticed
+
+// UI styles: a whole look (fonts, shapes, textures, colors); "cute" uses the palettes.
+function setStyle(id) {
+  const style = applyUiStyle(id, $('#themeSelect').value);
+  currentStyle = style.id;
+  try { localStorage.setItem('cv-editor:style', style.id); } catch {}
+  $('#styleSelect').value = style.id;
+  $('#styleNote').textContent = style.note;
+  $('#paletteBox').hidden = style.id !== 'cute';
+  applyZoom(); // the accent used inside the page follows the style
+}
+$('#styleSelect').innerHTML = STYLES.map((s) => `<option value="${s.id}">${s.name}</option>`).join('');
+const stepStyle = (d) => {
+  const i = STYLES.findIndex((s) => s.id === $('#styleSelect').value);
+  setStyle(STYLES[(i + d + STYLES.length) % STYLES.length].id);
+};
+$('#styleSelect').addEventListener('change', (e) => setStyle(e.target.value));
+$('#stylePrev').addEventListener('click', () => stepStyle(-1));
+$('#styleNext').addEventListener('click', () => stepStyle(1));
+let savedStyle = null;
+try { savedStyle = localStorage.getItem('cv-editor:style'); } catch {}
+setStyle(savedStyle ?? 'cute');
 
 // ---------- Side panels: show / hide ----------
 function setPanel(side, visible) {
