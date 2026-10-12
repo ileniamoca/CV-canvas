@@ -72,7 +72,8 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 
 1. Open `documents/pages/X.html`. Its `cv-job` meta points to the ad in `../jobs/`; `cv-template` to its template.
 2. Read `../ilenia/README.md` and the chapters that matter for the ad (respect each project file's
-   "safe / not safe to claim" sections).
+   "safe / not safe to claim" sections). For wording, look at the CVs already sent for the same track in
+   `../ilenia/_sources/cvs-sent/` (read its README first: early ones overstate the Snowflake project).
 3. From the ad, list must-haves, nice-to-haves, keywords, seniority and domain.
 4. Edit only the content of the page, keeping its structure and classes:
    - subtitle (`.role`) and **Professional Summary**: rewrite for this role;
