@@ -1148,15 +1148,20 @@ function setTheme(id) {
   applyZoom(); // the desk color inside the editor follows the theme
 }
 
-$('#themeSelect').innerHTML = THEMES.map((t) => `<option value="${t.id}">${t.name}</option>`).join('');
-$('#themeSwatches').replaceChildren(...THEMES.map((t) => {
-  const b = document.createElement('button');
-  b.dataset.theme = t.id;
-  b.title = t.name;
-  b.style.background = `linear-gradient(135deg, ${t.swatch[0]} 50%, ${t.swatch[1]} 50%)`;
-  b.addEventListener('click', () => setTheme(t.id));
-  return b;
-}));
+const themeGroups = [...new Set(THEMES.map((t) => t.group))];
+$('#themeSelect').innerHTML = themeGroups.map((g) => `<optgroup label="${g}">${THEMES.filter((t) => t.group === g)
+  .map((t) => `<option value="${t.id}">${t.name}</option>`).join('')}</optgroup>`).join('');
+$('#themeSwatches').replaceChildren(...themeGroups.flatMap((g) => [
+  Object.assign(document.createElement('div'), { className: 'swatch-group', textContent: g }),
+  ...THEMES.filter((t) => t.group === g).map((t) => {
+    const b = document.createElement('button');
+    b.dataset.theme = t.id;
+    b.title = t.name;
+    b.style.background = `linear-gradient(135deg, ${t.swatch[0]} 50%, ${t.swatch[1]} 50%)`;
+    b.addEventListener('click', () => setTheme(t.id));
+    return b;
+  }),
+]));
 const stepTheme = (d) => {
   const i = THEMES.findIndex((t) => t.id === $('#themeSelect').value);
   setTheme(THEMES[(i + d + THEMES.length) % THEMES.length].id);

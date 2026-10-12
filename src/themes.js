@@ -6,9 +6,9 @@
 const FONT = 'Quicksand';
 
 /** Builds a theme from its palette; everything that isn't color is shared. */
-function theme(id, name, note, c) {
+function theme(id, name, note, c, group = 'Warm peach') {
   return {
-    id, name, note, font: FONT, swatch: [c.accent, c.g2],
+    id, name, note, group, font: FONT, swatch: [c.accent, group === 'Peach & grey' ? c.g1 : c.g2],
     vars: {
       '--bg': c.bg, '--panel': '#ffffff', '--border': c.border, '--text': c.text, '--muted': c.muted,
       '--accent': c.accent, '--accent-soft': c.soft, '--on-accent': '#ffffff', '--danger': '#d64545',
@@ -62,6 +62,49 @@ export const THEMES = [
     accent: '#ec6b67', soft: '#ffe3e1', g1: '#ffc6c0', g2: '#ffdcc8', text: '#533634', muted: '#aa8582',
     border: '#f7d7d4', bg: '#fff6f5', canvas: '#fcecea', desk: '#fae8e6',
   }),
+  // Peach, coral, pink and orange accents over grey neutrals (warm stone/taupe, cool slate/graphite, plain concrete).
+  ...[
+    ['peach-slate', 'Peach Slate', 'Soft peach over cool slate greys.', {
+      accent: '#e8875e', soft: '#fdece3', g1: '#dfe2e7', g2: '#ffd9c4', text: '#3d4148', muted: '#8a8f98',
+      border: '#e3e4e7', bg: '#f7f7f8', canvas: '#eeeff1', desk: '#ebecef',
+    }],
+    ['coral-stone', 'Coral Stone', 'Coral on warm stone grey.', {
+      accent: '#ec6f5c', soft: '#fde6e1', g1: '#e6e1dc', g2: '#ffc9bd', text: '#44403c', muted: '#8f8a85',
+      border: '#e7e3df', bg: '#f9f8f6', canvas: '#f0eeeb', desk: '#edeae7',
+    }],
+    ['rose-taupe', 'Rose Taupe', 'Dusty rose with a soft taupe.', {
+      accent: '#d9758f', soft: '#f9e6ec', g1: '#e4dde0', g2: '#f7d2de', text: '#4a4245', muted: '#978d91',
+      border: '#e8e2e4', bg: '#faf8f9', canvas: '#f1edef', desk: '#eeeaec',
+    }],
+    ['apricot-fog', 'Apricot Fog', 'Apricot glowing through a light grey fog.', {
+      accent: '#ee8a5a', soft: '#ffece1', g1: '#d9dde2', g2: '#ffe0c4', text: '#3f4246', muted: '#8c9096',
+      border: '#e2e3e5', bg: '#f6f7f8', canvas: '#eceef0', desk: '#e9ebee',
+    }],
+    ['blush-graphite', 'Blush Graphite', 'Pink blush against graphite grey: the most contrasted.', {
+      accent: '#e5688a', soft: '#fbe4eb', g1: '#c9cdd3', g2: '#f9cfdb', text: '#2f3237', muted: '#7f848b',
+      border: '#dfe1e4', bg: '#f5f6f7', canvas: '#eaecee', desk: '#e6e8eb',
+    }],
+    ['melon-ash', 'Melon Ash', 'Melon orange with warm ash grey.', {
+      accent: '#ef8c66', soft: '#ffebe1', g1: '#dcd8d2', g2: '#ffd4c2', text: '#403e3b', muted: '#8d8984',
+      border: '#e5e2de', bg: '#f8f7f5', canvas: '#efedea', desk: '#ecebe7',
+    }],
+    ['grapefruit-mist', 'Grapefruit Mist', 'Pink grapefruit in a cool grey mist.', {
+      accent: '#ec6b67', soft: '#fde3e1', g1: '#d5d9e0', g2: '#ffc6c0', text: '#3b3e44', muted: '#868b93',
+      border: '#e1e3e7', bg: '#f6f7f9', canvas: '#ecedf1', desk: '#e8eaee',
+    }],
+    ['peach-concrete', 'Peach Concrete', 'Muted terracotta peach on plain concrete grey.', {
+      accent: '#d9805a', soft: '#f8e8df', g1: '#d6d6d4', g2: '#f6cfb8', text: '#3a3a3a', muted: '#888888',
+      border: '#e2e2e2', bg: '#f6f6f5', canvas: '#ececeb', desk: '#e8e8e7',
+    }],
+    ['dusty-coral', 'Dusty Coral', 'Dusty coral with a pinkish warm grey.', {
+      accent: '#d6735f', soft: '#f6e3dd', g1: '#ded5d2', g2: '#f3c6b8', text: '#463f3d', muted: '#958b88',
+      border: '#e7e1df', bg: '#f9f7f6', canvas: '#f0ecea', desk: '#ede8e6',
+    }],
+    ['pink-pewter', 'Pink Pewter', 'Candy pink softened by pewter grey.', {
+      accent: '#e07a95', soft: '#fae5ec', g1: '#cfd3da', g2: '#f6d0dc', text: '#3c3f45', muted: '#8a8e96',
+      border: '#e0e2e6', bg: '#f7f7f9', canvas: '#edeef1', desk: '#e9eaee',
+    }],
+  ].map(([id, name, note, c]) => theme(id, name, note, c, 'Peach & grey')),
 ];
 
 const ALL_VARS = [...new Set(THEMES.flatMap((t) => Object.keys(t.vars)))];
