@@ -126,7 +126,6 @@ html[data-style="pixel"] .titlebar .brand, html[data-style="pixel"] .sidebar h2,
 html[data-style="pixel"] .inspector .panel > summary, html[data-style="pixel"] .sidebar .pill-cta { font-size: 10px; line-height: 1.6; }
 html[data-style="pixel"] .sidebar .pill-cta { border-radius: 0; box-shadow: 4px 4px 0 #1b1c1f, inset -4px -4px 0 rgba(0,0,0,.25); color: #1b1c1f; }
 html[data-style="pixel"] .sidebar ul.pills li { border-radius: 0; box-shadow: 0 0 0 3px #1b1c1f; }
-html[data-style="pixel"] .sidebar ul.pills li .label::before { content: '►'; }
 
 /* ───────────────────────── Synthwave ───────────────────────── */
 html[data-style="synthwave"] {
@@ -238,7 +237,6 @@ html[data-style="editorial"] .sidebar h2, html[data-style="editorial"] .inspecto
 html[data-style="editorial"] .toolbar, html[data-style="editorial"] .sidebar, html[data-style="editorial"] .inspector { border-color: #d5d8de; }
 html[data-style="editorial"] .sidebar .pill-cta { border-radius: 0; background: #c85d7b; box-shadow: none; font-family: var(--font-display); font-style: italic; }
 html[data-style="editorial"] .sidebar ul.pills li { border-radius: 0; background: none; border-bottom: 1px solid #d5d8de; }
-html[data-style="editorial"] .sidebar ul.pills li .label::before { content: '§'; color: #c85d7b; }
 
 /* ───────────────────────── Swiss design ───────────────────────── */
 html[data-style="swiss"] {
@@ -258,7 +256,6 @@ html[data-style="swiss"] button:hover:not(:disabled) { background: #232428; colo
 html[data-style="swiss"] .toolbar button:hover:not(:disabled) { background: #232428; color: #fff; }
 html[data-style="swiss"] .sidebar .pill-cta { border-radius: 0; background: #232428; box-shadow: none; justify-content: flex-start; text-transform: uppercase; }
 html[data-style="swiss"] .sidebar ul.pills li { border-radius: 0; background: none; border-left: 4px solid #e07a95; }
-html[data-style="swiss"] .sidebar ul.pills li .label::before { content: none; }
 
 /* ───────────────────────── Minimalism ───────────────────────── */
 html[data-style="minimal"] {
@@ -277,7 +274,6 @@ html[data-style="minimal"] .titlebar .brand { font-weight: 500; letter-spacing: 
 html[data-style="minimal"] .sidebar h2, html[data-style="minimal"] .inspector .panel > summary { font-weight: 400; letter-spacing: .12em; }
 html[data-style="minimal"] .sidebar .pill-cta { background: #3c3f45; box-shadow: none; font-weight: 400; }
 html[data-style="minimal"] .sidebar ul.pills li { background: none; border: 1px solid #e5e7eb; }
-html[data-style="minimal"] .sidebar ul.pills li .label::before { content: none; }
 
 /* ───────────────────────── Maximalism ───────────────────────── */
 html[data-style="maximal"] {
@@ -319,7 +315,6 @@ html[data-style="luxury"] .titlebar .brand { letter-spacing: .3em; text-transfor
 html[data-style="luxury"] .sidebar h2, html[data-style="luxury"] .inspector .panel > summary { letter-spacing: .3em; color: #e3a3b4; }
 html[data-style="luxury"] .sidebar .pill-cta { border-radius: 0; background: transparent; color: #e3a3b4; border: 1px solid #e3a3b4; box-shadow: none; letter-spacing: .2em; text-transform: uppercase; font-size: 11px; }
 html[data-style="luxury"] .sidebar ul.pills li { border-radius: 0; background: none; border: 1px solid rgba(227,163,180,.35); }
-html[data-style="luxury"] .sidebar ul.pills li .label::before { content: '◆'; color: #e3a3b4; }
 
 /* ───────────────────────── Conceptual sketch ───────────────────────── */
 html[data-style="sketch"] {
@@ -379,7 +374,6 @@ html[data-style="boho"] {
 html[data-style="boho"] .sidebar h2, html[data-style="boho"] .inspector .panel > summary { color: #c85d7b; }
 html[data-style="boho"] .sidebar .pill-cta { background: #8a8e96; box-shadow: 0 6px 16px rgba(138,142,150,.35); }
 html[data-style="boho"] .sidebar ul.pills li { background: #fae5ec; border: 1px dashed #c85d7b; }
-html[data-style="boho"] .sidebar ul.pills li .label::before { content: '✿'; color: #c85d7b; }
 
 /* ───────────────────────── Victorian ───────────────────────── */
 html[data-style="victorian"] {
@@ -405,7 +399,6 @@ html[data-style="victorian"] .sidebar { border-right: 3px double #a9aeb7; }
 html[data-style="victorian"] .inspector { border-left: 3px double #a9aeb7; }
 html[data-style="victorian"] .sidebar .pill-cta { border-radius: 2px; background: #8a3a55; border: 3px double #a9aeb7; box-shadow: none; }
 html[data-style="victorian"] .sidebar ul.pills li { border-radius: 2px; background: #f1e1e7; border: 3px double #a9aeb7; }
-html[data-style="victorian"] .sidebar ul.pills li .label::before { content: '❧'; color: #8a3a55; }
 
 /* ───────────────────────── Cyberpunk ───────────────────────── */
 html[data-style="cyberpunk"] {
@@ -451,4 +444,3 @@ html[data-style="wabisabi"] .titlebar .brand { font-weight: 500; letter-spacing:
 html[data-style="wabisabi"] .sidebar h2, html[data-style="wabisabi"] .inspector .panel > summary { letter-spacing: .2em; font-weight: 500; }
 html[data-style="wabisabi"] .sidebar .pill-cta { background: #8f5a6a; border-radius: 18px 12px 20px 10px; box-shadow: none; font-weight: 500; }
 html[data-style="wabisabi"] .sidebar ul.pills li { background: #ecdfe3; border-radius: 16px 10px 18px 8px; }
-html[data-style="wabisabi"] .sidebar ul.pills li .label::before { content: '○'; color: #b0707f; }
