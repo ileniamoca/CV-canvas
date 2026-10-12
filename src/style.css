@@ -187,7 +187,9 @@ body.hide-right .theme-bubble { right: 18px; }
   transition: transform .15s, box-shadow .15s;
 }
 .sidebar .pill-cta:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 45%, transparent); }
-.sidebar .pill-cta .ico { width: 18px; height: 18px; }
+.sidebar .pill-cta .ico { width: 18px; height: 18px; flex: none; }
+.sidebar .pill-cta span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 /* Templates: pills */
 .sidebar ul.pills li {
   margin: 4px 12px; padding: 8px 8px 8px 14px; border: 0; border-radius: 999px;

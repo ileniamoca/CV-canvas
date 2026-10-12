@@ -444,3 +444,226 @@ html[data-style="wabisabi"] .titlebar .brand { font-weight: 500; letter-spacing:
 html[data-style="wabisabi"] .sidebar h2, html[data-style="wabisabi"] .inspector .panel > summary { letter-spacing: .2em; font-weight: 500; }
 html[data-style="wabisabi"] .sidebar .pill-cta { background: #8f5a6a; border-radius: 18px 12px 20px 10px; box-shadow: none; font-weight: 500; }
 html[data-style="wabisabi"] .sidebar ul.pills li { background: #ecdfe3; border-radius: 16px 10px 18px 8px; }
+
+/* ═════════════════════ Swiss & Editorial variations (Pink Pewter) ═════════════════════ */
+
+/* Shared: numbered sections (01, 02…) for the grid-based variants */
+html[data-style="swiss-grid"] .sidebar, html[data-style="mix-edgrid"] .sidebar,
+html[data-style="swiss-grid"] .inspector, html[data-style="mix-edgrid"] .inspector { counter-reset: sec; }
+html[data-style="swiss-grid"] .sidebar h2::before, html[data-style="mix-edgrid"] .sidebar h2::before,
+html[data-style="swiss-grid"] .inspector .panel > summary::after, html[data-style="mix-edgrid"] .inspector .panel > summary::after {
+  counter-increment: sec; content: counter(sec, decimal-leading-zero);
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 500; color: #e07a95; letter-spacing: 0;
+}
+html[data-style="swiss-grid"] .sidebar h2::before, html[data-style="mix-edgrid"] .sidebar h2::before { margin-right: 10px; }
+html[data-style="swiss-grid"] .inspector .panel > summary::after, html[data-style="mix-edgrid"] .inspector .panel > summary::after { margin-left: auto; }
+html[data-style="swiss-grid"] .sidebar h2, html[data-style="mix-edgrid"] .sidebar h2 { justify-content: flex-start; }
+html[data-style="swiss-grid"] .sidebar h2 .h2-add, html[data-style="mix-edgrid"] .sidebar h2 .h2-add { margin-left: auto; }
+
+/* ───────────────────────── Swiss · Grid ───────────────────────── */
+html[data-style="swiss-grid"] {
+  --bg: #ffffff; --panel: #ffffff; --border: #232428; --text: #232428; --muted: #6b6f78;
+  --accent: #e07a95; --accent-soft: #fae5ec; --on-accent: #fff; --desk: #f3f4f6; --canvas: #f3f4f6;
+  --titlebar: #ffffff; --titlebar-text: #232428; --titlebar-btn: transparent; --titlebar-btn-border: #232428;
+  --titlebar-primary: #e07a95; --titlebar-primary-text: #fff;
+  --radius: 0; --radius-sm: 0; --toast: #232428;
+  --font: "Inter", Helvetica, Arial, sans-serif; --font-display: "Inter", Helvetica, Arial, sans-serif;
+  --btn-bg: #fff; --btn-border: #232428;
+  --titlebar-shadow: 0 2px 0 #232428;
+  --desk-image: linear-gradient(90deg, rgba(224,122,149,.16) 1px, transparent 1px), linear-gradient(rgba(35,36,40,.05) 1px, transparent 1px);
+  --desk-size: 66px 100%, 100% 22px;
+  --sheet-shadow: none; --sheet-active-shadow: 0 0 0 1px #232428, 6px 6px 0 #e07a95;
+}
+html[data-style="swiss-grid"] .titlebar .brand { font-weight: 800; letter-spacing: -.02em; }
+html[data-style="swiss-grid"] .titlebar .brand::after { content: ' ■'; color: #e07a95; }
+html[data-style="swiss-grid"] .sidebar h2, html[data-style="swiss-grid"] .inspector .panel > summary {
+  color: #232428; font-weight: 700; font-size: 11px; letter-spacing: .04em; border-top: 2px solid #232428; padding-top: 8px;
+}
+html[data-style="swiss-grid"] .inspector .panel { border-top: 0; }
+html[data-style="swiss-grid"] .sidebar .pill-cta { border-radius: 0; background: #232428; box-shadow: none; justify-content: flex-start; }
+html[data-style="swiss-grid"] .sidebar ul.pills li { border-radius: 0; background: none; box-shadow: inset 3px 0 0 #e07a95; }
+html[data-style="swiss-grid"] .sidebar ul.cards li.current { background: #fae5ec; box-shadow: inset 3px 0 0 #232428; border-radius: 0; }
+
+/* ───────────────────────── Swiss · Poster ───────────────────────── */
+html[data-style="swiss-poster"] {
+  --bg: #f3f4f6; --panel: #ffffff; --border: #232428; --text: #232428; --muted: #6b6f78;
+  --accent: #e07a95; --accent-soft: #fae5ec; --on-accent: #232428; --desk: #cfd3da; --canvas: #cfd3da;
+  --titlebar: #e07a95; --titlebar-text: #232428; --titlebar-btn: transparent; --titlebar-btn-border: #232428;
+  --titlebar-primary: #232428; --titlebar-primary-text: #fff;
+  --radius: 0; --radius-sm: 0; --toast: #232428;
+  --font: "Inter", Helvetica, Arial, sans-serif; --font-display: "Inter", Helvetica, Arial, sans-serif;
+  --btn-bg: #fff; --btn-border: #232428; --bw: 2px;
+  --sheet-shadow: 14px 14px 0 #232428; --sheet-active-shadow: 14px 14px 0 #e07a95, 0 0 0 2px #232428;
+}
+html[data-style="swiss-poster"] .titlebar { padding-top: 14px; padding-bottom: 14px; }
+html[data-style="swiss-poster"] .titlebar .brand { font-size: 26px; font-weight: 900; letter-spacing: -.05em; line-height: .9; text-transform: uppercase; }
+html[data-style="swiss-poster"] .sidebar { background: #232428; color: #f3f4f6; border-color: #232428; }
+html[data-style="swiss-poster"] .sidebar h2 { color: #e07a95; font-size: 18px; font-weight: 900; letter-spacing: -.03em; text-transform: none; }
+html[data-style="swiss-poster"] .sidebar li .date { color: #a9aeb7; }
+html[data-style="swiss-poster"] .sidebar li .tpl { color: #f6d0dc; }
+html[data-style="swiss-poster"] .sidebar li:hover, html[data-style="swiss-poster"] .sidebar ul.cards li.current { background: #3c3f45; box-shadow: inset 4px 0 0 #e07a95; border-radius: 0; }
+html[data-style="swiss-poster"] .sidebar .h2-add { background: #e07a95; color: #232428; border: 0; border-radius: 0; }
+html[data-style="swiss-poster"] .sidebar .pill-cta { border-radius: 0; background: #e07a95; color: #232428; box-shadow: none; font-weight: 900; font-size: 14px; text-transform: uppercase; letter-spacing: -.03em; justify-content: flex-start; }
+html[data-style="swiss-poster"] .sidebar ul.pills li { border-radius: 0; background: #f3f4f6; color: #232428; }
+html[data-style="swiss-poster"] .inspector .panel > summary { color: #232428; font-size: 16px; font-weight: 900; letter-spacing: -.02em; text-transform: none; }
+html[data-style="swiss-poster"] .inspector-head .name { font-size: 20px; font-weight: 900; letter-spacing: -.03em; }
+
+/* ───────────────────────── Swiss · Monochrome ───────────────────────── */
+html[data-style="swiss-mono"] {
+  --bg: #ffffff; --panel: #ffffff; --border: #d5d8de; --text: #232428; --muted: #8a8e96;
+  --accent: #232428; --accent-soft: #f1f2f4; --on-accent: #fff; --desk: #eceef1; --canvas: #eceef1;
+  --titlebar: #232428; --titlebar-text: #ffffff; --titlebar-btn: transparent; --titlebar-btn-border: #8a8e96;
+  --titlebar-primary: #ffffff; --titlebar-primary-text: #232428;
+  --radius: 0; --radius-sm: 0; --toast: #232428;
+  --font: "Inter", Helvetica, Arial, sans-serif; --font-display: "Inter", Helvetica, Arial, sans-serif;
+  --btn-bg: transparent; --btn-border: #232428;
+  --sheet-shadow: 0 1px 0 #d5d8de; --sheet-active-shadow: 0 0 0 1px #232428;
+}
+html[data-style="swiss-mono"] .titlebar .brand { font-weight: 700; letter-spacing: -.01em; }
+html[data-style="swiss-mono"] .titlebar .brand::before { content: ''; display: inline-block; width: 8px; height: 8px; background: #e07a95; margin-right: 8px; }
+html[data-style="swiss-mono"] .sidebar h2, html[data-style="swiss-mono"] .inspector .panel > summary { color: #232428; font-weight: 700; letter-spacing: .02em; text-transform: none; font-size: 13px; }
+html[data-style="swiss-mono"] .sidebar .pill-cta { border-radius: 0; background: #232428; box-shadow: none; font-weight: 600; justify-content: space-between; }
+html[data-style="swiss-mono"] .sidebar .pill-cta::after { content: '→'; }
+html[data-style="swiss-mono"] .sidebar ul.pills li { border-radius: 0; background: none; border-bottom: 1px solid #d5d8de; }
+html[data-style="swiss-mono"] .sidebar ul.cards li.current { box-shadow: inset 2px 0 0 #e07a95; background: #f1f2f4; border-radius: 0; }
+html[data-style="swiss-mono"] .sidebar li .tpl { color: #8a8e96; }
+html[data-style="swiss-mono"] .lib-check, html[data-style="swiss-mono"] .inspector input[type="checkbox"] { accent-color: #232428; }
+
+/* ───────────────────────── Editorial · Magazine ───────────────────────── */
+html[data-style="ed-magazine"] {
+  --bg: #faf6f7; --panel: #fffcfd; --border: #e6dde0; --text: #2a2c31; --muted: #8a8e96;
+  --accent: #c85d7b; --accent-soft: #fae5ec; --on-accent: #fff; --desk: #efe8ea; --canvas: #efe8ea;
+  --titlebar: #fffcfd; --titlebar-text: #2a2c31; --titlebar-btn: transparent; --titlebar-btn-border: #2a2c31;
+  --titlebar-primary: #c85d7b; --titlebar-primary-text: #fff;
+  --radius: 2px; --radius-sm: 2px; --toast: #2a2c31;
+  --font: "Source Serif 4", Georgia, serif; --font-display: "Playfair Display", serif;
+  --btn-bg: transparent; --btn-border: #2a2c31;
+  --titlebar-shadow: 0 1px 0 #e6dde0;
+  --sheet-shadow: 0 18px 40px rgba(60,63,69,.16);
+}
+html[data-style="ed-magazine"] .titlebar .brand { font-size: 24px; font-style: italic; font-weight: 900; letter-spacing: -.01em; }
+html[data-style="ed-magazine"] .sidebar h2, html[data-style="ed-magazine"] .inspector .panel > summary {
+  font-family: "Source Serif 4", Georgia, serif; color: #c85d7b; font-weight: 600; font-size: 11px; letter-spacing: .22em;
+}
+html[data-style="ed-magazine"] .inspector-head .name { font-size: 22px; font-style: italic; font-weight: 700; }
+html[data-style="ed-magazine"] .sheet-label .name { font-style: italic; font-size: 18px; }
+html[data-style="ed-magazine"] .sidebar .pill-cta { border-radius: 2px; background: #2a2c31; box-shadow: none; font-style: italic; font-size: 16px; }
+html[data-style="ed-magazine"] .sidebar ul.pills li { border-radius: 2px; background: none; border-top: 1px solid #2a2c31; border-bottom: 1px solid #2a2c31; }
+html[data-style="ed-magazine"] .sidebar ul.pills li .label { font-family: "Playfair Display", serif; font-style: italic; font-size: 15px; }
+
+/* ───────────────────────── Editorial · Newspaper ───────────────────────── */
+html[data-style="ed-newspaper"] {
+  --bg: #efeff0; --panel: #f6f6f7; --border: #2a2c31; --text: #1e1f22; --muted: #6b6f78;
+  --accent: #c85d7b; --accent-soft: #eceef1; --on-accent: #fff; --desk: #dfe1e5; --canvas: #dfe1e5;
+  --titlebar: #f6f6f7; --titlebar-text: #1e1f22; --titlebar-btn: transparent; --titlebar-btn-border: #1e1f22;
+  --titlebar-primary: #1e1f22; --titlebar-primary-text: #f6f6f7;
+  --radius: 0; --radius-sm: 0; --toast: #1e1f22;
+  --font: "Old Standard TT", Georgia, serif; --font-display: "Old Standard TT", Georgia, serif;
+  --btn-bg: transparent; --btn-border: #1e1f22;
+  --titlebar-shadow: 0 3px 0 #f6f6f7, 0 4px 0 #1e1f22, 0 6px 0 #f6f6f7, 0 8px 0 #1e1f22;
+  --desk-image: repeating-linear-gradient(90deg, transparent 0 239px, rgba(30,31,34,.12) 239px 240px);
+  --sheet-shadow: 0 1px 2px rgba(0,0,0,.25);
+}
+html[data-style="ed-newspaper"] .titlebar .brand { font-family: "UnifrakturMaguntia", serif; font-size: 28px; font-weight: 400; line-height: 1; }
+html[data-style="ed-newspaper"] .sidebar h2, html[data-style="ed-newspaper"] .inspector .panel > summary {
+  color: #1e1f22; font-weight: 700; font-size: 12px; letter-spacing: .12em; border-bottom: 1px solid #1e1f22; padding-bottom: 3px;
+}
+html[data-style="ed-newspaper"] .sidebar { border-right: 1px solid #1e1f22; }
+html[data-style="ed-newspaper"] .inspector { border-left: 1px solid #1e1f22; }
+html[data-style="ed-newspaper"] .inspector-head .name, html[data-style="ed-newspaper"] .sheet-label .name { font-weight: 700; }
+html[data-style="ed-newspaper"] .sidebar .pill-cta { border-radius: 0; background: #1e1f22; box-shadow: none; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: 12px; }
+html[data-style="ed-newspaper"] .sidebar ul.pills li { border-radius: 0; background: none; border: 1px solid #1e1f22; }
+html[data-style="ed-newspaper"] .sidebar ul.cards li { border-bottom: 1px solid #c9ccd3; border-radius: 0; }
+html[data-style="ed-newspaper"] .sidebar ul.cards li.current { background: #eceef1; box-shadow: inset 3px 0 0 #c85d7b; }
+
+/* ───────────────────────── Editorial · Literary journal ───────────────────────── */
+html[data-style="ed-journal"] {
+  --bg: #fbfafb; --panel: #fdfcfd; --border: #e4e1e3; --text: #36383d; --muted: #93969d;
+  --accent: #c85d7b; --accent-soft: #f8edf1; --on-accent: #fff; --desk: #f2f0f2; --canvas: #f2f0f2;
+  --titlebar: #fdfcfd; --titlebar-text: #36383d; --titlebar-btn: transparent; --titlebar-btn-border: #cfcbcd;
+  --titlebar-primary: #36383d; --titlebar-primary-text: #fdfcfd;
+  --radius: 0; --radius-sm: 0; --toast: #36383d;
+  --font: "Libre Caslon Text", Georgia, serif; --font-display: "Cormorant SC", serif;
+  --btn-bg: transparent; --btn-border: #cfcbcd;
+  --titlebar-shadow: 0 1px 0 #e4e1e3;
+  --sheet-shadow: 0 2px 30px rgba(60,63,69,.08);
+}
+html[data-style="ed-journal"] { font-size: 13px; }
+html[data-style="ed-journal"] .titlebar .brand { font-size: 19px; letter-spacing: .14em; font-weight: 600; }
+html[data-style="ed-journal"] .sidebar h2 { justify-content: center; gap: 10px; color: #36383d; font-size: 14px; letter-spacing: .2em; text-transform: none; font-weight: 500; }
+html[data-style="ed-journal"] .sidebar h2::before { content: '~'; color: #c85d7b; }
+html[data-style="ed-journal"] .inspector .panel > summary { justify-content: center; color: #36383d; font-size: 14px; letter-spacing: .2em; text-transform: none; font-weight: 500; }
+html[data-style="ed-journal"] .sidebar .pill-cta { border-radius: 0; background: transparent; color: #c85d7b; border-top: 1px solid #c85d7b; border-bottom: 1px solid #c85d7b; box-shadow: none; font-family: "Cormorant SC", serif; font-size: 16px; letter-spacing: .05em; font-weight: 600; }
+html[data-style="ed-journal"] .sidebar ul.pills li { border-radius: 0; background: none; justify-content: center; }
+html[data-style="ed-journal"] .sidebar ul.pills li .label { text-align: center; font-style: italic; font-weight: 400; }
+html[data-style="ed-journal"] .sidebar ul.cards li.current { background: #f8edf1; box-shadow: none; border-radius: 0; }
+
+/* ───────────────────────── Swiss × Editorial ───────────────────────── */
+html[data-style="mix-swissed"] {
+  --bg: #fbfbfc; --panel: #ffffff; --border: #232428; --text: #232428; --muted: #7b7f88;
+  --accent: #e07a95; --accent-soft: #fae5ec; --on-accent: #fff; --desk: #eceef1; --canvas: #eceef1;
+  --titlebar: #ffffff; --titlebar-text: #232428; --titlebar-btn: transparent; --titlebar-btn-border: #232428;
+  --titlebar-primary: #e07a95; --titlebar-primary-text: #fff;
+  --radius: 0; --radius-sm: 0; --toast: #232428;
+  --font: "Source Serif 4", Georgia, serif; --font-display: "Inter", Helvetica, Arial, sans-serif;
+  --btn-bg: #fff; --btn-border: #232428;
+  --titlebar-shadow: 0 2px 0 #232428;
+  --desk-image: linear-gradient(90deg, rgba(35,36,40,.06) 1px, transparent 1px); --desk-size: 88px 100%;
+  --sheet-shadow: 0 1px 3px rgba(0,0,0,.15); --sheet-active-shadow: 0 0 0 2px #232428;
+}
+html[data-style="mix-swissed"] .titlebar .brand { font-weight: 800; letter-spacing: -.02em; text-transform: uppercase; }
+html[data-style="mix-swissed"] .sidebar h2, html[data-style="mix-swissed"] .inspector .panel > summary { color: #232428; font-weight: 800; font-size: 11px; letter-spacing: .06em; }
+html[data-style="mix-swissed"] .inspector-head .name, html[data-style="mix-swissed"] .sheet-label .name { font-weight: 800; letter-spacing: -.01em; }
+html[data-style="mix-swissed"] .sidebar .pill-cta { border-radius: 0; background: #e07a95; box-shadow: none; font-weight: 800; justify-content: flex-start; text-transform: uppercase; font-size: 13px; }
+html[data-style="mix-swissed"] .sidebar ul.pills li { border-radius: 0; background: none; border-left: 4px solid #232428; }
+html[data-style="mix-swissed"] .sidebar ul.pills li .label { font-family: "Source Serif 4", Georgia, serif; font-style: italic; font-weight: 600; }
+
+/* ───────────────────────── Editorial grid ───────────────────────── */
+html[data-style="mix-edgrid"] {
+  --bg: #faf8f9; --panel: #fffdfe; --border: #2a2c31; --text: #2a2c31; --muted: #85898f;
+  --accent: #c85d7b; --accent-soft: #fae5ec; --on-accent: #fff; --desk: #efecee; --canvas: #efecee;
+  --titlebar: #fffdfe; --titlebar-text: #2a2c31; --titlebar-btn: transparent; --titlebar-btn-border: #2a2c31;
+  --titlebar-primary: #2a2c31; --titlebar-primary-text: #fff;
+  --radius: 0; --radius-sm: 0; --toast: #2a2c31;
+  --font: "Inter", Helvetica, Arial, sans-serif; --font-display: "Playfair Display", serif;
+  --btn-bg: transparent; --btn-border: #2a2c31;
+  --titlebar-shadow: 0 1px 0 #2a2c31;
+  --desk-image: linear-gradient(90deg, rgba(200,93,123,.14) 1px, transparent 1px); --desk-size: 72px 100%;
+  --sheet-shadow: 0 10px 30px rgba(60,63,69,.12); --sheet-active-shadow: 0 0 0 1px #2a2c31, 0 10px 30px rgba(60,63,69,.12);
+}
+html[data-style="mix-edgrid"] .titlebar .brand { font-size: 22px; font-weight: 900; letter-spacing: -.02em; }
+html[data-style="mix-edgrid"] .sidebar h2, html[data-style="mix-edgrid"] .inspector .panel > summary {
+  font-family: "Playfair Display", serif; color: #2a2c31; font-size: 16px; font-weight: 700; letter-spacing: 0; text-transform: none;
+  border-top: 1px solid #2a2c31; padding-top: 8px;
+}
+html[data-style="mix-edgrid"] .inspector .panel { border-top: 0; }
+html[data-style="mix-edgrid"] .inspector-head .name { font-size: 22px; font-weight: 900; }
+html[data-style="mix-edgrid"] .sidebar .pill-cta { border-radius: 0; background: #c85d7b; box-shadow: none; font-family: "Inter", sans-serif; font-weight: 600; justify-content: flex-start; }
+html[data-style="mix-edgrid"] .sidebar ul.pills li { border-radius: 0; background: #fae5ec; }
+html[data-style="mix-edgrid"] .sidebar ul.pills li .label { font-family: "Playfair Display", serif; font-size: 15px; }
+
+/* ───────────────────────── Modern magazine ───────────────────────── */
+html[data-style="mix-modern"] {
+  --bg: #f6f6f8; --panel: #ffffff; --border: #e3e4e8; --text: #26282d; --muted: #8a8e96;
+  --accent: #e07a95; --accent-soft: #fae5ec; --on-accent: #fff; --desk: #e9eaee; --canvas: #e9eaee;
+  --titlebar: #26282d; --titlebar-text: #ffffff; --titlebar-btn: transparent; --titlebar-btn-border: rgba(255,255,255,.4);
+  --titlebar-primary: #e07a95; --titlebar-primary-text: #fff;
+  --radius: 14px; --radius-sm: 999px; --toast: #26282d;
+  --font: "Newsreader", Georgia, serif; --font-display: "Archivo Narrow", "Arial Narrow", sans-serif;
+  --btn-border: #d5d8de;
+  --sheet-shadow: 0 16px 40px rgba(38,40,45,.14);
+}
+html[data-style="mix-modern"] { font-size: 15px; }
+html[data-style="mix-modern"] .titlebar .brand { font-size: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
+html[data-style="mix-modern"] .sidebar h2, html[data-style="mix-modern"] .inspector .panel > summary { font-weight: 700; font-size: 13px; letter-spacing: .08em; color: #26282d; }
+html[data-style="mix-modern"] .inspector-head .name, html[data-style="mix-modern"] .sheet-label .name { text-transform: uppercase; font-weight: 700; letter-spacing: .02em; }
+html[data-style="mix-modern"] .inspector-head .kind, html[data-style="mix-modern"] .sheet-label .kind { background: #e07a95; color: #fff; }
+html[data-style="mix-modern"] .sidebar .pill-cta { background: #26282d; box-shadow: none; text-transform: uppercase; font-weight: 700; letter-spacing: .04em; }
+html[data-style="mix-modern"] .sidebar ul.pills li { background: #fae5ec; }
+html[data-style="mix-modern"] .sidebar ul.pills li .label { font-family: "Archivo Narrow", sans-serif; text-transform: uppercase; letter-spacing: .03em; }
+html[data-style="mix-modern"] .sidebar li .tpl { display: inline-block; margin-top: 4px; padding: 1px 8px; border-radius: 999px; background: #fae5ec; color: #c85d7b; font-family: "Archivo Narrow", sans-serif; font-weight: 600; }
+
+/* "New from job ad" on one line in the styles with wide display fonts */
+html[data-style="cybercore"] .sidebar .pill-cta { font-size: 12px; letter-spacing: .03em; padding-inline: 10px; }
+html[data-style="pixel"] .sidebar .pill-cta { font-size: 8px; padding-inline: 8px; gap: 6px; }
+html[data-style="cyberpunk"] .sidebar .pill-cta { font-size: 12px; letter-spacing: .02em; padding-inline: 10px; }

@@ -161,6 +161,18 @@ export const STYLES = [
   { id: 'victorian', name: 'Victorian', note: 'Deep rose and silver, double frames, fleurons and old-style type.', fonts: ['EB+Garamond:wght@400;600', 'IM+Fell+English+SC'] },
   { id: 'cyberpunk', name: 'Cyberpunk', note: 'Hot pink on graphite, cut corners, silver and red glitch shadows.', fonts: ['Rajdhani:wght@500;600;700', 'Orbitron:wght@600;800'] },
   { id: 'wabisabi', name: 'Wabi-sabi', note: 'Imperfect and calm: rosy greys, paper texture, uneven corners.', fonts: ['Zen+Kaku+Gothic+New:wght@400;500', 'Shippori+Mincho:wght@500;600'] },
+  // Variations of Swiss and Editorial design, and mixes of both.
+  ...[
+    { id: 'swiss-grid', name: 'Swiss · Grid', note: 'The grid made visible: column lines, numbered sections, everything flush left.', fonts: ['Inter:wght@400;500;700;800', 'IBM+Plex+Mono:wght@500'] },
+    { id: 'swiss-poster', name: 'Swiss · Poster', note: 'Poster-like: huge heavy type, a pink title block and a graphite sidebar.', fonts: ['Inter:wght@400;600;800;900'] },
+    { id: 'swiss-mono', name: 'Swiss · Monochrome', note: 'Graphite and white only; hierarchy by type alone, pink as a tiny marker.', fonts: ['Inter:wght@400;500;700'] },
+    { id: 'ed-magazine', name: 'Editorial · Magazine', note: 'Fashion magazine: big italic serif titles, pink section kickers, warm paper.', fonts: ['Playfair+Display:ital,wght@0,700;0,900;1,700', 'Source+Serif+4:wght@400;600'] },
+    { id: 'ed-newspaper', name: 'Editorial · Newspaper', note: 'Classic broadsheet: blackletter masthead, dense serif, column rules.', fonts: ['UnifrakturMaguntia', 'Old+Standard+TT:wght@400;700'] },
+    { id: 'ed-journal', name: 'Editorial · Literary journal', note: 'Airy and refined: centered small caps, thin rules, a discreet ornament.', fonts: ['Cormorant+SC:wght@500;600', 'Libre+Caslon+Text:wght@400;700'] },
+    { id: 'mix-swissed', name: 'Swiss × Editorial', note: 'Bold Swiss sans headings over an editorial serif, on a grid.', fonts: ['Inter:wght@500;700;800', 'Source+Serif+4:wght@400;600'] },
+    { id: 'mix-edgrid', name: 'Editorial grid', note: 'Big magazine serif with Swiss numbering and grid.', fonts: ['Playfair+Display:wght@700;900', 'Inter:wght@400;500;600', 'IBM+Plex+Mono:wght@500'] },
+    { id: 'mix-modern', name: 'Modern magazine', note: 'Condensed uppercase sans, serif text and pink pill tags: today\'s magazines.', fonts: ['Archivo+Narrow:wght@500;600;700', 'Newsreader:wght@400;500;600'] },
+  ].map((s) => ({ ...s, group: 'Swiss & Editorial' })),
 ];
 
 /** Applies a UI style; `palette` is the palette to use when going back to "cute". */

@@ -1196,7 +1196,9 @@ function setStyle(id) {
   $('#paletteBox').hidden = style.id !== 'cute';
   applyZoom(); // the accent used inside the page follows the style
 }
-$('#styleSelect').innerHTML = STYLES.map((s) => `<option value="${s.id}">${s.name}</option>`).join('');
+const styleGroups = [...new Set(STYLES.map((s) => s.group ?? 'Styles'))];
+$('#styleSelect').innerHTML = styleGroups.map((g) => `<optgroup label="${g}">${STYLES.filter((s) => (s.group ?? 'Styles') === g)
+  .map((s) => `<option value="${s.id}">${s.name}</option>`).join('')}</optgroup>`).join('');
 const stepStyle = (d) => {
   const i = STYLES.findIndex((s) => s.id === $('#styleSelect').value);
   setStyle(STYLES[(i + d + STYLES.length) % STYLES.length].id);
