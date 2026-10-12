@@ -113,6 +113,18 @@ button.active { background: var(--accent-soft); border-color: var(--accent); }
 
 /* Layout */
 .layout { display: grid; grid-template-columns: 230px minmax(0, 1fr) 300px; min-height: 0; } /* the board scrolls, never widens the page */
+/* Collapsible side panels (toolbar buttons at both ends) */
+body.hide-left .layout { grid-template-columns: 0 minmax(0, 1fr) 300px; }
+body.hide-right .layout { grid-template-columns: 230px minmax(0, 1fr) 0; }
+body.hide-left.hide-right .layout { grid-template-columns: 0 minmax(0, 1fr) 0; }
+body.hide-left .sidebar, body.hide-right .inspector { display: none; }
+/* Fixed columns, so hiding a panel never shifts the others into its place */
+.layout > .sidebar { grid-column: 1; }
+.layout > .canvas { grid-column: 2; }
+.layout > .inspector { grid-column: 3; }
+body.hide-right .theme-bubble { right: 18px; }
+.toolbar .panel-toggle.on { color: var(--accent); }
+.toolbar .panel-toggle .fill { stroke-width: 1.6; }
 .sidebar {
   background: var(--panel);
   border-right: 1px solid var(--border);

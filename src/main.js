@@ -887,6 +887,9 @@ function handleShortcuts(e) {
   } else if (k === 's') {
     e.preventDefault();
     e.shiftKey ? saveCopy() : save();
+  } else if (e.key === '\\' || e.code === 'Backslash') {
+    e.preventDefault();
+    togglePanel(e.altKey ? 'right' : 'left');
   } else if (k === 'p') {
     e.preventDefault();
     printDoc();
@@ -1175,6 +1178,29 @@ let savedTheme = null;
 try { savedTheme = localStorage.getItem('cv-editor:theme'); } catch {}
 setTheme(savedTheme ?? THEMES[0].id);
 $('#themePop').hidden = Boolean(savedTheme); // first visit: open, so the picker is noticed
+
+// ---------- Side panels: show / hide ----------
+function setPanel(side, visible) {
+  document.body.classList.toggle(`hide-${side}`, !visible);
+  $(side === 'left' ? '#toggleLeft' : '#toggleRight').classList.toggle('on', visible);
+  try { localStorage.setItem(`cv-editor:panel-${side}`, visible ? 'shown' : 'hidden'); } catch {}
+  // The board got wider or narrower: keep the active page in the middle.
+  if (state.current) {
+    requestAnimationFrame(() => {
+      board.resize(); // end margins for the new width, before centering
+      board.glideTo(state.current.kind, state.current.name, { instant: true });
+    });
+  }
+}
+const togglePanel = (side) => setPanel(side, document.body.classList.contains(`hide-${side}`));
+for (const side of ['left', 'right']) {
+  let shown = true;
+  try { shown = localStorage.getItem(`cv-editor:panel-${side}`) !== 'hidden'; } catch {}
+  document.body.classList.toggle(`hide-${side}`, !shown);
+  $(side === 'left' ? '#toggleLeft' : '#toggleRight').classList.toggle('on', shown);
+}
+$('#toggleLeft').addEventListener('click', () => togglePanel('left'));
+$('#toggleRight').addEventListener('click', () => togglePanel('right'));
 
 // Collapsible inspector panels: remember which ones are open.
 for (const panel of document.querySelectorAll('.inspector .panel')) {
