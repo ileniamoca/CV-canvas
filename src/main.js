@@ -28,6 +28,7 @@ const state = {
   mode: 'pages', // 'pages': the board shows every page · 'template': only the template being edited
   editing: null, // name of the template being edited (template mode)
   returnTo: null, // page to go back to when leaving template mode
+  viewing: null, // { kind, name } of the one document shown in the middle (a page, or the template being edited)
 };
 
 // ---------- API ----------
@@ -59,19 +60,21 @@ async function refreshList() {
   state.docs = data;
   $('#empty').textContent = !data.templates.length
     ? 'No CVs yet. Click “+” next to Templates to create your first template.'
-    : 'No pages yet. Click “+ Add page” to make a CV for a job from your template.';
+    : !data.pages.length
+      ? 'No pages yet. Click “New from job ad” to make a CV for a job.'
+      : 'Pick a page on the left to open it.';
   // Templates and pages keep their place on the board and in the list: oldest first, new ones at the end.
   for (const kind of ['templates', 'pages']) data[kind].sort((a, b) => a.created - b.created || a.name.localeCompare(b.name));
-  // The board shows the pages; in template mode, only the template being edited.
-  const sheets = state.mode === 'template'
-    ? data.templates.filter((f) => f.name === state.editing).map((f) => ({ kind: 'templates', name: f.name, mtime: f.mtime }))
-    : data.pages.map((f) => ({ kind: 'pages', name: f.name, mtime: f.mtime, template: f.template }));
+  // One document at a time in the middle: the page picked in the sidebar (or the template being edited).
+  const v = state.viewing;
+  const sheets = v ? (data[v.kind] ?? []).filter((f) => f.name === v.name)
+    .map((f) => ({ kind: v.kind, name: f.name, mtime: f.mtime, template: f.template })) : [];
   $('#empty').hidden = sheets.length > 0;
   $('#board').hidden = !sheets.length;
   board.sync(sheets);
   // Don't rebuild the list under a name being edited (it's rebuilt when the rename ends).
   if (document.querySelector('.sidebar input.rename')) return;
-  for (const kind of ['templates', 'pages', 'pdf']) {
+  for (const kind of ['templates', 'pages']) { // exported PDFs aren't listed: they're in documents/pdf
     const ul = $(`#list-${kind}`);
     ul.replaceChildren();
     if (!data[kind].length) {
@@ -336,10 +339,13 @@ async function openDoc(kind, name, { force = false, glide = true, auto = false }
   }
 }
 
-async function activate(kind, name, glide) {
+async function activate(kind, name) {
   try {
     const html = await api(docUrl(kind, name));
-    if (!board.has(kind, name)) await refreshList(); // a document just created
+    // Swap the document shown in the middle (marked active first, so it isn't loaded as a preview).
+    state.viewing = { kind, name };
+    board.setActive(kind, name);
+    await refreshList();
     state.current = { kind, name };
     try { localStorage.setItem('cv-editor:last', JSON.stringify(state.current)); } catch {}
     iframe = board.setActive(kind, name);
@@ -348,8 +354,8 @@ async function activate(kind, name, glide) {
     setDirty(false);
     $('#banner').hidden = true;
     updateChrome();
-    refreshList();
-    if (glide) board.glideTo(kind, name);
+    board.glideTo(kind, name, { instant: true }); // centered
+    refreshList(); // highlight it in the sidebar
   } catch (err) {
     toast(err.message, true);
   }
@@ -368,10 +374,7 @@ async function editTemplate(name, { force = false } = {}) {
   document.body.classList.add('template-mode');
   $('#templateBar').hidden = false;
   $('#templateBarName').textContent = stem(name);
-  board.setActive(null);
-  await refreshList();
-  await activate('templates', name, false);
-  board.glideTo('templates', name, { instant: true });
+  await activate('templates', name);
 }
 
 /**
@@ -389,6 +392,7 @@ async function leaveTemplate({ saveFirst, next, reopen = true } = {}) {
   document.body.classList.remove('template-mode');
   $('#templateBar').hidden = true;
   state.current = null;
+  state.viewing = null;
   state.dirty = false;
   iframe = null;
   board.setActive(null);
@@ -469,10 +473,12 @@ const withoutTemplate = (html) => html.replace(/\s*<meta name="cv-template"[^>]*
 
 function closeDoc() {
   state.current = null;
+  state.viewing = null;
   state.dirty = false;
   iframe = null;
   board.setActive(null);
   updateChrome();
+  refreshList();
 }
 
 function loadIntoIframe(html) {

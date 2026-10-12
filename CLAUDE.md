@@ -106,10 +106,9 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 - `server/pdf.js` — HTML → PDF with the installed Chrome/Brave.
 - `src/main.js` — editor: the CV is loaded in an iframe with `body.contentEditable`; whatever the editor injects
   carries `data-cv-editor` (and `cv-*` classes) and is removed on save.
-- `src/board.js` — the board: all pages side by side on a pasteboard (trackpad pan, pinch zoom). Templates aren't
-  on it: clicking one opens template mode (main.js), where it's edited alone until "Save & close" or "Discard";
-  the active sheet's iframe is the document being edited, the others are live previews; clicking a page
-  glides the view to it. Leaving a sheet with unsaved changes saves it.
+- `src/board.js` — the board: the document being edited, alone and centered on a pasteboard (trackpad pan, pinch
+  zoom). Clicking a page in the sidebar loads just that page; clicking a template opens template mode (main.js),
+  where it's edited until "Save & close" or "Discard". Leaving a page with unsaved changes saves it.
 - `src/canvas.js` — free-form layout, Canva-style: a click selects a frame/shape as an object (drag or arrow keys
   to move); drag on an empty area = selection box, ⇧+click adds/removes, ⌘A selects all, and several objects
   move/align/delete together; double-click or Enter edits a frame's text (only that frame is `contentEditable`,

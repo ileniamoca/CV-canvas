@@ -65,21 +65,14 @@
 
   <div class="layout">
     <nav class="sidebar" id="sidebar">
+      <button id="btnFromJob" class="pill-cta" title="Paste a job ad: it's saved and a page for it is created, ready to be tailored"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3.5 12.5h17"/></svg><span>New from job ad</span></button>
       <section>
         <h2>Templates <button class="h2-add" id="btnNewTemplate" title="New template (blank, or from a page or another template)">+</button></h2>
-        <ul id="list-templates"></ul>
+        <ul id="list-templates" class="pills"></ul>
       </section>
       <section>
-        <h2>Pages</h2>
-        <div class="page-actions">
-          <button id="btnFromJob" class="new-cv" title="Paste a job ad: it's saved and a page for it is created, ready to be tailored">+ From job ad</button>
-          <button id="btnAddPage" class="new-cv" title="Add a blank page from a template">+ Add page</button>
-        </div>
-        <ul id="list-pages"></ul>
-      </section>
-      <section>
-        <h2>Exported PDF</h2>
-        <ul id="list-pdf"></ul>
+        <h2>Pages <button class="h2-add" id="btnAddPage" title="New blank page from a template">+</button></h2>
+        <ul id="list-pages" class="cards"></ul>
       </section>
     </nav>
 
