@@ -1,9 +1,9 @@
 // The job brief: a screen-only card shown above a page that is linked to a job ad (<meta name="cv-job">).
 // It renders the ad's Markdown file from ../jobs: the title and its meta lines, then each "## " section,
-// in two columns: the ad on the left, the fit on the right.
-//   ## Fit            → the right column: its "### " groups (have / partly / missing, guessed from the heading)
+// as two cards side by side: the ad on the left, the fit on the right.
+//   ## Fit            → the right card: its "### " groups (have / partly / missing, guessed from the heading)
 //                       as coloured blocks, with a bar that counts the items of each group
-//   ## Job ad (as pasted), ## Tailoring notes → folded away (<details>) under both columns
+//   ## Job ad (as pasted), ## Tailoring notes → folded away (<details>) at the end of the ad card
 // Never printed or exported: it lives in the editor, not in the CV document.
 
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -122,15 +122,20 @@ export function renderJobBrief(md) {
   }
   const isFit = (s) => /^fit\b|my fit|how i fit/i.test(s.title);
   const isFolded = (s) => /as pasted|tailoring notes/i.test(s.title);
-  const section = (s) => `<section class="jb-section"><h3>${inline(s.title)}</h3>${isFit(s) ? fitSection(s.lines) : blocks(s.lines)}</section>`;
-  const ad = sections.filter((s) => !isFit(s) && !isFolded(s)).map(section).join('');
-  const fit = sections.filter(isFit).map(section).join('');
+  const ad = sections.filter((s) => !isFit(s) && !isFolded(s))
+    .map((s) => `<section class="jb-section"><h3>${inline(s.title)}</h3>${blocks(s.lines)}</section>`).join('');
   const folded = sections.filter(isFolded)
     .map((s) => `<details class="jb-folded"><summary>${inline(s.title)}</summary>${blocks(s.lines)}</details>`).join('');
+  const fit = sections.filter(isFit).map((s) => `
+    <article class="jb-card jb-fitcard">
+      <header class="jb-head"><span class="jb-kicker">How you fit</span><h2>${inline(s.title)}</h2></header>
+      ${fitSection(s.lines)}
+    </article>`).join('');
   return `
-    <header class="jb-head"><h2>${inline(title)}</h2>
-      <dl class="jb-meta">${meta.map(([k, v]) => `<div><dt>${inline(k)}</dt><dd>${inline(v)}</dd></div>`).join('')}</dl>
-    </header>
-    <div class="jb-cols${fit ? '' : ' single'}"><div class="jb-ad">${ad}</div>${fit ? `<div class="jb-fitside">${fit}</div>` : ''}</div>
-    ${folded}`;
+    <article class="jb-card jb-adcard">
+      <header class="jb-head"><span class="jb-kicker">The job ad</span><h2>${inline(title)}</h2>
+        <dl class="jb-meta">${meta.map(([k, v]) => `<div><dt>${inline(k)}</dt><dd>${inline(v)}</dd></div>`).join('')}</dl>
+      </header>
+      ${ad}${folded}
+    </article>${fit}`;
 }

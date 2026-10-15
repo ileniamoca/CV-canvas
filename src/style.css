@@ -318,7 +318,7 @@ input[type="color"] { width: 40px; height: 26px; padding: 0 2px; border: 1px sol
   background-color: var(--desk); background-image: var(--desk-image, none); background-size: var(--desk-size, auto);
 }
 .board-strip { display: flex; align-items: flex-start; gap: 72px; padding: 56px 96px 96px; width: max-content; }
-.sheet { flex: none; display: grid; gap: 10px; }
+.sheet { flex: none; display: grid; gap: 10px; justify-items: center; } /* the page centered under the job brief */
 .sheet-label {
   display: flex; align-items: center; gap: 8px; min-width: 0; cursor: pointer;
   font-size: 13px; color: var(--muted); white-space: nowrap;
@@ -335,29 +335,31 @@ input[type="color"] { width: 40px; height: 26px; padding: 0 2px; border: 1px sol
 .sheet iframe { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
 .sheet-cover { position: absolute; inset: 0; cursor: pointer; }
 .sheet.active .sheet-cover { display: none; }
-/* Job brief: the ad, summed up, and how the profile fits it, above a page linked to a job ad (screen only).
-   Drawn at A4 scale (794 px wide, the CV's type sizes) and zoomed with the page by board.js. */
+/* Job brief: two cards above a page linked to a job ad (screen only), the ad and how the profile fits it.
+   Each card is drawn at A4 scale (794 px wide, the CV's type sizes) and zoomed with the page by board.js;
+   the page sits centered below them. */
 .job-brief {
   --jb-have: #2e8b57; --jb-partly: #c98a12; --jb-missing: #c0392b;
-  width: 794px; margin-bottom: 14px; background: var(--panel); color: var(--text);
-  box-shadow: var(--sheet-shadow, 0 4px 22px rgba(0,0,0,.10));
-  font-size: 7pt; line-height: 1.4; overflow: hidden;
+  margin-bottom: 18px; color: var(--text); font-size: 7pt; line-height: 1.4;
 }
 .jb-toggle {
-  display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 40px;
-  border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: none; box-shadow: none;
-  color: var(--muted); font: inherit; font-size: 7pt; text-align: left; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; margin: 0 auto 8px; padding: 2px 4px;
+  border: 0; border-radius: 0; background: none; box-shadow: none;
+  color: var(--muted); font: inherit; font-size: 9pt; cursor: pointer;
 }
 .jb-toggle .jb-tag {
-  font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
   padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent);
 }
-.jb-toggle .jb-hint { margin-left: auto; }
-.job-brief.folded .jb-toggle { border-bottom: 0; }
-.job-brief.folded .jb-hint { margin-left: 0; }
+.jb-toggle:hover .jb-hint { color: var(--text); }
 .job-brief.folded .jb-body { display: none; }
-.jb-body { padding: 24px 40px 28px; }
+.jb-body { display: flex; align-items: stretch; justify-content: center; gap: 48px; }
+.jb-card {
+  width: 794px; padding: 28px 40px 30px; background: var(--panel);
+  box-shadow: var(--sheet-shadow, 0 4px 22px rgba(0,0,0,.10));
+}
 .jb-head { margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid var(--text); }
+.jb-kicker { display: block; margin-bottom: 3px; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); }
 .jb-body h2 { margin: 0 0 6px; font-family: var(--font-display, inherit); font-size: 15.75pt; line-height: 1.2; }
 .jb-body h3 {
   margin: 0 0 5px; padding-bottom: 3px; border-bottom: 1px solid var(--border);
@@ -374,13 +376,10 @@ input[type="color"] { width: 40px; height: 26px; padding: 0 2px; border: 1px sol
 .jb-meta div { display: flex; gap: 5px; }
 .jb-meta dt { color: var(--muted); }
 .jb-meta dd { margin: 0; font-weight: 600; }
-/* Two columns, like the CV: the ad (main) and the fit (side) */
-.jb-cols { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; align-items: start; }
-.jb-cols.single { grid-template-columns: minmax(0, 1fr); }
 .jb-section + .jb-section { margin-top: 12px; }
 .jb-body .chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .jb-body .chips span { padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); font-size: 6.5pt; }
-.jb-bar { display: flex; height: 6px; gap: 2px; border-radius: 999px; overflow: hidden; margin: 4px 0 5px; }
+.jb-bar { display: flex; height: 8px; gap: 2px; border-radius: 999px; overflow: hidden; margin: 4px 0 5px; }
 .jb-bar span { min-width: 3px; }
 .jb-bar .jb-have, .jb-key.jb-have i { background: var(--jb-have); }
 .jb-bar .jb-partly, .jb-key.jb-partly i { background: var(--jb-partly); }
@@ -389,8 +388,8 @@ input[type="color"] { width: 40px; height: 26px; padding: 0 2px; border: 1px sol
 .jb-legend { display: flex; flex-wrap: wrap; gap: 2px 12px; color: var(--muted); margin-bottom: 8px; }
 .jb-key i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: -.5px; }
 .jb-key b { color: var(--text); }
-.jb-fit { display: grid; gap: 8px; }
-.jb-col { padding: 6px 10px 4px; border-left: 3px solid var(--muted); background: color-mix(in srgb, var(--muted) 7%, transparent); }
+.jb-fit { display: grid; gap: 10px; }
+.jb-col { padding: 8px 14px 6px; border-left: 3px solid var(--muted); background: color-mix(in srgb, var(--muted) 7%, transparent); }
 .jb-col.jb-have { border-left-color: var(--jb-have); background: color-mix(in srgb, var(--jb-have) 8%, transparent); }
 .jb-col.jb-partly { border-left-color: var(--jb-partly); background: color-mix(in srgb, var(--jb-partly) 9%, transparent); }
 .jb-col.jb-missing { border-left-color: var(--jb-missing); background: color-mix(in srgb, var(--jb-missing) 8%, transparent); }

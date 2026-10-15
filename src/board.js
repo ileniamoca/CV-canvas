@@ -98,6 +98,7 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
   function setBriefOpen(open) {
     try { localStorage.setItem('cv-brief-folded', open ? '0' : '1'); } catch { /* private mode: just this session */ }
     for (const s of sheets.values()) paintBriefState(s);
+    resize();
   }
   function paintBriefState(s) {
     const open = briefOpen();
@@ -123,6 +124,7 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
     if (s.job !== job) return; // relinked meanwhile
     el.querySelector('.jb-body').innerHTML = html;
     paintBriefState(s);
+    resize(); // the sheet got wider
   }
 
   /** Makes the board match the list of documents (in order); reloads previews that changed. */
@@ -159,16 +161,19 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
       const f = s.el.querySelector('.sheet-frame');
       f.style.width = `${Math.round(PAGE_W * z)}px`;
       f.style.height = `${Math.round(PAGE_H * z)}px`;
-      s.el.querySelector('.job-brief').style.zoom = z; // drawn at A4 scale (794 px wide), zoomed with the page
+      s.el.querySelector('.job-brief').style.zoom = z; // two A4-wide cards, zoomed with the page
+      s.el.querySelector('.sheet-label').style.width = f.style.width; // the label stays over the (centered) page
       if (key !== active) {
         const style = s.iframe.contentDocument?.querySelector('style[data-cv-preview]');
         if (style) style.textContent = sheetCss(z);
       }
     }
-    // Room at both ends so that any sheet, the first and the last included, can sit in the middle of the view.
-    const side = `${Math.max(96, Math.round(board.clientWidth / 2 - (PAGE_W * z) / 2))}px`;
-    strip.style.paddingLeft = side;
-    strip.style.paddingRight = side;
+    // Room at both ends so that any sheet, the first and the last included, can sit in the middle of the view
+    // (a sheet with a job brief is wider than its page: measure the sheet itself).
+    const all = [...sheets.values()];
+    const side = (s) => `${Math.max(96, Math.round(board.clientWidth / 2 - (s ? s.el.offsetWidth : PAGE_W * z) / 2))}px`;
+    strip.style.paddingLeft = side(all[0]);
+    strip.style.paddingRight = side(all.at(-1));
   }
 
   /** Marks a sheet as the one being edited and returns its iframe (null if it isn't on the board). */
