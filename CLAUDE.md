@@ -14,6 +14,9 @@ Local tool (Vite) to edit Ilenia's CVs as if in Word/Canva: templates, one page 
 - `documents/pages/` — **pages**: one CV per job application ("+ Add page", or "Save as page…"). Each page records
   its template in `<meta name="cv-template" content="Template name">` (shown in the sidebar and on the board;
   renaming a template updates its pages). When creating a page by hand, add that meta.
+- `documents/.history/<kind>/<name>/` — every version of every template and page (the server copies a document
+  whenever it changes on disk, whoever writes it, and before each save; 200 kept per document). To bring back an
+  older version, copy it over the page.
 - `documents/pdf/` — exported PDFs (A4, generated with Chrome via puppeteer-core).
 - `templates/blank.html` (in the repo, not in `documents/`) — the **blank layout** (two columns, generic sample
   text, no personal data; it *is* pushed). "+" next to Templates can start a new template from it.

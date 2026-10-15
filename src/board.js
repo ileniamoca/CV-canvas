@@ -136,7 +136,7 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
         sheets.delete(key);
       }
     }
-    for (const d of docs) {
+    for (const [i, d] of docs.entries()) {
       const key = keyOf(d.kind, d.name);
       let s = sheets.get(key);
       if (!s) {
@@ -144,7 +144,9 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
         s = { el, iframe: el.querySelector('iframe'), kind: d.kind, name: d.name, mtime: null };
         sheets.set(key, s);
       }
-      strip.append(s.el); // keeps the order of `docs`
+      // Keeps the order of `docs`, moving a sheet only when it's out of place: moving an iframe in the DOM
+      // reloads it, which would throw away the edits in progress on the active sheet.
+      if (strip.children[i] !== s.el) strip.insertBefore(s.el, strip.children[i] ?? null);
       s.el.querySelector('.from').textContent = d.template ? `· from ${d.template}` : '';
       brief(s, d.job ?? null, d.jobMtime ?? null);
       if (s.mtime !== d.mtime) {

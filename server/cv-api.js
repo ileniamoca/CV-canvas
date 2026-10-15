@@ -12,6 +12,23 @@ const DIRS = {
 };
 const EXT = { templates: '.html', pages: '.html', pdf: '.pdf' };
 const LEGACY = { originals: 'templates', copies: 'pages' }; // folder names before 10/2026
+// Every version of every template and page, so nothing saved is ever lost: documents/.history/<kind>/<name>/<time>.html
+const HISTORY = path.join(ROOT, '.history');
+const HISTORY_KEEP = 200; // versions kept per document
+
+/** Keeps a copy of a template or page as it is on disk now (unless it equals the latest copy). */
+function snapshot(kind, name) {
+  if (kind !== 'templates' && kind !== 'pages') return;
+  let html;
+  try { html = fs.readFileSync(path.join(DIRS[kind], name), 'utf8'); } catch { return; } // deleted
+  const dir = path.join(HISTORY, kind, name.replace(/\.html$/i, ''));
+  fs.mkdirSync(dir, { recursive: true });
+  const versions = fs.readdirSync(dir).filter((f) => f.endsWith('.html')).sort();
+  if (versions.length && fs.readFileSync(path.join(dir, versions.at(-1)), 'utf8') === html) return;
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-'); // sortable, safe in file names
+  fs.writeFileSync(path.join(dir, `${stamp}.html`), html, 'utf8');
+  for (const old of versions.slice(0, Math.max(0, versions.length + 1 - HISTORY_KEEP))) fs.rmSync(path.join(dir, old));
+}
 
 /** Moves documents from the old folder names into the new ones (once). */
 function migrateLegacyDirs() {
@@ -128,7 +145,10 @@ export function cvApi() {
         try { return fs.statSync(path.join(ROOT, rel)).mtimeMs; } catch { return null; }
       };
       for (const kind of Object.keys(DIRS)) {
-        for (const name of fs.readdirSync(DIRS[kind])) mtimes.set(path.join(kind, name), mtimeOf(path.join(kind, name)));
+        for (const name of fs.readdirSync(DIRS[kind])) {
+          mtimes.set(path.join(kind, name), mtimeOf(path.join(kind, name)));
+          if (name.endsWith('.html')) snapshot(kind, name); // the version we start from
+        }
       }
       const watcher = fs.watch(ROOT, { recursive: true }, (_evt, rel) => {
         if (!rel) return;
@@ -140,6 +160,7 @@ export function cvApi() {
           const mtime = mtimeOf(rel);
           if (mtimes.get(rel) === mtime) return;
           mtimes.set(rel, mtime);
+          if (name.endsWith('.html')) snapshot(kind, name); // whoever wrote it: the editor, Claude, another app
           const msg = `data: ${JSON.stringify({ kind, name })}\n\n`;
           for (const c of clients) c.write(msg);
         }, 150));
@@ -197,6 +218,7 @@ export function cvApi() {
             if (req.method === 'PUT' && kind !== 'pdf') {
               const html = await readBody(req);
               if (!html.trim()) throw httpError(400, 'Empty document.');
+              snapshot(path.basename(path.dirname(file)), path.basename(file)); // the version being replaced
               await fsp.writeFile(file, html, 'utf8');
               return send(res, 200, { ok: true, kind, name: path.basename(file) });
             }
