@@ -51,6 +51,7 @@ const board = createBoard({
   onActivate: (kind, name) => openDoc(kind, name),
   onPinch: (deltaY) => setZoom(state.zoom * Math.exp(-deltaY * 0.01)),
   onCenter: (kind, name) => openDoc(kind, name, { glide: false, auto: true }),
+  loadJob: (file) => api(`/api/jobs/${encodeURIComponent(file)}`),
 });
 
 // ---------- Sidebar list ----------
@@ -68,7 +69,7 @@ async function refreshList() {
   // One document at a time in the middle: the page picked in the sidebar (or the template being edited).
   const v = state.viewing;
   const sheets = v ? (data[v.kind] ?? []).filter((f) => f.name === v.name)
-    .map((f) => ({ kind: v.kind, name: f.name, mtime: f.mtime, template: f.template })) : [];
+    .map((f) => ({ kind: v.kind, name: f.name, mtime: f.mtime, template: f.template, job: f.job, jobMtime: f.jobMtime })) : [];
   $('#empty').hidden = sheets.length > 0;
   $('#board').hidden = !sheets.length;
   board.sync(sheets);

@@ -4,6 +4,8 @@
 // active when clicked, or when scrolling stops with them in the middle of the view. Clicking a page in
 // the sidebar glides the view to it.
 
+import { renderJobBrief } from './jobbrief.js';
+
 const PAGE_W = 794; // A4 at 96 dpi
 const PAGE_H = 1123;
 
@@ -31,8 +33,9 @@ const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
  * @param {(kind: string, name: string) => void} o.onActivate        a preview was clicked
  * @param {(deltaY: number, e: WheelEvent) => void} o.onPinch        trackpad pinch (ctrl + wheel)
  * @param {(kind: string, name: string) => void} [o.onCenter]       scrolling stopped with this sheet centered
+ * @param {(file: string) => Promise<string>} [o.loadJob]           fetches a job ad's Markdown (for the brief above a page)
  */
-export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, onPinch, onCenter = () => {} }) {
+export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, onPinch, onCenter = () => {}, loadJob }) {
   const sheets = new Map(); // key → { el, iframe, kind, name, mtime }
   let active = null;
   let anim = null;
@@ -41,6 +44,10 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
     const el = document.createElement('div');
     el.className = 'sheet';
     el.innerHTML = `
+      <aside class="job-brief" hidden>
+        <button class="jb-toggle" type="button"><span class="jb-tag">Job ad &amp; fit</span><span class="jb-hint"></span></button>
+        <div class="jb-body"></div>
+      </aside>
       <div class="sheet-label"><span class="kind"></span><span class="name"></span><span class="from"></span></div>
       <div class="sheet-frame"><iframe tabindex="-1" aria-label="CV page"></iframe><div class="sheet-cover" title="Click to edit"></div></div>`;
     el.querySelector('.kind').textContent = kindLabel(kind);
@@ -49,6 +56,7 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
     const activate = () => onActivate(kind, el.dataset.name); // read at click time: the sheet may be renamed
     el.querySelector('.sheet-cover').addEventListener('click', activate);
     el.querySelector('.sheet-label').addEventListener('click', activate);
+    el.querySelector('.jb-toggle').addEventListener('click', () => setBriefOpen(!briefOpen()));
     return el;
   }
 
@@ -83,6 +91,40 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
     s.iframe.srcdoc = html;
   }
 
+  // The job brief is open or folded for every page alike, and stays so between sessions.
+  const briefOpen = () => {
+    try { return localStorage.getItem('cv-brief-folded') !== '1'; } catch { return true; }
+  };
+  function setBriefOpen(open) {
+    try { localStorage.setItem('cv-brief-folded', open ? '0' : '1'); } catch { /* private mode: just this session */ }
+    for (const s of sheets.values()) paintBriefState(s);
+  }
+  function paintBriefState(s) {
+    const open = briefOpen();
+    const brief = s.el.querySelector('.job-brief');
+    brief.classList.toggle('folded', !open);
+    brief.querySelector('.jb-hint').textContent = open ? 'Hide' : 'Show what the ad asks for and how you fit';
+  }
+
+  /** Draws (or hides) the brief of the job ad a page is linked to. */
+  async function brief(s, job, jobMtime) {
+    const el = s.el.querySelector('.job-brief');
+    if (s.job === job && s.jobMtime === jobMtime) return;
+    s.job = job;
+    s.jobMtime = jobMtime;
+    el.hidden = !job || !loadJob;
+    if (el.hidden) return;
+    let html;
+    try {
+      html = renderJobBrief(await loadJob(job));
+    } catch {
+      html = `<p class="jb-notfound">The job ad <code>${job.replace(/[&<>]/g, '')}</code> isn't in <code>../jobs/</code>.</p>`;
+    }
+    if (s.job !== job) return; // relinked meanwhile
+    el.querySelector('.jb-body').innerHTML = html;
+    paintBriefState(s);
+  }
+
   /** Makes the board match the list of documents (in order); reloads previews that changed. */
   function sync(docs) {
     const keys = docs.map((d) => keyOf(d.kind, d.name));
@@ -102,6 +144,7 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
       }
       strip.append(s.el); // keeps the order of `docs`
       s.el.querySelector('.from').textContent = d.template ? `· from ${d.template}` : '';
+      brief(s, d.job ?? null, d.jobMtime ?? null);
       if (s.mtime !== d.mtime) {
         s.mtime = d.mtime;
         if (key !== active) preview(key);
@@ -116,6 +159,7 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
       const f = s.el.querySelector('.sheet-frame');
       f.style.width = `${Math.round(PAGE_W * z)}px`;
       f.style.height = `${Math.round(PAGE_H * z)}px`;
+      s.el.querySelector('.job-brief').style.width = `${Math.max(560, Math.round(PAGE_W * z))}px`;
       if (key !== active) {
         const style = s.iframe.contentDocument?.querySelector('style[data-cv-preview]');
         if (style) style.textContent = sheetCss(z);

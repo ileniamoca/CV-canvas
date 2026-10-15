@@ -67,6 +67,10 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
   wins on dates). `../ilenia/_archive/` holds older documents; don't use them.
 - **Job ads:** saved as `../jobs/<company-role>.md` (outside this repo, private). A page is linked to its ad with
   `<meta name="cv-job" content="<file>.md">` (add it by hand when creating the page); the app shows "View job ad".
+- **Job brief:** above a page linked to an ad, the board shows a screen-only card (never printed or exported) rendered
+  from that ad's Markdown (`src/jobbrief.js`): the `# title`, the `- **Key:** value` meta lines, then each `## ` section.
+  `## Fit` with `### Have` / `### Partly` / `### Missing` becomes three coloured columns with a count bar; a line
+  `a · b · c` becomes chips; `## Job ad (as pasted)` and `## Tailoring notes` are folded away.
 
 ## When Ilenia asks to tailor a page ("tailor the page X")
 
@@ -84,8 +88,11 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
    no internal notes (names, mentors, personal life).
 6. Keep **one A4 page**: no frame past its region's bottom margin, no overlaps (restack each column with 16 px
    gaps if heights changed). Check with headless Chrome or `npm run pdf -- documents/pages/X.html`.
-7. In the job file set `Status: tailored (YYYY-MM-DD)` and add a short "Tailoring notes" section: what was
-   emphasised, what was hidden, and honest gaps vs the requirements. Tell Ilenia the gaps.
+7. In the job file set `Status: tailored (YYYY-MM-DD)` and, before `## Job ad (as pasted)`, write the brief:
+   `## At a glance` (a short plain-language synthesis + key bullets), `## What they ask for` (`### Must-haves`,
+   `### What the days look like`, `### Keywords` as one `a · b · c` line) and `## Fit` (`### Have` / `### Partly` /
+   `### Missing`, each bullet `**requirement:** evidence from ../ilenia/`). After the ad, a short "Tailoring notes"
+   section: what was emphasised, what was hidden, and honest gaps. Tell Ilenia the gaps.
 
 ## Personal data
 
@@ -119,6 +126,8 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 - `src/blocks.js` — items (.item), the sub-blocks of a frame: selected with a second click inside a selected frame
   (canvas.js), dragged within or between frames or into a new frame, duplicated, hidden; plus the
   shared undo history (body + styles).
+- `src/jobbrief.js` — the job brief above a page linked to a job ad (Markdown of `../jobs/<file>.md` → HTML card);
+  `server/cv-api.js` also watches `../jobs/` so the brief redraws when the file changes.
 - `src/library.js` — blocks: every `.item` gets a stable `data-item` id; the Blocks panel shows each section's
   items with a checkbox (unticked = `hidden` attribute: kept in place, not shown or printed), reorders them and
   moves them between sections.

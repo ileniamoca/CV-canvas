@@ -84,10 +84,13 @@ async function listDir(kind) {
         const st = await fsp.stat(file);
         const doc = { name: e.name, mtime: st.mtimeMs, created: st.birthtimeMs || st.ctimeMs, size: st.size };
         if (kind === 'pages') {
-          const m = (await fsp.readFile(file, 'utf8')).match(TEMPLATE_META);
+          const html = await fsp.readFile(file, 'utf8');
+          const m = html.match(TEMPLATE_META);
           doc.template = m ? unescapeAttr(m[1]) : null;
-          const j = (await fsp.readFile(file, 'utf8')).match(JOB_META);
+          const j = html.match(JOB_META);
           doc.job = j ? unescapeAttr(j[1]) : null;
+          // So the board knows when to redraw the job brief above the page
+          doc.jobMtime = doc.job ? (await fsp.stat(path.join(JOBS_DIR, path.basename(doc.job))).catch(() => null))?.mtimeMs ?? null : null;
         }
         return doc;
       }),
@@ -141,7 +144,21 @@ export function cvApi() {
           for (const c of clients) c.write(msg);
         }, 150));
       });
-      server.httpServer?.on('close', () => watcher.close());
+      // Job ads (../jobs) change too, e.g. when Claude writes the fit analysis: the pages linked to them redraw their brief.
+      fs.mkdirSync(JOBS_DIR, { recursive: true });
+      const jobsWatcher = fs.watch(JOBS_DIR, (_evt, name) => {
+        if (!name?.endsWith('.md')) return;
+        clearTimeout(timers.get(`jobs/${name}`));
+        timers.set(`jobs/${name}`, setTimeout(() => {
+          timers.delete(`jobs/${name}`);
+          const msg = `data: ${JSON.stringify({ kind: 'jobs', name })}\n\n`;
+          for (const c of clients) c.write(msg);
+        }, 150));
+      });
+      server.httpServer?.on('close', () => {
+        watcher.close();
+        jobsWatcher.close();
+      });
 
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url, 'http://localhost');
