@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
+import { execFile } from 'node:child_process';
 import { htmlToPdf, findChrome } from './pdf.js';
 
 const ROOT = path.resolve('documents');
@@ -265,9 +266,11 @@ export function cvApi() {
 
           // POST /api/pdf  { name, html }  → generates documents/pdf/<name>.pdf
           if (parts[1] === 'pdf' && req.method === 'POST') {
-            const { name, html } = await readBody(req);
+            const { name, html, reveal = false } = await readBody(req);
             const fileName = cleanName(name, '.pdf');
             await htmlToPdf(html, path.join(DIRS.pdf, fileName));
+            // Opens documents/pdf in Finder with the new PDF selected (macOS only)
+            if (reveal && process.platform === 'darwin') execFile('open', ['-R', path.join(DIRS.pdf, fileName)], () => {});
             return send(res, 200, { ok: true, name: fileName, url: `/files/pdf/${encodeURIComponent(fileName)}` });
           }
 

@@ -18,7 +18,11 @@ templates, keeps one page per job application, and exports each page to PDF.
 - `documents/.history/<kind>/<name>/` — the version history of every template and page. The server stores a copy
   whenever a document changes on disk, whatever wrote it, and before each save (200 versions per document). An
   older version is restored by copying it over the page.
-- `documents/pdf/` — exported PDFs (A4, generated with Chrome via puppeteer-core).
+- `documents/pdf/` — exported PDFs (A4, generated with Chrome via puppeteer-core). "Export PDF" suggests the name
+  `CV_<First>_<Surname>_<position>_<Company>` (e.g. `CV_Ilenia_Molina_product_analyst_AARK`): the name from the CV's
+  h1, the position from its subtitle (before any "·"), the company from the linked job ad (`- **Short name:**` if
+  present, otherwise `- **Company:**` without its legal form, reduced to the first word when longer than two words).
+  After a successful export, Finder opens `documents/pdf/` with the new PDF selected.
 - `templates/blank.html` (in the repository, not in `documents/`) — the **blank layout**: two columns, generic sample
   text and no personal data, so it is pushed. The "+" next to Templates can start a new template from it.
 

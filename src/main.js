@@ -674,6 +674,28 @@ async function saveCopy() {
  * Exports a document to PDF: the active one as it is on screen (unsaved changes included), or any
  * other template/page (from the sidebar ⋯ menu) as it was last saved.
  */
+/** Letters, digits and & only, words joined by "_" (accents dropped). */
+const fileWord = (t) => t.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9&]+/g, '_').replace(/^_+|_+$/g, '');
+const LEGAL_FORM = /\s+(AB|GmbH|Ltd|Limited|Inc|LLC|AS|ASA|Oy|Oyj|SA|SL|BV|NV|AG|SE|plc|Co)\.?$/i;
+
+/**
+ * Default PDF name: CV_<First>_<Surname>_<position>_<Company>, e.g. CV_Ilenia_Molina_product_analyst_AARK.
+ * The name comes from the CV's h1, the position from its subtitle (.role, before any "·"), the company from the
+ * linked job ad ("Short name", else "Company": legal form dropped, only the first word when it's long).
+ */
+function defaultPdfName(html, jobMd) {
+  const d = new DOMParser().parseFromString(html, 'text/html');
+  const name = (d.querySelector('h1')?.textContent ?? '').trim().split(/\s+/).slice(0, 2)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+  const role = (d.querySelector('.role')?.textContent ?? '').split(/[·|–—]/)[0].trim().toLowerCase();
+  const meta = (key) => jobMd?.match(new RegExp(`^[-*]\\s+\\*\\*${key}:?\\*\\*:?\\s*(.+)$`, 'mi'))?.[1].trim();
+  let company = meta('Short name') ?? meta('Company') ?? '';
+  if (/not named|unknown|n\/a/i.test(company)) company = '';
+  while (LEGAL_FORM.test(company)) company = company.replace(LEGAL_FORM, '');
+  if (company.split(/\s+/).length > 2) company = company.split(/\s+/)[0];
+  return ['CV', fileWord(name), fileWord(role).toLowerCase(), fileWord(company)].filter(Boolean).join('_');
+}
+
 async function exportPdf(kind = state.current?.kind, docName = state.current?.name) {
   if (!kind || !docName) return;
   const isActive = state.current?.kind === kind && state.current?.name === docName;
@@ -682,19 +704,27 @@ async function exportPdf(kind = state.current?.kind, docName = state.current?.na
     toast('Chrome not found, so the PDF cannot be generated; use "Save as PDF" in the print dialog.');
     return printDoc();
   }
-  const name = await askName('Export PDF', stem(docName), 'Export');
+  let html;
+  let jobMd = null;
+  try {
+    html = isActive ? serialize() : await api(docUrl(kind, docName));
+    const job = kind === 'pages' && state.docs?.pages?.find((f) => f.name === docName)?.job;
+    if (job) jobMd = await api(`/api/jobs/${encodeURIComponent(job)}`).catch(() => null);
+  } catch (err) {
+    return toast(err.message, true);
+  }
+  const name = await askName('Export PDF', defaultPdfName(html, jobMd) || stem(docName), 'Export');
   if (!name) return;
   const btn = $('#btnPdf');
   btn.disabled = true;
   btn.textContent = 'Generating…';
   try {
-    const html = isActive ? serialize() : await api(docUrl(kind, docName));
     const res = await api('/api/pdf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, html }),
+      body: JSON.stringify({ name, html, reveal: true }),
     });
-    toast(`PDF created: <a href="${res.url}" target="_blank">${res.name}</a>`, false, true);
+    toast(`PDF created: <a href="${res.url}" target="_blank">${res.name}</a> · shown in Finder`, false, true);
     refreshList();
   } catch (err) {
     toast(err.message, true);
