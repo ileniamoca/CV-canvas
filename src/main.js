@@ -567,7 +567,7 @@ function updateChrome() {
   }
   $('#status').textContent = has ? (state.dirty ? 'Unsaved changes' : 'Saved') : '';
   $('#pathInfo').textContent = has ? `CVs/documents/${state.current.kind}/${state.current.name}` : '';
-  document.title = has ? `${state.dirty ? '• ' : ''}${stem(state.current.name)} · CV Designer` : 'CV Designer';
+  document.title = has ? `${state.dirty ? '• ' : ''}${stem(state.current.name)} · CV-blueprint` : 'CV-blueprint';
 }
 
 function updateWordCount() {

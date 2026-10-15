@@ -1,6 +1,6 @@
-# CV Designer
+# CV-blueprint
 
-CV Designer is a local tool (Vite) for designing and editing CVs the way one would in Word or Canva. It works with
+CV-blueprint is a local tool (Vite) for designing and editing CVs the way one would in Word or Canva. It works with
 templates, keeps one page per job application, and exports each page to PDF.
 
 ## Language
