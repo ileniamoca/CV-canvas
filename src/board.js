@@ -159,7 +159,7 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
       const f = s.el.querySelector('.sheet-frame');
       f.style.width = `${Math.round(PAGE_W * z)}px`;
       f.style.height = `${Math.round(PAGE_H * z)}px`;
-      s.el.querySelector('.job-brief').style.width = `${Math.max(560, Math.round(PAGE_W * z))}px`;
+      s.el.querySelector('.job-brief').style.zoom = z; // drawn at A4 scale (794 px wide), zoomed with the page
       if (key !== active) {
         const style = s.iframe.contentDocument?.querySelector('style[data-cv-preview]');
         if (style) style.textContent = sheetCss(z);

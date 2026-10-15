@@ -335,63 +335,70 @@ input[type="color"] { width: 40px; height: 26px; padding: 0 2px; border: 1px sol
 .sheet iframe { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
 .sheet-cover { position: absolute; inset: 0; cursor: pointer; }
 .sheet.active .sheet-cover { display: none; }
-/* Job brief: the ad, summed up, and how the profile fits it, above a page linked to a job ad (screen only) */
+/* Job brief: the ad, summed up, and how the profile fits it, above a page linked to a job ad (screen only).
+   Drawn at A4 scale (794 px wide, the CV's type sizes) and zoomed with the page by board.js. */
 .job-brief {
   --jb-have: #2e8b57; --jb-partly: #c98a12; --jb-missing: #c0392b;
-  margin-bottom: 18px; border-radius: var(--radius); background: var(--panel); color: var(--text);
-  border: 1px solid var(--border); box-shadow: var(--sheet-shadow, 0 4px 22px rgba(0,0,0,.08));
-  font-size: 13px; line-height: 1.5; overflow: hidden;
+  width: 794px; margin-bottom: 14px; background: var(--panel); color: var(--text);
+  box-shadow: var(--sheet-shadow, 0 4px 22px rgba(0,0,0,.10));
+  font-size: 7pt; line-height: 1.4; overflow: hidden;
 }
 .jb-toggle {
-  display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 16px;
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 40px;
   border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: none; box-shadow: none;
-  color: var(--muted); font: inherit; font-size: 12px; text-align: left; cursor: pointer;
+  color: var(--muted); font: inherit; font-size: 7pt; text-align: left; cursor: pointer;
 }
 .jb-toggle .jb-tag {
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
-  padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent);
+  font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent);
 }
 .jb-toggle .jb-hint { margin-left: auto; }
 .job-brief.folded .jb-toggle { border-bottom: 0; }
 .job-brief.folded .jb-hint { margin-left: 0; }
 .job-brief.folded .jb-body { display: none; }
-.jb-body { padding: 18px 22px 20px; display: grid; gap: 18px; }
-.jb-body h2 { margin: 0 0 10px; font-family: var(--font-display, inherit); font-size: 20px; line-height: 1.25; }
+.jb-body { padding: 24px 40px 28px; }
+.jb-head { margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid var(--text); }
+.jb-body h2 { margin: 0 0 6px; font-family: var(--font-display, inherit); font-size: 15.75pt; line-height: 1.2; }
 .jb-body h3 {
-  margin: 0 0 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--accent);
+  margin: 0 0 5px; padding-bottom: 3px; border-bottom: 1px solid var(--border);
+  font-size: 9.75pt; font-weight: 700; text-transform: uppercase; letter-spacing: .02em;
 }
-.jb-body h4 { margin: 12px 0 4px; font-size: 13px; }
-.jb-body h5 { margin: 10px 0 4px; font-size: 12px; color: var(--muted); }
-.jb-body p { margin: 0 0 8px; }
-.jb-body ul { margin: 0 0 8px; padding-left: 18px; }
-.jb-body li { margin: 2px 0; }
-.jb-body code { font-size: 12px; }
+.jb-body h4 { margin: 8px 0 3px; font-size: 7.5pt; }
+.jb-body h5 { margin: 6px 0 2px; font-size: 7pt; color: var(--muted); }
+.jb-body p { margin: 0 0 5px; }
+.jb-body ul { margin: 2px 0 5px; padding-left: 14px; }
+.jb-body li { margin: 0 0 1.5px; }
+.jb-body code { font-size: 6.5pt; }
 .jb-body a { color: var(--accent); }
-.jb-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; }
-.jb-meta div { display: flex; gap: 6px; }
+.jb-meta { display: flex; flex-wrap: wrap; gap: 2px 14px; margin: 0; }
+.jb-meta div { display: flex; gap: 5px; }
 .jb-meta dt { color: var(--muted); }
 .jb-meta dd { margin: 0; font-weight: 600; }
-.jb-body .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.jb-body .chips span { padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); font-size: 12px; }
-.jb-bar { display: flex; height: 8px; gap: 2px; border-radius: 999px; overflow: hidden; margin: 2px 0 8px; }
-.jb-bar span { min-width: 4px; }
+/* Two columns, like the CV: the ad (main) and the fit (side) */
+.jb-cols { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; align-items: start; }
+.jb-cols.single { grid-template-columns: minmax(0, 1fr); }
+.jb-section + .jb-section { margin-top: 12px; }
+.jb-body .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.jb-body .chips span { padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); font-size: 6.5pt; }
+.jb-bar { display: flex; height: 6px; gap: 2px; border-radius: 999px; overflow: hidden; margin: 4px 0 5px; }
+.jb-bar span { min-width: 3px; }
 .jb-bar .jb-have, .jb-key.jb-have i { background: var(--jb-have); }
 .jb-bar .jb-partly, .jb-key.jb-partly i { background: var(--jb-partly); }
 .jb-bar .jb-missing, .jb-key.jb-missing i { background: var(--jb-missing); }
 .jb-bar .jb-neutral, .jb-key.jb-neutral i { background: var(--muted); }
-.jb-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--muted); margin-bottom: 12px; }
-.jb-key i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.jb-legend { display: flex; flex-wrap: wrap; gap: 2px 12px; color: var(--muted); margin-bottom: 8px; }
+.jb-key i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: -.5px; }
 .jb-key b { color: var(--text); }
-.jb-fit { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-.jb-col { padding: 10px 12px; border-radius: var(--radius-sm); border-top: 3px solid var(--muted); background: color-mix(in srgb, var(--muted) 7%, transparent); }
-.jb-col.jb-have { border-top-color: var(--jb-have); background: color-mix(in srgb, var(--jb-have) 8%, transparent); }
-.jb-col.jb-partly { border-top-color: var(--jb-partly); background: color-mix(in srgb, var(--jb-partly) 9%, transparent); }
-.jb-col.jb-missing { border-top-color: var(--jb-missing); background: color-mix(in srgb, var(--jb-missing) 8%, transparent); }
+.jb-fit { display: grid; gap: 8px; }
+.jb-col { padding: 6px 10px 4px; border-left: 3px solid var(--muted); background: color-mix(in srgb, var(--muted) 7%, transparent); }
+.jb-col.jb-have { border-left-color: var(--jb-have); background: color-mix(in srgb, var(--jb-have) 8%, transparent); }
+.jb-col.jb-partly { border-left-color: var(--jb-partly); background: color-mix(in srgb, var(--jb-partly) 9%, transparent); }
+.jb-col.jb-missing { border-left-color: var(--jb-missing); background: color-mix(in srgb, var(--jb-missing) 8%, transparent); }
 .jb-col h4 { margin-top: 0; }
-.jb-col ul { padding-left: 16px; font-size: 12.5px; }
-.jb-folded summary { cursor: pointer; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
-.jb-folded[open] summary { margin-bottom: 8px; }
-.jb-folded p { white-space: pre-line; }
+.jb-col ul { padding-left: 12px; }
+.jb-folded { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+.jb-folded summary { cursor: pointer; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.jb-folded[open] summary { margin-bottom: 6px; }
 .jb-notfound { color: var(--muted); margin: 0; }
 @media print { .job-brief { display: none !important; } }
 .empty { margin: auto; color: var(--muted); }

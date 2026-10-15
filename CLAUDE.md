@@ -69,7 +69,8 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
   `<meta name="cv-job" content="<file>.md">` (add it by hand when creating the page); the app shows "View job ad".
 - **Job brief:** above a page linked to an ad, the board shows a screen-only card (never printed or exported) rendered
   from that ad's Markdown (`src/jobbrief.js`): the `# title`, the `- **Key:** value` meta lines, then each `## ` section.
-  `## Fit` with `### Have` / `### Partly` / `### Missing` becomes three coloured columns with a count bar; a line
+  It is drawn at A4 scale with the CV's type sizes and zooms with the page: the ad on the left, `## Fit` on the right
+  (`### Have` / `### Partly` / `### Missing` as coloured blocks with a count bar); a line
   `a · b · c` becomes chips; `## Job ad (as pasted)` and `## Tailoring notes` are folded away.
 
 ## When Ilenia asks to tailor a page ("tailor the page X")
