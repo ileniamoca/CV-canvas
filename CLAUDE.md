@@ -116,7 +116,7 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 
 ## Git
 
-- Repository: https://github.com/ileniamoca/CV-designer.git (branch `main`).
+- Repository: https://github.com/ileniamoca/CV-canvas.git (branch `main`).
 - **Every substantial change is committed and pushed to `main`** (`git add … && git commit && git push origin main`)
   with a descriptive message. Minor tweaks can be grouped into the next commit.
 
