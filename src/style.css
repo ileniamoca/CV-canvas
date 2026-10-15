@@ -62,7 +62,7 @@ button, select {
   transition: background .15s, border-color .15s, box-shadow .15s, transform .15s;
 }
 .titlebar .brand, .sidebar h2, .inspector .panel > summary, .inspector-head .name, .lib-title,
-.tb-text strong, dialog h3, .theme-pop-head strong, .sidebar .pill-cta, .sheet-label .name, .margin-title {
+.tb-text strong, dialog h3, .theme-pop-head strong, .sheet-label .name, .margin-title {
   font-family: var(--font-display, var(--font));
 }
 button:hover:not(:disabled), select:hover { border-color: var(--accent); }
@@ -178,17 +178,6 @@ body.hide-right .theme-bubble { right: 18px; }
 .item-menu button:hover { background: var(--accent-soft); }
 .item-menu button.danger { color: var(--danger); }
 .sidebar .none { color: var(--muted); font-style: italic; cursor: default; }
-/* Main action: a bold, rounded pill */
-.sidebar .pill-cta {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: calc(100% - 24px); margin: 10px 12px 6px; padding: 11px 16px;
-  border-radius: 999px; border: 0; background: var(--accent); color: var(--on-accent);
-  font-weight: 700; font-size: 14px; box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 35%, transparent);
-  transition: transform .15s, box-shadow .15s;
-}
-.sidebar .pill-cta:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 45%, transparent); }
-.sidebar .pill-cta .ico { width: 18px; height: 18px; flex: none; }
-.sidebar .pill-cta span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 /* Templates: pills */
 .sidebar ul.pills li {

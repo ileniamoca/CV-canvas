@@ -24,7 +24,6 @@ html[data-style="clay"] .sidebar, html[data-style="clay"] .inspector {
   box-shadow: 8px 8px 20px rgba(224,122,149,.2), inset -4px -4px 10px rgba(60,63,69,.06), inset 4px 4px 10px #fff;
 }
 html[data-style="clay"] .toolbar { border: 0; background: transparent; }
-html[data-style="clay"] .sidebar .pill-cta { border-radius: 22px; box-shadow: 6px 8px 16px rgba(224,122,149,.4), inset -4px -4px 8px rgba(0,0,0,.12), inset 4px 4px 8px rgba(255,255,255,.35); }
 html[data-style="clay"] .sidebar ul.pills li { box-shadow: 4px 4px 10px rgba(224,122,149,.18), inset 2px 2px 4px #fff; }
 
 /* ───────────────────────── Cybercore ───────────────────────── */
@@ -46,7 +45,6 @@ html[data-style="cybercore"] {
 html[data-style="cybercore"] .titlebar .brand { text-shadow: 0 0 10px #ff8fb0; letter-spacing: .12em; }
 html[data-style="cybercore"] button:hover:not(:disabled) { box-shadow: 0 0 12px rgba(255,143,176,.5); }
 html[data-style="cybercore"] .sidebar h2, html[data-style="cybercore"] .inspector .panel > summary { color: #ff8fb0; letter-spacing: .18em; }
-html[data-style="cybercore"] .sidebar .pill-cta { border-radius: 2px; box-shadow: 0 0 18px rgba(255,143,176,.45); text-transform: uppercase; letter-spacing: .08em; }
 
 /* ───────────────────────── Neo-Brutalism ───────────────────────── */
 html[data-style="brutal"] {
@@ -63,7 +61,6 @@ html[data-style="brutal"] {
 html[data-style="brutal"] button:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 #2a2c31; }
 html[data-style="brutal"] button:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #2a2c31; }
 html[data-style="brutal"] .toolbar button, html[data-style="brutal"] .toolbar .color { box-shadow: none; }
-html[data-style="brutal"] .sidebar .pill-cta { border: 2px solid #2a2c31; border-radius: 10px; box-shadow: 4px 4px 0 #2a2c31; color: #2a2c31; }
 html[data-style="brutal"] .sidebar ul.pills li { border: 2px solid #2a2c31; box-shadow: 3px 3px 0 #2a2c31; background: #f6d0dc; }
 html[data-style="brutal"] .sidebar ul.cards li.current { box-shadow: inset 0 0 0 2px #2a2c31; background: #fae5ec; }
 html[data-style="brutal"] .theme-pop, html[data-style="brutal"] dialog { border: 2px solid #2a2c31; box-shadow: 6px 6px 0 #2a2c31; }
@@ -86,7 +83,6 @@ html[data-style="surreal"] {
 }
 html[data-style="surreal"] .board { background-attachment: scroll; }
 html[data-style="surreal"] .titlebar .brand, html[data-style="surreal"] .sidebar h2 { font-style: italic; }
-html[data-style="surreal"] .sidebar .pill-cta { border-radius: 30px 8px 30px 8px; }
 html[data-style="surreal"] .sidebar ul.pills li { border-radius: 24px 8px 24px 8px; }
 
 /* ───────────────────────── Y2K ───────────────────────── */
@@ -105,7 +101,6 @@ html[data-style="y2k"] {
     radial-gradient(circle at 50% 90%, rgba(246,208,220,.5), transparent 45%);
   --sheet-shadow: 0 10px 30px rgba(224,122,149,.25);
 }
-html[data-style="y2k"] .sidebar .pill-cta { background: linear-gradient(90deg, #f6a9c0, #e07a95, #b9bec7); box-shadow: inset 0 2px 0 rgba(255,255,255,.6), 0 6px 18px rgba(224,122,149,.35); }
 html[data-style="y2k"] .titlebar .brand { background: linear-gradient(90deg, #e07a95, #e07a95, #8a8e96); -webkit-background-clip: text; color: transparent; }
 
 /* ───────────────────────── Pixel art ───────────────────────── */
@@ -123,8 +118,7 @@ html[data-style="pixel"] {
 }
 html[data-style="pixel"] { font-size: 18px; }
 html[data-style="pixel"] .titlebar .brand, html[data-style="pixel"] .sidebar h2,
-html[data-style="pixel"] .inspector .panel > summary, html[data-style="pixel"] .sidebar .pill-cta { font-size: 10px; line-height: 1.6; }
-html[data-style="pixel"] .sidebar .pill-cta { border-radius: 0; box-shadow: 4px 4px 0 #1b1c1f, inset -4px -4px 0 rgba(0,0,0,.25); color: #1b1c1f; }
+html[data-style="pixel"] .inspector .panel > summary { font-size: 10px; line-height: 1.6; }
 html[data-style="pixel"] .sidebar ul.pills li { border-radius: 0; box-shadow: 0 0 0 3px #1b1c1f; }
 
 /* ───────────────────────── Synthwave ───────────────────────── */
@@ -147,7 +141,6 @@ html[data-style="synthwave"] {
 }
 html[data-style="synthwave"] .titlebar .brand { text-shadow: 0 0 12px rgba(255,255,255,.8); letter-spacing: .08em; }
 html[data-style="synthwave"] .sidebar h2, html[data-style="synthwave"] .inspector .panel > summary { color: #cfd3da; text-shadow: 0 0 8px rgba(207,211,218,.6); }
-html[data-style="synthwave"] .sidebar .pill-cta { background: linear-gradient(90deg, #ff7aa2, #c85d7b); box-shadow: 0 0 22px rgba(255,122,162,.55); }
 
 /* ───────────────────────── Glassmorphism ───────────────────────── */
 html[data-style="glass"] {
@@ -171,7 +164,6 @@ html[data-style="glass"] dialog, html[data-style="glass"] .inspector-head {
   -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
 }
 html[data-style="glass"] .theme-pop, html[data-style="glass"] dialog, html[data-style="glass"] .inspector-head { background: rgba(255,255,255,.55); }
-html[data-style="glass"] .sidebar .pill-cta { background: linear-gradient(135deg, rgba(224,122,149,.9), rgba(200,93,123,.85)); }
 
 /* ───────────────────────── Neumorphism ───────────────────────── */
 html[data-style="neu"] {
@@ -191,7 +183,6 @@ html[data-style="neu"] .toolbar button.active { box-shadow: inset 4px 4px 8px #c
 html[data-style="neu"] .toolbar button, html[data-style="neu"] .toolbar .color { box-shadow: none; }
 html[data-style="neu"] .sidebar, html[data-style="neu"] .inspector { box-shadow: none; }
 html[data-style="neu"] .sidebar ul.pills li, html[data-style="neu"] .sidebar ul.cards li.current { background: #ebecef; box-shadow: inset 4px 4px 8px #c9ccd3, inset -4px -4px 8px #ffffff; }
-html[data-style="neu"] .sidebar .pill-cta { box-shadow: 6px 6px 12px #c9ccd3, -6px -6px 12px #ffffff; }
 html[data-style="neu"] input, html[data-style="neu"] textarea { box-shadow: inset 3px 3px 6px #c9ccd3, inset -3px -3px 6px #fff; border-color: transparent !important; }
 
 /* ───────────────────────── Bento grid ───────────────────────── */
@@ -214,7 +205,6 @@ html[data-style="bento"] .inspector-head, html[data-style="bento"] .inspector .p
 }
 html[data-style="bento"] .inspector-head { padding: 14px; }
 html[data-style="bento"] .inspector .panel > summary { margin: 0 -14px; }
-html[data-style="bento"] .sidebar .pill-cta { border-radius: 18px; background: #3c3f45; box-shadow: none; }
 html[data-style="bento"] .sidebar ul.pills li { border-radius: 16px; }
 
 /* ───────────────────────── Editorial design ───────────────────────── */
@@ -235,7 +225,6 @@ html[data-style="editorial"] .sidebar h2, html[data-style="editorial"] .inspecto
   border-bottom: 1px solid #2a2c31; padding-bottom: 4px;
 }
 html[data-style="editorial"] .toolbar, html[data-style="editorial"] .sidebar, html[data-style="editorial"] .inspector { border-color: #d5d8de; }
-html[data-style="editorial"] .sidebar .pill-cta { border-radius: 0; background: #c85d7b; box-shadow: none; font-family: var(--font-display); font-style: italic; }
 html[data-style="editorial"] .sidebar ul.pills li { border-radius: 0; background: none; border-bottom: 1px solid #d5d8de; }
 
 /* ───────────────────────── Swiss design ───────────────────────── */
@@ -254,7 +243,6 @@ html[data-style="swiss"] .titlebar .brand { font-weight: 900; letter-spacing: -.
 html[data-style="swiss"] .sidebar h2, html[data-style="swiss"] .inspector .panel > summary { color: #232428; font-weight: 800; font-size: 12px; letter-spacing: 0; }
 html[data-style="swiss"] button:hover:not(:disabled) { background: #232428; color: #fff; }
 html[data-style="swiss"] .toolbar button:hover:not(:disabled) { background: #232428; color: #fff; }
-html[data-style="swiss"] .sidebar .pill-cta { border-radius: 0; background: #232428; box-shadow: none; justify-content: flex-start; text-transform: uppercase; }
 html[data-style="swiss"] .sidebar ul.pills li { border-radius: 0; background: none; border-left: 4px solid #e07a95; }
 
 /* ───────────────────────── Minimalism ───────────────────────── */
@@ -272,7 +260,6 @@ html[data-style="minimal"] { font-weight: 300; }
 html[data-style="minimal"] .titlebar { border-bottom: 1px solid #eceef1; }
 html[data-style="minimal"] .titlebar .brand { font-weight: 500; letter-spacing: .02em; }
 html[data-style="minimal"] .sidebar h2, html[data-style="minimal"] .inspector .panel > summary { font-weight: 400; letter-spacing: .12em; }
-html[data-style="minimal"] .sidebar .pill-cta { background: #3c3f45; box-shadow: none; font-weight: 400; }
 html[data-style="minimal"] .sidebar ul.pills li { background: none; border: 1px solid #e5e7eb; }
 
 /* ───────────────────────── Maximalism ───────────────────────── */
@@ -294,7 +281,6 @@ html[data-style="maximal"] .board { background-position: 0 0, 23px 23px, 0 0; }
 html[data-style="maximal"] .sidebar { background: repeating-linear-gradient(-45deg, #fffafc 0 18px, #ffe8f3 18px 36px); }
 html[data-style="maximal"] .inspector { background: radial-gradient(#ffd3e8 2px, transparent 3px) 0 0 / 18px 18px, #fffafc; }
 html[data-style="maximal"] .titlebar .brand { font-size: 20px; font-weight: 800; }
-html[data-style="maximal"] .sidebar .pill-cta { background: linear-gradient(90deg, #e07a95, #f6a9c0); border: 2px solid #2f3136; box-shadow: 4px 4px 0 #2f3136; }
 html[data-style="maximal"] .sidebar ul.pills li { border: 2px solid #2f3136; background: #e9eaee; }
 
 /* ───────────────────────── Luxury typography ───────────────────────── */
@@ -313,7 +299,6 @@ html[data-style="luxury"] {
 html[data-style="luxury"] { font-size: 16px; }
 html[data-style="luxury"] .titlebar .brand { letter-spacing: .3em; text-transform: uppercase; font-size: 13px; color: #e3a3b4; }
 html[data-style="luxury"] .sidebar h2, html[data-style="luxury"] .inspector .panel > summary { letter-spacing: .3em; color: #e3a3b4; }
-html[data-style="luxury"] .sidebar .pill-cta { border-radius: 0; background: transparent; color: #e3a3b4; border: 1px solid #e3a3b4; box-shadow: none; letter-spacing: .2em; text-transform: uppercase; font-size: 11px; }
 html[data-style="luxury"] .sidebar ul.pills li { border-radius: 0; background: none; border: 1px solid rgba(227,163,180,.35); }
 
 /* ───────────────────────── Conceptual sketch ───────────────────────── */
@@ -334,7 +319,6 @@ html[data-style="sketch"] { font-size: 15px; }
 html[data-style="sketch"] .titlebar { border-bottom: 2px solid #3c3f45; }
 html[data-style="sketch"] .titlebar .brand { font-size: 26px; }
 html[data-style="sketch"] .sidebar h2, html[data-style="sketch"] .inspector .panel > summary { font-size: 20px; text-transform: none; letter-spacing: 0; color: #3c3f45; }
-html[data-style="sketch"] .sidebar .pill-cta { background: #f6d0dc; color: #3c3f45; border: 2px solid #3c3f45; border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; box-shadow: 2px 3px 0 #3c3f45; font-size: 20px; }
 html[data-style="sketch"] .sidebar ul.pills li { border: 2px solid #3c3f45; border-radius: 15px 255px 15px 225px / 225px 15px 255px 15px; background: #fdfdfe; }
 
 /* ───────────────────────── Ethereal ───────────────────────── */
@@ -356,7 +340,6 @@ html[data-style="ethereal"] {
 html[data-style="ethereal"] .titlebar .brand, html[data-style="ethereal"] .sidebar h2,
 html[data-style="ethereal"] .inspector .panel > summary { font-style: italic; letter-spacing: .08em; font-weight: 500; }
 html[data-style="ethereal"] .titlebar .brand { font-size: 20px; }
-html[data-style="ethereal"] .sidebar .pill-cta { background: linear-gradient(90deg, #f6b8d8, #e07a95, #cfd3da); box-shadow: 0 0 24px rgba(224,122,149,.5); }
 
 /* ───────────────────────── Bohemian ───────────────────────── */
 html[data-style="boho"] {
@@ -372,7 +355,6 @@ html[data-style="boho"] {
   --sheet-shadow: 0 10px 26px rgba(69,56,61,.22);
 }
 html[data-style="boho"] .sidebar h2, html[data-style="boho"] .inspector .panel > summary { color: #c85d7b; }
-html[data-style="boho"] .sidebar .pill-cta { background: #8a8e96; box-shadow: 0 6px 16px rgba(138,142,150,.35); }
 html[data-style="boho"] .sidebar ul.pills li { background: #fae5ec; border: 1px dashed #c85d7b; }
 
 /* ───────────────────────── Victorian ───────────────────────── */
@@ -397,7 +379,6 @@ html[data-style="victorian"] .sidebar h2::before, html[data-style="victorian"] .
 html[data-style="victorian"] .sidebar h2, html[data-style="victorian"] .inspector .panel > summary { color: #8a3a55; font-size: 13px; letter-spacing: .06em; }
 html[data-style="victorian"] .sidebar { border-right: 3px double #a9aeb7; }
 html[data-style="victorian"] .inspector { border-left: 3px double #a9aeb7; }
-html[data-style="victorian"] .sidebar .pill-cta { border-radius: 2px; background: #8a3a55; border: 3px double #a9aeb7; box-shadow: none; }
 html[data-style="victorian"] .sidebar ul.pills li { border-radius: 2px; background: #f1e1e7; border: 3px double #a9aeb7; }
 
 /* ───────────────────────── Cyberpunk ───────────────────────── */
@@ -421,7 +402,6 @@ html[data-style="cyberpunk"] button:not(.toolbar button) { clip-path: polygon(0 
 html[data-style="cyberpunk"] .titlebar .brand { letter-spacing: .1em; text-transform: uppercase; }
 html[data-style="cyberpunk"] .sidebar h2, html[data-style="cyberpunk"] .inspector .panel > summary { color: #cfd3da; letter-spacing: .2em; }
 html[data-style="cyberpunk"] .sidebar, html[data-style="cyberpunk"] .inspector, html[data-style="cyberpunk"] .toolbar { border-color: #3c3f45; }
-html[data-style="cyberpunk"] .sidebar .pill-cta { border-radius: 0; color: #17181b; box-shadow: 4px 4px 0 #e0446f; text-transform: uppercase; letter-spacing: .1em; }
 html[data-style="cyberpunk"] .sidebar ul.pills li { border-radius: 0; background: #2a1f24; border-left: 4px solid #ff8fb0; }
 
 /* ───────────────────────── Wabi-sabi ───────────────────────── */
@@ -442,7 +422,6 @@ html[data-style="wabisabi"] {
 html[data-style="wabisabi"] .titlebar { border-bottom: 1px solid #dbd5d8; }
 html[data-style="wabisabi"] .titlebar .brand { font-weight: 500; letter-spacing: .1em; }
 html[data-style="wabisabi"] .sidebar h2, html[data-style="wabisabi"] .inspector .panel > summary { letter-spacing: .2em; font-weight: 500; }
-html[data-style="wabisabi"] .sidebar .pill-cta { background: #8f5a6a; border-radius: 18px 12px 20px 10px; box-shadow: none; font-weight: 500; }
 html[data-style="wabisabi"] .sidebar ul.pills li { background: #ecdfe3; border-radius: 16px 10px 18px 8px; }
 
 /* ═════════════════════ Swiss & Editorial variations (Pink Pewter) ═════════════════════ */
@@ -480,7 +459,6 @@ html[data-style="swiss-grid"] .sidebar h2, html[data-style="swiss-grid"] .inspec
   color: #232428; font-weight: 700; font-size: 11px; letter-spacing: .04em; border-top: 2px solid #232428; padding-top: 8px;
 }
 html[data-style="swiss-grid"] .inspector .panel { border-top: 0; }
-html[data-style="swiss-grid"] .sidebar .pill-cta { border-radius: 0; background: #232428; box-shadow: none; justify-content: flex-start; }
 html[data-style="swiss-grid"] .sidebar ul.pills li { border-radius: 0; background: none; box-shadow: inset 3px 0 0 #e07a95; }
 html[data-style="swiss-grid"] .sidebar ul.cards li.current { background: #fae5ec; box-shadow: inset 3px 0 0 #232428; border-radius: 0; }
 
@@ -503,7 +481,6 @@ html[data-style="swiss-poster"] .sidebar li .date { color: #a9aeb7; }
 html[data-style="swiss-poster"] .sidebar li .tpl { color: #f6d0dc; }
 html[data-style="swiss-poster"] .sidebar li:hover, html[data-style="swiss-poster"] .sidebar ul.cards li.current { background: #3c3f45; box-shadow: inset 4px 0 0 #e07a95; border-radius: 0; }
 html[data-style="swiss-poster"] .sidebar .h2-add { background: #e07a95; color: #232428; border: 0; border-radius: 0; }
-html[data-style="swiss-poster"] .sidebar .pill-cta { border-radius: 0; background: #e07a95; color: #232428; box-shadow: none; font-weight: 900; font-size: 14px; text-transform: uppercase; letter-spacing: -.03em; justify-content: flex-start; }
 html[data-style="swiss-poster"] .sidebar ul.pills li { border-radius: 0; background: #f3f4f6; color: #232428; }
 html[data-style="swiss-poster"] .inspector .panel > summary { color: #232428; font-size: 16px; font-weight: 900; letter-spacing: -.02em; text-transform: none; }
 html[data-style="swiss-poster"] .inspector-head .name { font-size: 20px; font-weight: 900; letter-spacing: -.03em; }
@@ -522,8 +499,6 @@ html[data-style="swiss-mono"] {
 html[data-style="swiss-mono"] .titlebar .brand { font-weight: 700; letter-spacing: -.01em; }
 html[data-style="swiss-mono"] .titlebar .brand::before { content: ''; display: inline-block; width: 8px; height: 8px; background: #e07a95; margin-right: 8px; }
 html[data-style="swiss-mono"] .sidebar h2, html[data-style="swiss-mono"] .inspector .panel > summary { color: #232428; font-weight: 700; letter-spacing: .02em; text-transform: none; font-size: 13px; }
-html[data-style="swiss-mono"] .sidebar .pill-cta { border-radius: 0; background: #232428; box-shadow: none; font-weight: 600; justify-content: space-between; }
-html[data-style="swiss-mono"] .sidebar .pill-cta::after { content: '→'; }
 html[data-style="swiss-mono"] .sidebar ul.pills li { border-radius: 0; background: none; border-bottom: 1px solid #d5d8de; }
 html[data-style="swiss-mono"] .sidebar ul.cards li.current { box-shadow: inset 2px 0 0 #e07a95; background: #f1f2f4; border-radius: 0; }
 html[data-style="swiss-mono"] .sidebar li .tpl { color: #8a8e96; }
@@ -547,7 +522,6 @@ html[data-style="ed-magazine"] .sidebar h2, html[data-style="ed-magazine"] .insp
 }
 html[data-style="ed-magazine"] .inspector-head .name { font-size: 22px; font-style: italic; font-weight: 700; }
 html[data-style="ed-magazine"] .sheet-label .name { font-style: italic; font-size: 18px; }
-html[data-style="ed-magazine"] .sidebar .pill-cta { border-radius: 2px; background: #2a2c31; box-shadow: none; font-style: italic; font-size: 16px; }
 html[data-style="ed-magazine"] .sidebar ul.pills li { border-radius: 2px; background: none; border-top: 1px solid #2a2c31; border-bottom: 1px solid #2a2c31; }
 html[data-style="ed-magazine"] .sidebar ul.pills li .label { font-family: "Playfair Display", serif; font-style: italic; font-size: 15px; }
 
@@ -571,7 +545,6 @@ html[data-style="ed-newspaper"] .sidebar h2, html[data-style="ed-newspaper"] .in
 html[data-style="ed-newspaper"] .sidebar { border-right: 1px solid #1e1f22; }
 html[data-style="ed-newspaper"] .inspector { border-left: 1px solid #1e1f22; }
 html[data-style="ed-newspaper"] .inspector-head .name, html[data-style="ed-newspaper"] .sheet-label .name { font-weight: 700; }
-html[data-style="ed-newspaper"] .sidebar .pill-cta { border-radius: 0; background: #1e1f22; box-shadow: none; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: 12px; }
 html[data-style="ed-newspaper"] .sidebar ul.pills li { border-radius: 0; background: none; border: 1px solid #1e1f22; }
 html[data-style="ed-newspaper"] .sidebar ul.cards li { border-bottom: 1px solid #c9ccd3; border-radius: 0; }
 html[data-style="ed-newspaper"] .sidebar ul.cards li.current { background: #eceef1; box-shadow: inset 3px 0 0 #c85d7b; }
@@ -593,7 +566,6 @@ html[data-style="ed-journal"] .titlebar .brand { font-size: 19px; letter-spacing
 html[data-style="ed-journal"] .sidebar h2 { justify-content: center; gap: 10px; color: #36383d; font-size: 14px; letter-spacing: .2em; text-transform: none; font-weight: 500; }
 html[data-style="ed-journal"] .sidebar h2::before { content: '~'; color: #c85d7b; }
 html[data-style="ed-journal"] .inspector .panel > summary { justify-content: center; color: #36383d; font-size: 14px; letter-spacing: .2em; text-transform: none; font-weight: 500; }
-html[data-style="ed-journal"] .sidebar .pill-cta { border-radius: 0; background: transparent; color: #c85d7b; border-top: 1px solid #c85d7b; border-bottom: 1px solid #c85d7b; box-shadow: none; font-family: "Cormorant SC", serif; font-size: 16px; letter-spacing: .05em; font-weight: 600; }
 html[data-style="ed-journal"] .sidebar ul.pills li { border-radius: 0; background: none; justify-content: center; }
 html[data-style="ed-journal"] .sidebar ul.pills li .label { text-align: center; font-style: italic; font-weight: 400; }
 html[data-style="ed-journal"] .sidebar ul.cards li.current { background: #f8edf1; box-shadow: none; border-radius: 0; }
@@ -614,7 +586,6 @@ html[data-style="mix-swissed"] {
 html[data-style="mix-swissed"] .titlebar .brand { font-weight: 800; letter-spacing: -.02em; text-transform: uppercase; }
 html[data-style="mix-swissed"] .sidebar h2, html[data-style="mix-swissed"] .inspector .panel > summary { color: #232428; font-weight: 800; font-size: 11px; letter-spacing: .06em; }
 html[data-style="mix-swissed"] .inspector-head .name, html[data-style="mix-swissed"] .sheet-label .name { font-weight: 800; letter-spacing: -.01em; }
-html[data-style="mix-swissed"] .sidebar .pill-cta { border-radius: 0; background: #e07a95; box-shadow: none; font-weight: 800; justify-content: flex-start; text-transform: uppercase; font-size: 13px; }
 html[data-style="mix-swissed"] .sidebar ul.pills li { border-radius: 0; background: none; border-left: 4px solid #232428; }
 html[data-style="mix-swissed"] .sidebar ul.pills li .label { font-family: "Source Serif 4", Georgia, serif; font-style: italic; font-weight: 600; }
 
@@ -638,7 +609,6 @@ html[data-style="mix-edgrid"] .sidebar h2, html[data-style="mix-edgrid"] .inspec
 }
 html[data-style="mix-edgrid"] .inspector .panel { border-top: 0; }
 html[data-style="mix-edgrid"] .inspector-head .name { font-size: 22px; font-weight: 900; }
-html[data-style="mix-edgrid"] .sidebar .pill-cta { border-radius: 0; background: #c85d7b; box-shadow: none; font-family: "Inter", sans-serif; font-weight: 600; justify-content: flex-start; }
 html[data-style="mix-edgrid"] .sidebar ul.pills li { border-radius: 0; background: #fae5ec; }
 html[data-style="mix-edgrid"] .sidebar ul.pills li .label { font-family: "Playfair Display", serif; font-size: 15px; }
 
@@ -658,12 +628,7 @@ html[data-style="mix-modern"] .titlebar .brand { font-size: 20px; font-weight: 7
 html[data-style="mix-modern"] .sidebar h2, html[data-style="mix-modern"] .inspector .panel > summary { font-weight: 700; font-size: 13px; letter-spacing: .08em; color: #26282d; }
 html[data-style="mix-modern"] .inspector-head .name, html[data-style="mix-modern"] .sheet-label .name { text-transform: uppercase; font-weight: 700; letter-spacing: .02em; }
 html[data-style="mix-modern"] .inspector-head .kind, html[data-style="mix-modern"] .sheet-label .kind { background: #e07a95; color: #fff; }
-html[data-style="mix-modern"] .sidebar .pill-cta { background: #26282d; box-shadow: none; text-transform: uppercase; font-weight: 700; letter-spacing: .04em; }
 html[data-style="mix-modern"] .sidebar ul.pills li { background: #fae5ec; }
 html[data-style="mix-modern"] .sidebar ul.pills li .label { font-family: "Archivo Narrow", sans-serif; text-transform: uppercase; letter-spacing: .03em; }
 html[data-style="mix-modern"] .sidebar li .tpl { display: inline-block; margin-top: 4px; padding: 1px 8px; border-radius: 999px; background: #fae5ec; color: #c85d7b; font-family: "Archivo Narrow", sans-serif; font-weight: 600; }
 
-/* "New from job ad" on one line in the styles with wide display fonts */
-html[data-style="cybercore"] .sidebar .pill-cta { font-size: 12px; letter-spacing: .03em; padding-inline: 10px; }
-html[data-style="pixel"] .sidebar .pill-cta { font-size: 8px; padding-inline: 8px; gap: 6px; }
-html[data-style="cyberpunk"] .sidebar .pill-cta { font-size: 12px; letter-spacing: .02em; padding-inline: 10px; }

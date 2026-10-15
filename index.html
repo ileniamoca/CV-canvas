@@ -66,7 +66,6 @@
 
   <div class="layout">
     <nav class="sidebar" id="sidebar">
-      <button id="btnFromJob" class="pill-cta" title="Paste a job ad: it's saved and a page for it is created, ready to be tailored"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3.5 12.5h17"/></svg><span>New from job ad</span></button>
       <section>
         <h2>Templates <button class="h2-add" id="btnNewTemplate" title="New template (blank, or from a page or another template)">+</button></h2>
         <ul id="list-templates" class="pills"></ul>
@@ -178,24 +177,6 @@
       <menu>
         <button value="cancel" formnovalidate>Cancel</button>
         <button value="ok" class="primary">Create</button>
-      </menu>
-    </form>
-  </dialog>
-
-  <dialog id="jobDialog" class="wide">
-    <form method="dialog">
-      <h3>New page from a job ad</h3>
-      <div class="two">
-        <label>Company <input id="jobCompany" required autocomplete="off" placeholder="e.g. Sinch" /></label>
-        <label>Role <input id="jobRole" required autocomplete="off" placeholder="e.g. Data Analyst II" /></label>
-      </div>
-      <label>Link to the ad <small>(optional)</small> <input id="jobUrl" autocomplete="off" placeholder="https://…" /></label>
-      <label>Job ad <small>(paste the whole text)</small> <textarea id="jobText" required rows="12" placeholder="Paste the job ad here…"></textarea></label>
-      <label>Start from template <select id="jobTemplate"></select></label>
-      <p class="hint">The ad is saved in <code>jobs/</code> and a page “Company – Role” is created from the template. Then ask Claude Code to tailor it: <em>“tailor the page Company – Role”</em>.</p>
-      <menu>
-        <button value="cancel" formnovalidate>Cancel</button>
-        <button value="ok" class="primary">Create page</button>
       </menu>
     </form>
   </dialog>

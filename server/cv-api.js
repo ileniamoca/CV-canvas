@@ -217,35 +217,6 @@ export function cvApi() {
             return send(res, 200, { ok: true, kind, name: fileName });
           }
 
-          // POST /api/jobs  { company, role, url?, text, page }  → saves a pasted job ad as ../jobs/<company-role>.md
-          if (parts[1] === 'jobs' && parts.length === 2 && req.method === 'POST') {
-            const { company = '', role = '', url = '', text = '', page = '' } = await readBody(req);
-            if (!String(text).trim()) throw httpError(400, 'Paste the job ad first.');
-            if (!String(company).trim() || !String(role).trim()) throw httpError(400, 'Company and role are needed.');
-            const slug = `${company}-${role}`.normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
-              .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80) || 'job';
-            await fsp.mkdir(JOBS_DIR, { recursive: true });
-            let fileName = `${slug}.md`;
-            for (let i = 2; fs.existsSync(path.join(JOBS_DIR, fileName)); i++) fileName = `${slug}-${i}.md`;
-            const md = [
-              `# ${company.trim()} — ${role.trim()}`,
-              '',
-              `- **Company:** ${company.trim()}`,
-              `- **Role:** ${role.trim()}`,
-              ...(url.trim() ? [`- **Link:** ${url.trim()}`] : []),
-              `- **Saved:** ${new Date().toLocaleDateString('sv-SE')}`, // local date, YYYY-MM-DD
-              ...(page ? [`- **CV page:** \`CVs/documents/pages/${page}\``] : []),
-              '- **Status:** to tailor',
-              '',
-              '## Job ad (as pasted)',
-              '',
-              String(text).trim(),
-              '',
-            ].join('\n');
-            await fsp.writeFile(path.join(JOBS_DIR, fileName), md, 'utf8');
-            return send(res, 200, { ok: true, file: fileName });
-          }
-
           // GET /api/jobs/:file  → a saved job ad (Markdown)
           if (parts[1] === 'jobs' && parts.length === 3 && req.method === 'GET') {
             const base = path.basename(parts[2]);

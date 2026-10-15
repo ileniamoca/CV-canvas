@@ -65,8 +65,8 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 - **Source of truth for content:** `../ilenia/` (outside this repo, private). Start with `../ilenia/README.md`: it
   indexes the chapters and sets the rules (honesty about personal vs team work, confidence markers, `timeline.md`
   wins on dates). `../ilenia/_archive/` holds older documents; don't use them.
-- **Job ads:** "+ From job ad" in the app saves the pasted ad as `../jobs/<company-role>.md` (outside this repo,
-  private) and creates the page "Company – Role", linked to it with `<meta name="cv-job" content="<file>.md">`.
+- **Job ads:** saved as `../jobs/<company-role>.md` (outside this repo, private). A page is linked to its ad with
+  `<meta name="cv-job" content="<file>.md">` (add it by hand when creating the page); the app shows "View job ad".
 
 ## When Ilenia asks to tailor a page ("tailor the page X")
 

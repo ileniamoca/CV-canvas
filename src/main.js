@@ -61,7 +61,7 @@ async function refreshList() {
   $('#empty').textContent = !data.templates.length
     ? 'No CVs yet. Click “+” next to Templates to create your first template.'
     : !data.pages.length
-      ? 'No pages yet. Click “New from job ad” to make a CV for a job.'
+      ? 'No pages yet. Click “+” next to Pages to make a CV for a job.'
       : 'Pick a page on the left to open it.';
   // Templates and pages keep their place on the board and in the list: oldest first, new ones at the end.
   for (const kind of ['templates', 'pages']) data[kind].sort((a, b) => a.created - b.created || a.name.localeCompare(b.name));
@@ -412,45 +412,7 @@ $('#btnTemplateDiscard').addEventListener('click', () => {
   leaveTemplate({ saveFirst: false });
 });
 
-// ---------- Pages from job ads ----------
-/** Paste a job ad → saved in ../jobs → a page "Company – Role" from a template, linked to the ad. */
-async function newFromJob() {
-  const templates = state.docs.templates ?? [];
-  if (!templates.length) return toast('Create a template first (the “+” next to Templates).');
-  const dlg = $('#jobDialog');
-  $('#jobTemplate').innerHTML = templates.map((f) => `<option value="${escapeHtml(f.name)}">${escapeHtml(stem(f.name))}</option>`).join('');
-  for (const id of ['#jobCompany', '#jobRole', '#jobUrl', '#jobText']) $(id).value = '';
-  dlg.returnValue = '';
-  dlg.showModal();
-  $('#jobCompany').focus();
-  const ok = await new Promise((resolve) => dlg.addEventListener('close', () => resolve(dlg.returnValue === 'ok'), { once: true }));
-  if (!ok) return;
-  const company = $('#jobCompany').value.trim();
-  const role = $('#jobRole').value.trim();
-  const template = $('#jobTemplate').value;
-  const name = `${company} – ${role}`;
-  try {
-    const job = await api('/api/jobs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ company, role, url: $('#jobUrl').value, text: $('#jobText').value, page: `${name}.html` }),
-    });
-    let html = withTemplate(await api(docUrl('templates', template)), template);
-    html = html.replace(/<meta name="cv-template"[^>]*>/, (m) => `${m}\n<meta name="cv-job" content="${escapeHtml(job.file)}">`);
-    html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(name)}</title>`);
-    const res = await api('/api/docs/pages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, html }),
-    });
-    markOwnWrite('pages', res.name);
-    await openDoc('pages', res.name, { force: true });
-    toast(`Page “${stem(res.name)}” created. Now ask Claude Code: “tailor the page ${stem(res.name)}”.`);
-  } catch (err) {
-    toast(err.message, true);
-  }
-}
-
+// ---------- Job ads linked to pages ----------
 async function viewJob(file) {
   try {
     const md = await api(`/api/jobs/${encodeURIComponent(file)}`);
@@ -1486,7 +1448,6 @@ $('#zoomIn').addEventListener('click', () => setZoom(state.zoom + 0.1));
 $('#zoomOut').addEventListener('click', () => setZoom(state.zoom - 0.1));
 
 $('#btnAddPage').addEventListener('click', () => newDoc('pages'));
-$('#btnFromJob').addEventListener('click', newFromJob);
 $('#btnNewTemplate').addEventListener('click', () => newDoc('templates'));
 $('#btnSave').addEventListener('click', save);
 $('#btnSaveCopy').addEventListener('click', saveCopy);
