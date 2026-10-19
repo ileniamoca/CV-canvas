@@ -160,6 +160,7 @@ body.hide-right .theme-bubble { right: 18px; }
 .sidebar li:hover { background: var(--accent-soft); }
 .sidebar li.current { background: var(--accent-soft); border-left-color: var(--accent); }
 .sidebar li .label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar li .company { display: block; font-size: 12px; font-weight: 600; margin-top: 1px; }
 .sidebar li .date { display: block; font-size: 11px; color: var(--muted); }
 .sidebar li .mini { padding: 2px 6px; font-size: 12px; opacity: 0; }
 .sidebar li:hover .mini { opacity: 1; }

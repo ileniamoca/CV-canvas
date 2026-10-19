@@ -94,7 +94,7 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
   and is not used.
 - **Job ads** are stored as `../jobs/<company-role>.md` (outside this repository, private). A page is linked to its
   ad with `<meta name="cv-job" content="<file>.md">`, added by hand when the page is created; the app then offers
-  "View job ad".
+  "View job ad", and the sidebar shows the ad's `- **Company:**` under the page title.
 - **Job brief:** above a page linked to an ad, the board shows a screen-only card (never printed or exported),
   rendered from the ad's Markdown by `src/jobbrief.js`: the `# title`, the `- **Key:** value` meta lines, then each
   `## ` section. It consists of two A4-wide cards above the sheets, at the CV's type sizes and following its zoom:

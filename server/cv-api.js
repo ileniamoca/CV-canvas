@@ -126,6 +126,9 @@ async function listDir(kind) {
           doc.coverFor = c ? unescapeAttr(c[1]) : null;
           // So the board knows when to redraw the job brief above the page
           doc.jobMtime = doc.job ? (await fsp.stat(path.join(JOBS_DIR, path.basename(doc.job))).catch(() => null))?.mtimeMs ?? null : null;
+          // The company applied to, from the job ad's "- **Company:** …" line (shown under the page in the sidebar)
+          const ad = doc.job ? await fsp.readFile(path.join(JOBS_DIR, path.basename(doc.job)), 'utf8').catch(() => '') : '';
+          doc.company = ad.match(/^[-*]\s+\*\*Company:?\*\*:?\s*(.+)$/mi)?.[1].trim() || null;
         }
         return doc;
       }),

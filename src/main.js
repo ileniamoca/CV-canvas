@@ -114,6 +114,12 @@ function renderItem(kind, f) {
   const label = document.createElement('span');
   label.className = 'label';
   label.textContent = stem(f.name);
+  if (kind === 'pages' && f.company) {
+    const company = document.createElement('span');
+    company.className = 'company';
+    company.textContent = f.company;
+    label.append(company);
+  }
   const date = document.createElement('span');
   date.className = 'date';
   date.textContent = new Date(f.mtime).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
