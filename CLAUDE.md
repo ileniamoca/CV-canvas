@@ -16,9 +16,14 @@ templates, keeps one page per job application, and exports each page to PDF.
   its template in `<meta name="cv-template" content="Template name">` (shown in the sidebar and on the board;
   renaming a template updates its pages). Pages created by hand need this meta as well.
 - **Cover letters** are pages too, linked to their CV page with `<meta name="cv-cover-for" content="CV page.html">`
-  (plus the same `cv-template` and `cv-job` metas), named `<CV page> – Cover letter.html`. They use the CV's header,
-  shapes and styles (with a larger `--body-size` for reading), the letter in the main column and an "Application"
-  block in the side column. The sidebar shows them inside their CV page ("cover letter ✓"); opening either shows
+  (plus the same `cv-template` and `cv-job` metas), named `<CV page> – Cover letter.html`. Layout: the CV's text
+  styles (with `--body-size: 8.5pt`, `--body-leading: 1.5`, `--body-after: 10pt` for reading), no side stripe, a
+  single column with wide margins (header frame at x 86, top 64, width 622: name, `.role` as
+  "<strong>COVER LETTER</strong> · ROLE, COMPANY", and a `.contact-line` with city, phone and email; the header rule at
+  top 166 across the page; the letter frame at x 86, top 214, width 622). The letter opens with a bold greeting and
+  ends with "Kind regards,", the handwritten signature (`<p class="signature"><img src="data:image/png;base64,…">`,
+  embedded from `documents/assets/signature.png`, which is private) and the first name in bold. Without a side
+  stripe, the page has no margin regions. The sidebar shows them inside their CV page ("cover letter ✓"); opening either shows
   both side by side, and "Export PDF" asks which one to export (they are never exported together). Renaming the CV
   page updates the link.
 - `documents/.history/<kind>/<name>/` — the version history of every template and page. The server stores a copy
