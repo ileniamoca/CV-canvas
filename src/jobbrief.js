@@ -1,8 +1,9 @@
 // The job brief: a screen-only card shown above a page that is linked to a job ad (<meta name="cv-job">).
 // It renders the ad's Markdown file from ../jobs: the title and its meta lines, then each "## " section,
 // as two cards side by side: the ad on the left, the fit on the right.
-//   ## Fit            → the right card: its "### " groups (have / partly / missing, guessed from the heading)
-//                       as coloured blocks, with a bar that counts the items of each group
+//   ## Fit            → the right card: a "**Match: 55%** — why" line becomes a score with a verdict, and the
+//                       "### " groups (have / partly / missing, guessed from the heading) coloured blocks,
+//                       with a bar that counts the items of each group
 //   ## Job ad (as pasted), ## Tailoring notes → folded away (<details>) at the end of the ad card
 // Never printed or exported: it lives in the editor, not in the CV document.
 
@@ -83,6 +84,28 @@ function fitKind(heading) {
   return 'neutral';
 }
 
+/** What a match score means: worth applying (75+), a stretch (50–74) or a low match (under 50). */
+function verdict(score) {
+  if (score >= 75) return { kind: 'have', text: 'Worth applying' };
+  if (score >= 50) return { kind: 'partly', text: 'A stretch: apply if you\'re keen, and let the cover letter bridge the gaps' };
+  return { kind: 'missing', text: 'Low match: probably better to prioritise other roles' };
+}
+
+/** "**Match: 55%** — why" (anywhere in the lines) → the score card; returns [html, the other lines]. */
+function matchScore(lines) {
+  const i = lines.findIndex((l) => /match\W*\s*\d{1,3}\s*%/i.test(l));
+  if (i < 0) return ['', lines];
+  const score = Math.min(100, Number(lines[i].match(/(\d{1,3})\s*%/)[1]));
+  const why = lines[i].replace(/^.*?\d{1,3}\s*%\**\s*[—–:-]?\s*/, '');
+  const v = verdict(score);
+  const html = `
+    <div class="jb-score jb-${v.kind}">
+      <div class="jb-ring" style="--p: ${score}"><b>${score}%</b><span>match</span></div>
+      <div class="jb-verdict"><strong>${esc(v.text)}</strong>${why ? `<p>${inline(why)}</p>` : ''}</div>
+    </div>`;
+  return [html, lines.filter((_, j) => j !== i)];
+}
+
 function fitSection(lines) {
   const groups = [];
   const intro = [];
@@ -92,10 +115,11 @@ function fitSection(lines) {
     else if (groups.length) groups.at(-1).lines.push(line);
     else intro.push(line);
   }
+  const [score, rest] = matchScore(intro);
   const count = (g) => g.lines.filter((l) => /^[-*]\s+/.test(l)).length;
   const bar = groups.map((g) => `<span class="jb-${fitKind(g.title)}" style="flex: ${count(g)}" title="${esc(g.title)}: ${count(g)}"></span>`).join('');
   const legend = groups.map((g) => `<span class="jb-key jb-${fitKind(g.title)}"><i></i>${inline(g.title)} <b>${count(g)}</b></span>`).join('');
-  return `${blocks(intro)}
+  return `${score}${blocks(rest)}
     <div class="jb-bar" aria-hidden="true">${bar}</div>
     <div class="jb-legend">${legend}</div>
     <div class="jb-fit">${groups.map((g) => `

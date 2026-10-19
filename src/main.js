@@ -66,10 +66,13 @@ async function refreshList() {
       : 'Pick a page on the left to open it.';
   // Templates and pages keep their place on the board and in the list: oldest first, new ones at the end.
   for (const kind of ['templates', 'pages']) data[kind].sort((a, b) => a.created - b.created || a.name.localeCompare(b.name));
-  // One document at a time in the middle: the page picked in the sidebar (or the template being edited).
+  // One document at a time in the middle: the page picked in the sidebar (or the template being edited),
+  // with its cover letter beside it.
   const v = state.viewing;
-  const sheets = v ? (data[v.kind] ?? []).filter((f) => f.name === v.name)
-    .map((f) => ({ kind: v.kind, name: f.name, mtime: f.mtime, template: f.template, job: f.job, jobMtime: f.jobMtime })) : [];
+  const sheets = v ? group(v.kind, v.name).map((f) => ({
+    kind: v.kind, name: f.name, mtime: f.mtime, template: f.template, job: f.job, jobMtime: f.jobMtime,
+    label: f.coverFor ? 'Cover letter' : undefined,
+  })) : [];
   $('#empty').hidden = sheets.length > 0;
   $('#board').hidden = !sheets.length;
   board.sync(sheets);
@@ -78,18 +81,36 @@ async function refreshList() {
   for (const kind of ['templates', 'pages']) { // exported PDFs aren't listed: they're in documents/pdf
     const ul = $(`#list-${kind}`);
     ul.replaceChildren();
-    if (!data[kind].length) {
+    // A cover letter is shown with its CV page, not on its own (unless that page is gone).
+    const listed = data[kind].filter((f) => !coverOf(f));
+    if (!listed.length) {
       ul.append(Object.assign(document.createElement('li'), { className: 'none', textContent: 'Empty' }));
       continue;
     }
-    for (const f of data[kind]) ul.append(renderItem(kind, f));
+    for (const f of listed) ul.append(renderItem(kind, f));
   }
+}
+
+/** The CV page a cover letter belongs to (null if it isn't a cover letter, or its page is gone). */
+function coverOf(f) {
+  return (f.coverFor && state.docs?.pages?.find((p) => p.name === f.coverFor)) || null;
+}
+
+/** The documents shown together: a CV page and its cover letters (opening either shows both). */
+function group(kind, name) {
+  const docs = state.docs?.[kind] ?? [];
+  const f = docs.find((d) => d.name === name);
+  if (!f) return [];
+  if (kind !== 'pages') return [f];
+  const cv = coverOf(f) ?? f;
+  return [cv, ...docs.filter((d) => d.coverFor === cv.name)];
 }
 
 function renderItem(kind, f) {
   const li = document.createElement('li');
   li.title = f.name;
-  if (state.current?.kind === kind && state.current?.name === f.name) li.classList.add('current');
+  const shown = state.current && group(state.current.kind, state.current.name);
+  if (state.current?.kind === kind && shown?.some((d) => d.name === f.name)) li.classList.add('current');
   const label = document.createElement('span');
   label.className = 'label';
   label.textContent = stem(f.name);
@@ -97,10 +118,12 @@ function renderItem(kind, f) {
   date.className = 'date';
   date.textContent = new Date(f.mtime).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
   label.append(date);
-  if (kind === 'pages' && (f.template || f.job)) {
+  const hasCover = kind === 'pages' && state.docs.pages.some((d) => d.coverFor === f.name);
+  if (kind === 'pages' && (f.template || f.job || hasCover)) {
     const tpl = document.createElement('span');
     tpl.className = 'tpl';
-    tpl.textContent = [f.template && `Template: ${f.template}`, f.job && 'job ad ✓'].filter(Boolean).join(' · ');
+    tpl.textContent = [f.template && `Template: ${f.template}`, f.job && 'job ad ✓', hasCover && 'cover letter ✓']
+      .filter(Boolean).join(' · ');
     label.append(tpl);
   }
   li.append(label);
@@ -679,11 +702,12 @@ const fileWord = (t) => t.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').repl
 const LEGAL_FORM = /\s+(AB|GmbH|Ltd|Limited|Inc|LLC|AS|ASA|Oy|Oyj|SA|SL|BV|NV|AG|SE|plc|Co)\.?$/i;
 
 /**
- * Default PDF name: CV_<First>_<Surname>_<position>_<Company>, e.g. CV_Ilenia_Molina_product_analyst_AARK.
+ * Default PDF name: CV_<First>_<Surname>_<position>_<Company>, e.g. CV_Ilenia_Molina_product_analyst_AARK
+ * (CoverLetter_… for a cover letter).
  * The name comes from the CV's h1, the position from its subtitle (.role, before any "·"), the company from the
  * linked job ad ("Short name", else "Company": legal form dropped, only the first word when it's long).
  */
-function defaultPdfName(html, jobMd) {
+function defaultPdfName(html, jobMd, prefix = 'CV') {
   const d = new DOMParser().parseFromString(html, 'text/html');
   const name = (d.querySelector('h1')?.textContent ?? '').trim().split(/\s+/).slice(0, 2)
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
@@ -693,7 +717,7 @@ function defaultPdfName(html, jobMd) {
   if (/not named|unknown|n\/a/i.test(company)) company = '';
   while (LEGAL_FORM.test(company)) company = company.replace(LEGAL_FORM, '');
   if (company.split(/\s+/).length > 2) company = company.split(/\s+/)[0];
-  return ['CV', fileWord(name), fileWord(role).toLowerCase(), fileWord(company)].filter(Boolean).join('_');
+  return [prefix, fileWord(name), fileWord(role).toLowerCase(), fileWord(company)].filter(Boolean).join('_');
 }
 
 async function exportPdf(kind = state.current?.kind, docName = state.current?.name) {
@@ -706,14 +730,16 @@ async function exportPdf(kind = state.current?.kind, docName = state.current?.na
   }
   let html;
   let jobMd = null;
+  let prefix = 'CV';
   try {
     html = isActive ? serialize() : await api(docUrl(kind, docName));
-    const job = kind === 'pages' && state.docs?.pages?.find((f) => f.name === docName)?.job;
-    if (job) jobMd = await api(`/api/jobs/${encodeURIComponent(job)}`).catch(() => null);
+    const doc = kind === 'pages' ? state.docs?.pages?.find((f) => f.name === docName) : null;
+    if (doc?.coverFor) prefix = 'CoverLetter';
+    if (doc?.job) jobMd = await api(`/api/jobs/${encodeURIComponent(doc.job)}`).catch(() => null);
   } catch (err) {
     return toast(err.message, true);
   }
-  const name = await askName('Export PDF', defaultPdfName(html, jobMd) || stem(docName), 'Export');
+  const name = await askName(prefix === 'CV' ? 'Export PDF' : 'Export cover letter PDF', defaultPdfName(html, jobMd, prefix) || stem(docName), 'Export');
   if (!name) return;
   const btn = $('#btnPdf');
   btn.disabled = true;
@@ -1482,7 +1508,14 @@ $('#btnAddPage').addEventListener('click', () => newDoc('pages'));
 $('#btnNewTemplate').addEventListener('click', () => newDoc('templates'));
 $('#btnSave').addEventListener('click', save);
 $('#btnSaveCopy').addEventListener('click', saveCopy);
-$('#btnPdf').addEventListener('click', () => exportPdf());
+// With a cover letter beside the CV, Export PDF asks which one: they're always exported separately.
+$('#btnPdf').addEventListener('click', () => {
+  const shown = state.current ? group(state.current.kind, state.current.name) : [];
+  if (shown.length < 2) return exportPdf();
+  openItemMenu($('#btnPdf'), shown.map((f) => [
+    f.coverFor ? `Cover letter · ${stem(f.name)}` : `CV · ${stem(f.name)}`, () => exportPdf('pages', f.name),
+  ]));
+});
 $('#btnPrint').addEventListener('click', printDoc);
 $('#bannerReload').addEventListener('click', () => openDoc(state.current.kind, state.current.name, { force: true }));
 $('#bannerDismiss').addEventListener('click', () => ($('#banner').hidden = true));

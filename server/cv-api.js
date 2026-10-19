@@ -74,12 +74,27 @@ function httpError(status, message) {
 const TEMPLATE_META = /<meta name="cv-template" content="([^"]*)">/;
 // …and, if made from a job ad, the ad's file in ../jobs: <meta name="cv-job" content="company-role.md">
 const JOB_META = /<meta name="cv-job" content="([^"]*)">/;
+// A cover letter is a page that belongs to a CV page: <meta name="cv-cover-for" content="CV page.html">
+const COVER_META = /<meta name="cv-cover-for" content="([^"]*)">/;
 // Job ads live next to the career docs, outside this repo (private): portfolio_web/jobs/
 const JOBS_DIR = path.resolve('..', 'jobs');
 const unescapeAttr = (s) => s.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 const escapeAttr = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /** After a template is renamed, its pages point to the new name. */
+/** After a page is renamed, its cover letters point to the new name. */
+async function retargetCovers(oldName, newName) {
+  for (const name of await fsp.readdir(DIRS.pages)) {
+    if (!name.endsWith('.html')) continue;
+    const file = path.join(DIRS.pages, name);
+    const html = await fsp.readFile(file, 'utf8');
+    const m = html.match(COVER_META);
+    if (m && unescapeAttr(m[1]) === oldName) {
+      await fsp.writeFile(file, html.replace(COVER_META, `<meta name="cv-cover-for" content="${escapeAttr(newName)}">`), 'utf8');
+    }
+  }
+}
+
 async function retargetPages(oldStem, newStem) {
   for (const name of await fsp.readdir(DIRS.pages)) {
     if (!name.endsWith('.html')) continue;
@@ -107,6 +122,8 @@ async function listDir(kind) {
           doc.template = m ? unescapeAttr(m[1]) : null;
           const j = html.match(JOB_META);
           doc.job = j ? unescapeAttr(j[1]) : null;
+          const c = html.match(COVER_META);
+          doc.coverFor = c ? unescapeAttr(c[1]) : null;
           // So the board knows when to redraw the job brief above the page
           doc.jobMtime = doc.job ? (await fsp.stat(path.join(JOBS_DIR, path.basename(doc.job))).catch(() => null))?.mtimeMs ?? null : null;
         }
@@ -234,6 +251,7 @@ export function cvApi() {
               if (dirKind === 'templates') {
                 await retargetPages(path.basename(file, '.html'), path.basename(target, '.html'));
               }
+              if (dirKind === 'pages') await retargetCovers(path.basename(file), path.basename(target));
               return send(res, 200, { ok: true, kind: dirKind, name: path.basename(target) });
             }
             if (req.method === 'DELETE' && kind !== 'templates') {

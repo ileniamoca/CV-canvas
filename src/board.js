@@ -2,7 +2,7 @@
 // Pan with the trackpad (two fingers), pinch to zoom. One sheet is active: it is the document being
 // edited (main.js attaches the editor to its iframe); the others are live previews that become
 // active when clicked, or when scrolling stops with them in the middle of the view. Clicking a page in
-// the sidebar glides the view to it.
+// the sidebar glides the view to it. Above the sheets, the job brief of the ad they are linked to.
 
 import { renderJobBrief } from './jobbrief.js';
 
@@ -26,9 +26,9 @@ const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 /**
  * @param {object} o
  * @param {HTMLElement} o.board                     the scrolling pasteboard
- * @param {HTMLElement} o.strip                     row that holds the sheets
+ * @param {HTMLElement} o.strip                     holds the job brief and, below it, the row of sheets
  * @param {() => number} o.zoom
- * @param {(kind: string) => string} o.kindLabel
+ * @param {(kind: string) => string} o.kindLabel     label of a sheet (unless the document brings its own `label`)
  * @param {(kind: string, name: string) => Promise<string>} o.load   fetches a document's HTML
  * @param {(kind: string, name: string) => void} o.onActivate        a preview was clicked
  * @param {(deltaY: number, e: WheelEvent) => void} o.onPinch        trackpad pinch (ctrl + wheel)
@@ -40,14 +40,24 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
   let active = null;
   let anim = null;
 
+  // The job brief (one per group of sheets: a CV page and its cover letter) sits above the row of sheets.
+  const SHEET_GAP = 72; // px between sheets, unzoomed; the brief's cards use the same gap so they line up
+  const briefEl = document.createElement('aside');
+  briefEl.className = 'job-brief';
+  briefEl.hidden = true;
+  briefEl.innerHTML = `
+    <button class="jb-toggle" type="button"><span class="jb-tag">Job ad &amp; fit</span><span class="jb-hint"></span></button>
+    <div class="jb-body"></div>`;
+  briefEl.querySelector('.jb-toggle').addEventListener('click', () => setBriefOpen(!briefOpen()));
+  const row = document.createElement('div');
+  row.className = 'board-row';
+  row.style.gap = `${SHEET_GAP}px`;
+  strip.replaceChildren(briefEl, row);
+
   function sheetEl(kind, name) {
     const el = document.createElement('div');
     el.className = 'sheet';
     el.innerHTML = `
-      <aside class="job-brief" hidden>
-        <button class="jb-toggle" type="button"><span class="jb-tag">Job ad &amp; fit</span><span class="jb-hint"></span></button>
-        <div class="jb-body"></div>
-      </aside>
       <div class="sheet-label"><span class="kind"></span><span class="name"></span><span class="from"></span></div>
       <div class="sheet-frame"><iframe tabindex="-1" aria-label="CV page"></iframe><div class="sheet-cover" title="Click to edit"></div></div>`;
     el.querySelector('.kind').textContent = kindLabel(kind);
@@ -56,7 +66,6 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
     const activate = () => onActivate(kind, el.dataset.name); // read at click time: the sheet may be renamed
     el.querySelector('.sheet-cover').addEventListener('click', activate);
     el.querySelector('.sheet-label').addEventListener('click', activate);
-    el.querySelector('.jb-toggle').addEventListener('click', () => setBriefOpen(!briefOpen()));
     return el;
   }
 
@@ -91,40 +100,39 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
     s.iframe.srcdoc = html;
   }
 
-  // The job brief is open or folded for every page alike, and stays so between sessions.
+  // The job brief is open or folded for every group alike, and stays so between sessions.
   const briefOpen = () => {
     try { return localStorage.getItem('cv-brief-folded') !== '1'; } catch { return true; }
   };
   function setBriefOpen(open) {
     try { localStorage.setItem('cv-brief-folded', open ? '0' : '1'); } catch { /* private mode: just this session */ }
-    for (const s of sheets.values()) paintBriefState(s);
+    paintBriefState();
     resize();
   }
-  function paintBriefState(s) {
+  function paintBriefState() {
     const open = briefOpen();
-    const brief = s.el.querySelector('.job-brief');
-    brief.classList.toggle('folded', !open);
-    brief.querySelector('.jb-hint').textContent = open ? 'Hide' : 'Show what the ad asks for and how you fit';
+    briefEl.classList.toggle('folded', !open);
+    briefEl.querySelector('.jb-hint').textContent = open ? 'Hide' : 'Show what the ad asks for and how you fit';
   }
 
-  /** Draws (or hides) the brief of the job ad a page is linked to. */
-  async function brief(s, job, jobMtime) {
-    const el = s.el.querySelector('.job-brief');
-    if (s.job === job && s.jobMtime === jobMtime) return;
-    s.job = job;
-    s.jobMtime = jobMtime;
-    el.hidden = !job || !loadJob;
-    if (el.hidden) return;
+  /** Draws (or hides) the brief of the job ad the shown sheets are linked to. */
+  const shownBrief = { job: undefined, mtime: undefined };
+  async function brief(job, jobMtime) {
+    if (shownBrief.job === job && shownBrief.mtime === jobMtime) return;
+    shownBrief.job = job;
+    shownBrief.mtime = jobMtime;
+    briefEl.hidden = !job || !loadJob;
+    if (briefEl.hidden) return resize();
     let html;
     try {
       html = renderJobBrief(await loadJob(job));
     } catch {
       html = `<p class="jb-notfound">The job ad <code>${job.replace(/[&<>]/g, '')}</code> isn't in <code>../jobs/</code>.</p>`;
     }
-    if (s.job !== job) return; // relinked meanwhile
-    el.querySelector('.jb-body').innerHTML = html;
-    paintBriefState(s);
-    resize(); // the sheet got wider
+    if (shownBrief.job !== job) return; // another group meanwhile
+    briefEl.querySelector('.jb-body').innerHTML = html;
+    paintBriefState();
+    resize(); // the board got taller and maybe wider
   }
 
   /** Makes the board match the list of documents (in order); reloads previews that changed. */
@@ -146,14 +154,16 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
       }
       // Keeps the order of `docs`, moving a sheet only when it's out of place: moving an iframe in the DOM
       // reloads it, which would throw away the edits in progress on the active sheet.
-      if (strip.children[i] !== s.el) strip.insertBefore(s.el, strip.children[i] ?? null);
+      if (row.children[i] !== s.el) row.insertBefore(s.el, row.children[i] ?? null);
+      s.el.querySelector('.kind').textContent = d.label ?? kindLabel(d.kind);
       s.el.querySelector('.from').textContent = d.template ? `· from ${d.template}` : '';
-      brief(s, d.job ?? null, d.jobMtime ?? null);
       if (s.mtime !== d.mtime) {
         s.mtime = d.mtime;
         if (key !== active) preview(key);
       }
     }
+    const linked = docs.find((d) => d.job);
+    brief(linked?.job ?? null, linked?.jobMtime ?? null);
     resize();
   }
 
@@ -163,19 +173,21 @@ export function createBoard({ board, strip, zoom, kindLabel, load, onActivate, o
       const f = s.el.querySelector('.sheet-frame');
       f.style.width = `${Math.round(PAGE_W * z)}px`;
       f.style.height = `${Math.round(PAGE_H * z)}px`;
-      s.el.querySelector('.job-brief').style.zoom = z; // two A4-wide cards, zoomed with the page
-      s.el.querySelector('.sheet-label').style.width = f.style.width; // the label stays over the (centered) page
+      s.el.querySelector('.sheet-label').style.width = f.style.width;
       if (key !== active) {
         const style = s.iframe.contentDocument?.querySelector('style[data-cv-preview]');
         if (style) style.textContent = sheetCss(z);
       }
     }
-    // Room at both ends so that any sheet, the first and the last included, can sit in the middle of the view
-    // (a sheet with a job brief is wider than its page: measure the sheet itself).
-    const all = [...sheets.values()];
-    const side = (s) => `${Math.max(96, Math.round(board.clientWidth / 2 - (s ? s.el.offsetWidth : PAGE_W * z) / 2))}px`;
-    strip.style.paddingLeft = side(all[0]);
-    strip.style.paddingRight = side(all.at(-1));
+    // The brief is drawn at A4 scale (two 794 px cards) and zoomed with the pages; its cards keep the same
+    // on-screen gap as the sheets, so the card on the left sits right above the CV.
+    briefEl.style.zoom = z;
+    briefEl.querySelector('.jb-body').style.gap = `${SHEET_GAP / z}px`;
+    // Room at both ends so that the first and the last sheet can sit in the middle of the view (the brief,
+    // centered above the row, then always fits within the scrollable area).
+    const side = `${Math.max(96, Math.round(board.clientWidth / 2 - (PAGE_W * z) / 2))}px`;
+    strip.style.paddingLeft = side;
+    strip.style.paddingRight = side;
   }
 
   /** Marks a sheet as the one being edited and returns its iframe (null if it isn't on the board). */

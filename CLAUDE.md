@@ -15,6 +15,12 @@ templates, keeps one page per job application, and exports each page to PDF.
 - `documents/pages/` — **pages**: one CV per job application ("+ Add page", or "Save as page…"). Each page records
   its template in `<meta name="cv-template" content="Template name">` (shown in the sidebar and on the board;
   renaming a template updates its pages). Pages created by hand need this meta as well.
+- **Cover letters** are pages too, linked to their CV page with `<meta name="cv-cover-for" content="CV page.html">`
+  (plus the same `cv-template` and `cv-job` metas), named `<CV page> – Cover letter.html`. They use the CV's header,
+  shapes and styles (with a larger `--body-size` for reading), the letter in the main column and an "Application"
+  block in the side column. The sidebar shows them inside their CV page ("cover letter ✓"); opening either shows
+  both side by side, and "Export PDF" asks which one to export (they are never exported together). Renaming the CV
+  page updates the link.
 - `documents/.history/<kind>/<name>/` — the version history of every template and page. The server stores a copy
   whenever a document changes on disk, whatever wrote it, and before each save (200 versions per document). An
   older version is restored by copying it over the page.
@@ -22,7 +28,8 @@ templates, keeps one page per job application, and exports each page to PDF.
   `CV_<First>_<Surname>_<position>_<Company>` (e.g. `CV_Ilenia_Molina_product_analyst_AARK`): the name from the CV's
   h1, the position from its subtitle (before any "·"), the company from the linked job ad (`- **Short name:**` if
   present, otherwise `- **Company:**` without its legal form, reduced to the first word when longer than two words).
-  After a successful export, Finder opens `documents/pdf/` with the new PDF selected.
+  A cover letter gets `CoverLetter_…` instead of `CV_…`. After a successful export, Finder opens `documents/pdf/`
+  with the new PDF selected.
 - `templates/blank.html` (in the repository, not in `documents/`) — the **blank layout**: two columns, generic sample
   text and no personal data, so it is pushed. The "+" next to Templates can start a new template from it.
 
@@ -85,10 +92,11 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
   "View job ad".
 - **Job brief:** above a page linked to an ad, the board shows a screen-only card (never printed or exported),
   rendered from the ad's Markdown by `src/jobbrief.js`: the `# title`, the `- **Key:** value` meta lines, then each
-  `## ` section. It consists of two A4-wide cards side by side above the page (which sits centered below), at the
-  CV's type sizes and following its zoom: the ad on the left, `## Fit` on the right (`### Have` / `### Partly` /
-  `### Missing` as coloured blocks with a count bar). A line `a · b · c` becomes chips; `## Job ad (as pasted)` and
-  `## Tailoring notes` are folded.
+  `## ` section. It consists of two A4-wide cards above the sheets, at the CV's type sizes and following its zoom:
+  the ad on the left (above the CV), `## Fit` on the right (above the cover letter). In `## Fit`, a line
+  `**Match: NN%** — why` becomes a score ring with a verdict (75+ worth applying, 50–74 a stretch, under 50 a low
+  match), and `### Have` / `### Partly` / `### Missing` coloured blocks with a count bar. A line `a · b · c` becomes
+  chips; `## Job ad (as pasted)` and `## Tailoring notes` are folded.
 
 ## Tailoring a page to a job ad ("tailor the page X")
 
@@ -109,9 +117,13 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 7. In the job file, set `Status: tailored (YYYY-MM-DD)` and, before `## Job ad (as pasted)`, write the brief:
    `## At a glance` (a short plain-language synthesis + key bullets), `## What they ask for` (`### Must-haves`,
    `### What the days look like`, `### Keywords` as one `a · b · c` line) and `## Fit` (`### Have` / `### Partly` /
-   `### Missing`, each bullet `**requirement:** evidence from ../ilenia/`). After the ad, add a short
-   "Tailoring notes" section: what was emphasised, what was hidden, and the honest gaps, which are also reported
-   directly in the conversation.
+   `### Missing`, each bullet `**requirement:** evidence from ../ilenia/`), opening `## Fit` with
+   `**Match: NN%** — why`: an honest estimate weighted towards the must-haves, not a count of bullets. After the ad,
+   add a short "Tailoring notes" section: what was emphasised, what was hidden, and the honest gaps, which are also
+   reported directly in the conversation.
+8. Write the cover letter as `documents/pages/X – Cover letter.html` (see Cover letters above), on one A4 page:
+   why this role → Livstories → one Hyper Island project in depth → honest gaps and what to learn → architecture as
+   a problem-solving background → close. Same honesty rules as the CV; interests may be stated as interests.
 
 ## Personal data
 
@@ -133,8 +145,8 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 - `server/pdf.js` — HTML → PDF with the installed Chrome/Brave.
 - `src/main.js` — the editor: the CV is loaded in an iframe with `body.contentEditable`; everything the editor injects
   carries `data-cv-editor` (and `cv-*` classes) and is removed on save.
-- `src/board.js` — the board: the document being edited, alone and centered on a pasteboard (trackpad pan, pinch
-  zoom). Clicking a page in the sidebar loads only that page; clicking a template opens template mode (main.js),
+- `src/board.js` — the board: the document being edited (with its cover letter beside it) on a pasteboard,
+  below the job brief (trackpad pan, pinch zoom). Clicking a page in the sidebar loads only that page; clicking a template opens template mode (main.js),
   where it is edited until "Save & close" or "Discard". Leaving a page with unsaved changes saves it. A sheet is
   moved in the DOM only when it is out of place, since moving an iframe reloads it.
 - `src/canvas.js` — free-form layout, Canva-style: a click selects a frame/shape as an object (drag or arrow keys

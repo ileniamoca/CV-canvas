@@ -317,8 +317,9 @@ input[type="color"] { width: 40px; height: 26px; padding: 0 2px; border: 1px sol
   flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain;
   background-color: var(--desk); background-image: var(--desk-image, none); background-size: var(--desk-size, auto);
 }
-.board-strip { display: flex; align-items: flex-start; gap: 72px; padding: 56px 96px 96px; width: max-content; }
-.sheet { flex: none; display: grid; gap: 10px; justify-items: center; } /* the page centered under the job brief */
+.board-strip { display: flex; flex-direction: column; align-items: center; padding: 56px 96px 96px; width: max-content; }
+.board-row { display: flex; align-items: flex-start; } /* gap set by board.js */
+.sheet { flex: none; display: grid; gap: 10px; }
 .sheet-label {
   display: flex; align-items: center; gap: 8px; min-width: 0; cursor: pointer;
   font-size: 13px; color: var(--muted); white-space: nowrap;
@@ -388,6 +389,21 @@ input[type="color"] { width: 40px; height: 26px; padding: 0 2px; border: 1px sol
 .jb-legend { display: flex; flex-wrap: wrap; gap: 2px 12px; color: var(--muted); margin-bottom: 8px; }
 .jb-key i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: -.5px; }
 .jb-key b { color: var(--text); }
+/* Match score: a ring with the percentage and a verdict (green 75+, amber 50–74, red under 50) */
+.jb-score { display: flex; align-items: center; gap: 16px; margin: 2px 0 12px; padding: 12px 14px; border-radius: 6px; }
+.jb-score.jb-have { --jb-c: var(--jb-have); }
+.jb-score.jb-partly { --jb-c: var(--jb-partly); }
+.jb-score.jb-missing { --jb-c: var(--jb-missing); }
+.jb-score { background: color-mix(in srgb, var(--jb-c) 9%, transparent); }
+.jb-ring {
+  flex: none; width: 74px; height: 74px; border-radius: 50%; display: grid; place-content: center; text-align: center;
+  background: radial-gradient(closest-side, var(--panel) 78%, transparent 80%),
+    conic-gradient(var(--jb-c) calc(var(--p) * 1%), color-mix(in srgb, var(--jb-c) 18%, transparent) 0);
+}
+.jb-ring b { font-size: 15pt; line-height: 1; color: var(--jb-c); }
+.jb-ring span { font-size: 6pt; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.jb-verdict strong { display: block; font-size: 9pt; color: var(--jb-c); margin-bottom: 3px; }
+.jb-verdict p { margin: 0; }
 .jb-fit { display: grid; gap: 10px; }
 .jb-col { padding: 8px 14px 6px; border-left: 3px solid var(--muted); background: color-mix(in srgb, var(--muted) 7%, transparent); }
 .jb-col.jb-have { border-left-color: var(--jb-have); background: color-mix(in srgb, var(--jb-have) 8%, transparent); }
