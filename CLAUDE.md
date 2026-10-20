@@ -19,7 +19,8 @@ templates, keeps one page per job application, and exports each page to PDF.
   (plus the same `cv-template` and `cv-job` metas), named `<CV page> – Cover letter.html`. Layout: the CV's text
   styles (with `--body-size: 8.5pt`, `--body-leading: 1.5`, `--body-after: 10pt` for reading), no side stripe, a
   single column with wide margins (header frame at x 86, top 64, width 622: name, `.role` as
-  "<strong>COVER LETTER</strong> · ROLE, COMPANY", and a `.contact-line` with city, phone and email; the header rule at
+  "<strong>COVER LETTER</strong> · ROLE, COMPANY" on a single line (shorten the role if it wraps, or the contact
+  line runs into the rule), and a `.contact-line` with city, phone and email; the header rule at
   top 166 across the page; the letter frame at x 86, top 214, width 622). The letter opens with a bold greeting and
   ends with "Kind regards,", the handwritten signature (`<p class="signature"><img src="data:image/png;base64,…">`,
   embedded from `documents/assets/signature.png`, which is private) and the first name in bold. Without a side
