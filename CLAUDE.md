@@ -105,6 +105,11 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 
 ## Tailoring a page to a job ad ("tailor the page X")
 
+**Every page made for a job ad always gets its cover letter**, whether the request was to tailor a page, create a
+page or add a job: the steps below always run to the end, including step 8, even if the cover letter is not
+mentioned. The model is the most recent cover letter in `documents/pages/`: it is copied (metas, styles, header,
+signature, frame positions) and only the header's role and company and the letter's text change.
+
 1. Open `documents/pages/X.html`. Its `cv-job` meta points to the ad in `../jobs/`; `cv-template` to its template.
 2. Read `../ilenia/README.md` and the chapters relevant to the ad, respecting each project file's
    "safe / not safe to claim" sections. For wording, refer to the CVs already sent for the same track in
@@ -126,7 +131,7 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
    `**Match: NN%** — why`: an honest estimate weighted towards the must-haves, not a count of bullets. After the ad,
    add a short "Tailoring notes" section: what was emphasised, what was hidden, and the honest gaps, which are also
    reported directly in the conversation.
-8. Write the cover letter as `documents/pages/X – Cover letter.html` (see Cover letters above), on one A4 page:
+8. Always write the cover letter as `documents/pages/X – Cover letter.html` (see Cover letters above), on one A4 page:
    why this role → Livstories → one Hyper Island project in depth → honest gaps and what to learn → architecture as
    a problem-solving background → close. Same honesty rules as the CV; interests may be stated as interests.
 
