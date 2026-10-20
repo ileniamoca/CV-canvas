@@ -86,7 +86,8 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
 - Pages are edited directly in their `.html`, keeping the existing structure and classes (`.frame`, `.item`,
   `.job-head`, `.where`, `.note`, `h2 .meta`…) so the design and the A4 print layout stay intact.
 - A new version of a CV (e.g. for a job offer) is a new page in `documents/pages/`, made from a template; the
-  template itself is not modified.
+  template itself is not modified. The template matches the ad's track (e.g. `Analytics_Engineer` for analytics
+  engineering roles, `Data_Analyst` for analyst roles).
 - A new template from scratch starts from `templates/blank.html` and is saved in `documents/templates/`.
 - PDF from the terminal: `npm run pdf -- documents/pages/<file>.html` (output in `documents/pdf/`).
 - **Source of truth for content:** `../ilenia/` (outside this repository, private). The entry point is
