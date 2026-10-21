@@ -78,6 +78,20 @@ const JOB_META = /<meta name="cv-job" content="([^"]*)">/;
 const COVER_META = /<meta name="cv-cover-for" content="([^"]*)">/;
 // Job ads live next to the career docs, outside this repo (private): portfolio_web/jobs/
 const JOBS_DIR = path.resolve('..', 'jobs');
+// Whether the application was sent: "- **Applied:** YYYY-MM-DD" in the ad's meta lines (ticked in the sidebar)
+const APPLIED_LINE = /^[-*]\s+\*\*Applied:?\*\*:?\s*(.+)$/mi;
+
+/** Marks a job ad as applied (adds "- **Applied:** today" after its last meta line) or not (removes the line). */
+function setApplied(ad, applied) {
+  const text = ad.replace(new RegExp(APPLIED_LINE.source + '\\n?', 'mi'), '');
+  if (!applied) return text;
+  const line = `- **Applied:** ${new Date().toISOString().slice(0, 10)}`;
+  // After the meta block: the run of "- **Key:** value" lines that follows the "# title"
+  const meta = text.match(/^#\s.*\n+(?:[-*]\s+\*\*[^*]+\*\*.*\n)*/m);
+  if (!meta) return `${line}\n${text}`;
+  const end = meta.index + meta[0].replace(/\n+$/, '\n').length;
+  return text.slice(0, end) + line + '\n' + text.slice(end);
+}
 const unescapeAttr = (s) => s.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 const escapeAttr = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -129,6 +143,10 @@ async function listDir(kind) {
           // The company applied to, from the job ad's "- **Company:** …" line (shown under the page in the sidebar)
           const ad = doc.job ? await fsp.readFile(path.join(JOBS_DIR, path.basename(doc.job)), 'utf8').catch(() => '') : '';
           doc.company = ad.match(/^[-*]\s+\*\*Company:?\*\*:?\s*(.+)$/mi)?.[1].trim() || null;
+          // The match score from "## Fit" ("**Match: 65%** — why") and the date applied ("- **Applied:** YYYY-MM-DD")
+          const score = ad.match(/\*\*Match:?\s*(\d{1,3})\s*%/i);
+          doc.match = score ? Math.min(100, Number(score[1])) : null;
+          doc.applied = ad.match(APPLIED_LINE)?.[1].trim() || null;
         }
         return doc;
       }),
@@ -283,6 +301,16 @@ export function cvApi() {
             const base = path.basename(parts[2]);
             if (!base.endsWith('.md')) throw httpError(400, `Invalid name: ${parts[2]}`);
             return send(res, 200, await fsp.readFile(path.join(JOBS_DIR, base), 'utf8'), 'text/markdown; charset=utf-8');
+          }
+
+          // PATCH /api/jobs/:file  { applied: true|false }  → ticks or unticks "applied" in the job ad
+          if (parts[1] === 'jobs' && parts.length === 3 && req.method === 'PATCH') {
+            const base = path.basename(parts[2]);
+            if (!base.endsWith('.md')) throw httpError(400, `Invalid name: ${parts[2]}`);
+            const file = path.join(JOBS_DIR, base);
+            const { applied } = await readBody(req);
+            await fsp.writeFile(file, setApplied(await fsp.readFile(file, 'utf8'), Boolean(applied)), 'utf8');
+            return send(res, 200, { ok: true });
           }
 
           // POST /api/pdf  { name, html }  → generates documents/pdf/<name>.pdf

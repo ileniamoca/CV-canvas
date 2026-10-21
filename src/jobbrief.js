@@ -85,7 +85,7 @@ function fitKind(heading) {
 }
 
 /** What a match score means: worth applying (75+), a stretch (50–74) or a low match (under 50). */
-function verdict(score) {
+export function verdict(score) {
   if (score >= 75) return { kind: 'have', text: 'Worth applying' };
   if (score >= 50) return { kind: 'partly', text: 'A stretch: apply if you\'re keen, and let the cover letter bridge the gaps' };
   return { kind: 'missing', text: 'Low match: probably better to prioritise other roles' };

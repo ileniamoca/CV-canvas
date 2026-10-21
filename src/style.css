@@ -162,6 +162,19 @@ body.hide-right .theme-bubble { right: 18px; }
 .sidebar li .label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sidebar li .company { display: block; font-size: 12px; font-weight: 600; margin-top: 1px; }
 .sidebar li .date { display: block; font-size: 11px; color: var(--muted); }
+/* Pages linked to a job ad: the applied checkbox above the match score, in one column before the name */
+.sidebar li .status { flex: none; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.sidebar li input.applied { margin: 0; width: 15px; height: 15px; cursor: pointer; }
+.sidebar li.is-applied .label { opacity: .6; }
+.sidebar li .match {
+  --jb-c: var(--muted);
+  font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.3;
+  padding: 0 4px; border-radius: 999px;
+  color: var(--jb-c); background: color-mix(in srgb, var(--jb-c) 14%, transparent);
+}
+.sidebar li .match.jb-have { --jb-c: #2e8b57; }
+.sidebar li .match.jb-partly { --jb-c: #c98a12; }
+.sidebar li .match.jb-missing { --jb-c: #c0392b; }
 .sidebar li .mini { padding: 2px 6px; font-size: 12px; opacity: 0; }
 .sidebar li:hover .mini { opacity: 1; }
 .sidebar li .mini.more { border: 0; background: none; font-size: 16px; line-height: 1; padding: 2px 6px; }

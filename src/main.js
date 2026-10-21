@@ -2,6 +2,7 @@ import { createBlocks, BLOCKS_CSS } from './blocks.js';
 import { createCanvas, CANVAS_CSS } from './canvas.js';
 import { createLibrary } from './library.js';
 import { createBoard, sheetCss } from './board.js';
+import { verdict } from './jobbrief.js';
 import {
   TEXT_STYLES, FONTS, fontByStack, styleSheetEl, readStyles, writeStyles, detectStyle, applyStyle,
 } from './styles.js';
@@ -111,6 +112,30 @@ function renderItem(kind, f) {
   li.title = f.name;
   const shown = state.current && group(state.current.kind, state.current.name);
   if (state.current?.kind === kind && shown?.some((d) => d.name === f.name)) li.classList.add('current');
+  // A page linked to a job ad: one column before the name, with the "applied" checkbox (stored in the ad)
+  // above the match score from the ad's fit analysis (coloured like the brief's ring)
+  if (kind === 'pages' && f.job) {
+    const status = document.createElement('span');
+    status.className = 'status';
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.className = 'applied';
+    box.checked = Boolean(f.applied);
+    box.title = f.applied ? `Applied on ${f.applied}` : 'Not applied yet: tick when sent';
+    box.addEventListener('click', (e) => e.stopPropagation());
+    box.addEventListener('change', () => setApplied(f, box.checked));
+    status.append(box);
+    if (f.match != null) {
+      const v = verdict(f.match);
+      const badge = document.createElement('span');
+      badge.className = `match jb-${v.kind}`;
+      badge.textContent = `${f.match}%`;
+      badge.title = `Match ${f.match}%: ${v.text}`;
+      status.append(badge);
+    }
+    li.append(status);
+    if (f.applied) li.classList.add('is-applied');
+  }
   const label = document.createElement('span');
   label.className = 'label';
   label.textContent = stem(f.name);
@@ -157,6 +182,21 @@ function renderItem(kind, f) {
   });
   li.append(more);
   return li;
+}
+
+/** Ticks or unticks "applied" for a page's job ad; the ad changes on disk, which refreshes the list. */
+async function setApplied(f, applied) {
+  try {
+    await api(`/api/jobs/${encodeURIComponent(f.job)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ applied }),
+    });
+    toast(applied ? `Marked as applied: ${f.company ?? stem(f.name)}` : `Marked as not applied: ${f.company ?? stem(f.name)}`);
+  } catch (err) {
+    toast(err.message, true);
+  }
+  refreshList();
 }
 
 // ---------- Sidebar: rename, duplicate, delete ----------
