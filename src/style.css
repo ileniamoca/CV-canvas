@@ -120,10 +120,26 @@ button.active { background: var(--accent-soft); border-color: var(--accent); }
 #zoomLabel { min-width: 44px; text-align: center; font-variant-numeric: tabular-nums; }
 
 /* Layout */
-.layout { display: grid; grid-template-columns: 230px minmax(0, 1fr) 300px; min-height: 0; } /* the board scrolls, never widens the page */
+.layout { /* the board scrolls, never widens the page */
+  --sidebar-w: 230px; /* dragged with .sidebar-resizer (main.js) */
+  position: relative; display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr) 300px; min-height: 0;
+}
+/* The sidebar's right edge: drag to resize, double-click to reset */
+.sidebar-resizer {
+  position: absolute; top: 0; bottom: 0; left: calc(var(--sidebar-w) - 4px); width: 8px; z-index: 5;
+  cursor: col-resize; touch-action: none;
+}
+.sidebar-resizer::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 3px; width: 2px;
+  background: var(--accent); opacity: 0; transition: opacity .15s;
+}
+.sidebar-resizer:hover::after, body.resizing-sidebar .sidebar-resizer::after { opacity: .6; }
+body.resizing-sidebar { cursor: col-resize; user-select: none; }
+body.resizing-sidebar iframe { pointer-events: none; } /* the board's pages would swallow the drag */
+body.hide-left .sidebar-resizer { display: none; }
 /* Collapsible side panels (toolbar buttons at both ends) */
 body.hide-left .layout { grid-template-columns: 0 minmax(0, 1fr) 300px; }
-body.hide-right .layout { grid-template-columns: 230px minmax(0, 1fr) 0; }
+body.hide-right .layout { grid-template-columns: var(--sidebar-w) minmax(0, 1fr) 0; }
 body.hide-left.hide-right .layout { grid-template-columns: 0 minmax(0, 1fr) 0; }
 body.hide-left .sidebar, body.hide-right .inspector { display: none; }
 /* Fixed columns, so hiding a panel never shifts the others into its place */
@@ -529,6 +545,7 @@ dialog menu { display: flex; justify-content: flex-end; gap: 8px; padding: 0; ma
 
 @media (max-width: 760px) {
   .layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+  .sidebar-resizer { display: none; }
   .inspector { border-left: 0; border-top: 1px solid var(--border); max-height: 40vh; }
   .sidebar { max-height: 30vh; border-right: 0; border-bottom: 1px solid var(--border); }
   .titlebar { flex-wrap: wrap; }

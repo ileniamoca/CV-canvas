@@ -1298,6 +1298,47 @@ for (const side of ['left', 'right']) {
 $('#toggleLeft').addEventListener('click', () => togglePanel('left'));
 $('#toggleRight').addEventListener('click', () => togglePanel('right'));
 
+// Sidebar width: drag its right edge (remembered), double-click the edge to go back to the default.
+{
+  const layout = $('.layout');
+  const handle = $('#sidebarResizer');
+  const DEFAULT = 230, MIN = 170, MAX = 560;
+  const setWidth = (w) => {
+    w = Math.round(Math.min(MAX, Math.max(MIN, w)));
+    layout.style.setProperty('--sidebar-w', `${w}px`);
+    return w;
+  };
+  try { const saved = Number(localStorage.getItem('cv-editor:sidebar-w')); if (saved) setWidth(saved); } catch {}
+  const save = (w) => { try { localStorage.setItem('cv-editor:sidebar-w', String(w)); } catch {} };
+  const recenter = () => {
+    if (!state.current) return;
+    board.resize();
+    board.glideTo(state.current.kind, state.current.name, { instant: true });
+  };
+  handle.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    handle.setPointerCapture(e.pointerId);
+    document.body.classList.add('resizing-sidebar');
+    const left = layout.getBoundingClientRect().left;
+    let width = $('#sidebar').offsetWidth;
+    const move = (ev) => { width = setWidth(ev.clientX - left); };
+    const end = () => {
+      handle.removeEventListener('pointermove', move);
+      document.body.classList.remove('resizing-sidebar');
+      save(width);
+      recenter();
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', end, { once: true });
+    handle.addEventListener('pointercancel', end, { once: true });
+  });
+  handle.addEventListener('dblclick', () => {
+    save(setWidth(DEFAULT));
+    recenter();
+  });
+}
+
 // Collapsible inspector panels: remember which ones are open.
 for (const panel of document.querySelectorAll('.inspector .panel')) {
   try {
