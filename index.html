@@ -71,7 +71,11 @@
         <ul id="list-templates" class="pills"></ul>
       </section>
       <section>
-        <h2>Pages <button class="h2-add" id="btnAddPage" title="New blank page from a template">+</button></h2>
+        <h2>Pages <select class="h2-sort" id="pageSort" title="Order the pages">
+            <option value="created-desc">Newest</option>
+            <option value="created-asc">Oldest</option>
+            <option value="match">Match %</option>
+          </select><button class="h2-add" id="btnAddPage" title="New blank page from a template">+</button></h2>
         <ul id="list-pages" class="cards"></ul>
       </section>
     </nav>

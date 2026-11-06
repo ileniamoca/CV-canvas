@@ -84,12 +84,30 @@ async function refreshList() {
     ul.replaceChildren();
     // A cover letter is shown with its CV page, not on its own (unless that page is gone).
     const listed = data[kind].filter((f) => !coverOf(f));
+    if (kind === 'pages') sortPages(listed);
     if (!listed.length) {
       ul.append(Object.assign(document.createElement('li'), { className: 'none', textContent: 'Empty' }));
       continue;
     }
     for (const f of listed) ul.append(renderItem(kind, f));
   }
+}
+
+/** Orders the page list as picked in the Pages header: by creation date, or by match % (unscored pages last). */
+let pageSort = 'created-desc';
+try { pageSort = localStorage.getItem('cv-editor:page-sort') || pageSort; } catch {}
+$('#pageSort').value = pageSort;
+if (!$('#pageSort').value) $('#pageSort').value = pageSort = 'created-desc';
+$('#pageSort').addEventListener('change', (e) => {
+  pageSort = e.target.value;
+  try { localStorage.setItem('cv-editor:page-sort', pageSort); } catch {}
+  refreshList();
+});
+function sortPages(list) {
+  const byCreated = (a, b) => a.created - b.created || a.name.localeCompare(b.name);
+  if (pageSort === 'created-asc') return list.sort(byCreated);
+  if (pageSort === 'match') return list.sort((a, b) => (b.match ?? -1) - (a.match ?? -1) || byCreated(b, a));
+  return list.sort((a, b) => byCreated(b, a));
 }
 
 /** The CV page a cover letter belongs to (null if it isn't a cover letter, or its page is gone). */

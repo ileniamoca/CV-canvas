@@ -99,7 +99,8 @@ CVs use an InDesign/Canva-style free-form layout on a fixed A4 page (`.page`, 21
   "View job ad", and the sidebar shows the ad's `- **Company:**` under the page title. Before the title, in one
   column, the sidebar shows an "applied" checkbox above the match score (`**Match: NN%**` from `## Fit`, coloured
   like the brief's verdict). Ticking it adds `- **Applied:** YYYY-MM-DD` to the ad's meta lines (`PATCH
-  /api/jobs/:file`); unticking removes that line.
+  /api/jobs/:file`); unticking removes that line. A selector in the Pages header orders the list by creation date
+  (newest or oldest first) or by match % (pages without a score last); the choice is remembered.
 - **Job brief:** above a page linked to an ad, the board shows a screen-only card (never printed or exported),
   rendered from the ad's Markdown by `src/jobbrief.js`: the `# title`, the `- **Key:** value` meta lines, then each
   `## ` section. It consists of two A4-wide cards above the sheets, at the CV's type sizes and following its zoom:
